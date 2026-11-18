@@ -1,0 +1,463 @@
+<!doctype html>
+<html lang="sk">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>{{NAME}} – ukážka rezervácie s mapou</title>
+<meta name="description" content="Ukážka návrhu online rezervácie s mapou parciel pre {{NAME}}. Nie je to oficiálna stránka kempu.">
+<meta name="robots" content="noindex">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect x='1' y='1' width='30' height='30' rx='6' fill='%230a5bab'/%3E%3Crect x='3.5' y='3.5' width='25' height='25' rx='4' fill='none' stroke='%23fff' stroke-width='1.6'/%3E%3Cpath d='M16 8.5 23 19H9z' fill='%23fff'/%3E%3Crect x='9' y='21' width='14' height='3' rx='1' fill='%23fff'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Overpass:wght@400;600;700;800&display=swap" rel="stylesheet">
+<script>
+  (function () {
+    var t = new URLSearchParams(location.search).get('theme');
+    if (t === 'dark' || t === 'light') document.documentElement.setAttribute('data-theme', t);
+  })();
+</script>
+<style>
+:root {
+  --paper: #ffffff; --ink: #1a2a21; --muted: #55655c; --line: #dde5df; --soft: #f3f6f2;
+  --ground: #cfe2c6; --inside: #e4eee1; --meadow: #d8e9cf; --tree: #a9cb9f; --hedge: #8fb487;
+  --road: #ffffff; --road-edge: #c4cfc7; --gravel: #e8dcc4; --water: #9fd0e8; --play: #efe4c9;
+  --build: #ffffff; --build-line: #b3c0b7; --taken: #d3d9d5; --taken-line: #a9b2ac;
+  --sign: #0a5bab; --sign-deep: #084a8c; --link: #0a5bab; --ok: #2b7a4b; --no: #a8402f;
+  --shadow: 0 1px 2px rgba(26, 42, 33, .06), 0 12px 32px -12px rgba(26, 42, 33, .18);
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --paper: #0f1713; --ink: #e5ede7; --muted: #a2b1a8; --line: #26342c; --soft: #15201a;
+    --ground: #15231b; --inside: #1b2a22; --meadow: #213428; --tree: #2a4634; --hedge: #3e6349;
+    --road: #2f3a35; --road-edge: #3a4740; --gravel: #3d3729; --water: #1d4458; --play: #3a3426;
+    --build: #26312b; --build-line: #3d4a43; --taken: #252c28; --taken-line: #3d4640;
+    --sign: #2f6fc0; --sign-deep: #2a63ad; --link: #8db9ef; --ok: #6cc08e; --no: #f08b77;
+    --shadow: 0 1px 2px rgba(0, 0, 0, .3), 0 14px 36px -12px rgba(0, 0, 0, .6);
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --paper: #0f1713; --ink: #e5ede7; --muted: #a2b1a8; --line: #26342c; --soft: #15201a;
+  --ground: #15231b; --inside: #1b2a22; --meadow: #213428; --tree: #2a4634; --hedge: #3e6349;
+  --road: #2f3a35; --road-edge: #3a4740; --gravel: #3d3729; --water: #1d4458; --play: #3a3426;
+  --build: #26312b; --build-line: #3d4a43; --taken: #252c28; --taken-line: #3d4640;
+  --sign: #2f6fc0; --sign-deep: #2a63ad; --link: #8db9ef; --ok: #6cc08e; --no: #f08b77;
+  --shadow: 0 1px 2px rgba(0, 0, 0, .3), 0 14px 36px -12px rgba(0, 0, 0, .6);
+  color-scheme: dark;
+}
+*, *::before, *::after { box-sizing: border-box; }
+html { -webkit-text-size-adjust: 100%; }
+body { margin: 0; background: var(--paper); color: var(--ink); font-family: "Overpass", system-ui, sans-serif; font-size: 1.0625rem; line-height: 1.6; font-variant-numeric: tabular-nums; -webkit-font-smoothing: antialiased; }
+img, svg { display: block; max-width: 100%; }
+a { color: var(--link); text-underline-offset: .18em; }
+:focus-visible { outline: 3px solid var(--sign); outline-offset: 3px; border-radius: 4px; }
+h1, h2, h3 { margin: 0; line-height: 1.12; letter-spacing: -.015em; font-weight: 800; }
+p { margin: 0; }
+.wrap { width: min(1180px, 100% - 32px); margin-inline: auto; }
+.sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+@media (prefers-reduced-motion: reduce) { *, *::before, *::after { transition: none !important; } }
+
+.notice { position: sticky; top: 0; z-index: 30; background: #fff4c7; color: #3d3200; border-bottom: 1px solid #ecd98b; font-size: .92rem; font-weight: 600; }
+.notice .wrap { padding-block: 8px; }
+.top .wrap { display: flex; align-items: center; justify-content: space-between; gap: 16px; min-height: 64px; flex-wrap: wrap; }
+.brand { display: inline-flex; align-items: center; gap: 10px; min-height: 44px; color: var(--ink); text-decoration: none; font-weight: 800; font-size: 1.15rem; }
+.brand svg { width: 30px; height: 30px; }
+.for { color: var(--muted); font-size: .95rem; }
+.btn { display: inline-flex; align-items: center; justify-content: center; gap: .5em; min-height: 48px; padding: .7em 1.25em; border-radius: 10px; border: 2px solid transparent; font: inherit; font-weight: 700; line-height: 1.2; text-decoration: none; cursor: pointer; transition: background-color .15s, border-color .15s; }
+.btn-sign { background: var(--sign); color: #fff; }
+.btn-sign:hover { background: var(--sign-deep); }
+.btn-line { background: transparent; color: var(--ink); border-color: var(--line); }
+.btn-line:hover { border-color: var(--ink); }
+
+.intro { padding-top: clamp(28px, 5vw, 56px); }
+.intro h1 { font-size: clamp(2rem, 4.4vw, 3.2rem); letter-spacing: -.02em; max-width: 820px; text-wrap: balance; }
+.intro p { margin-top: 16px; color: var(--muted); font-size: clamp(1.05rem, 1.5vw, 1.2rem); max-width: 680px; }
+
+.demo { margin-top: clamp(28px, 4vw, 44px); border: 1px solid var(--line); border-radius: 20px; background: var(--paper); box-shadow: var(--shadow); overflow: hidden; }
+.demo-bar { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px 20px; padding: 16px 20px; border-bottom: 1px solid var(--line); }
+.demo-title { display: flex; flex-direction: column; }
+.demo-title strong { font-size: 1.05rem; }
+.demo-title span { color: var(--muted); font-size: .92rem; }
+.controls { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 16px; }
+.seg { display: inline-flex; flex-wrap: wrap; gap: 4px; padding: 4px; border-radius: 12px; background: var(--soft); border: 1px solid var(--line); }
+.seg button { min-height: 44px; padding: 6px 12px; border: 0; border-radius: 8px; background: transparent; color: var(--muted); font: inherit; font-size: .93rem; font-weight: 700; cursor: pointer; }
+.seg button[aria-pressed="true"] { background: var(--paper); color: var(--ink); box-shadow: 0 1px 2px rgba(0, 0, 0, .12); }
+.stepper { display: inline-flex; align-items: center; gap: 6px; font-size: .93rem; font-weight: 700; }
+.stepper button { width: 44px; height: 44px; border-radius: 10px; border: 1px solid var(--line); background: var(--paper); color: var(--ink); font: inherit; font-size: 1.2rem; cursor: pointer; }
+.stepper output { min-width: 5.5em; text-align: center; }
+.demo-body { display: grid; grid-template-columns: minmax(0, 1fr) 340px; }
+.demo-body > div { min-width: 0; }
+.map-scroll { overflow-x: auto; overscroll-behavior-x: contain; background: var(--ground); border-right: 1px solid var(--line); }
+.map-scroll svg { width: 100%; min-width: 780px; height: auto; }
+.map-hint { display: none; padding: 8px 16px; font-size: .9rem; color: var(--muted); border-top: 1px solid var(--line); }
+.legend { display: flex; flex-wrap: wrap; gap: 8px 18px; padding: 12px 20px; border-top: 1px solid var(--line); font-size: .9rem; color: var(--muted); }
+.legend span { display: inline-flex; align-items: center; gap: 8px; }
+.legend i { width: 18px; height: 14px; border-radius: 3px; display: inline-block; border: 1.5px solid rgba(0, 0, 0, .25); }
+.lg-taken { background: repeating-linear-gradient(135deg, var(--taken) 0 3px, var(--taken-line) 3px 4.5px) !important; }
+.lg-nofit { background: transparent !important; border-style: dashed !important; }
+.lg-sel { background: var(--sign) !important; border-color: var(--sign) !important; }
+.panel { padding: 22px 22px 24px; display: flex; flex-direction: column; gap: 16px; }
+.panel h3 { font-size: 1.35rem; }
+.muted { color: var(--muted); }
+.chip { display: inline-flex; align-items: center; padding: 3px 10px; border-radius: 999px; font-size: .85rem; font-weight: 700; background: var(--soft); border: 1px solid var(--line); }
+.chip.ok { color: var(--ok); }
+.chip.no { color: var(--no); }
+.p-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap; }
+.facts { display: flex; flex-wrap: wrap; gap: 6px 16px; color: var(--muted); font-size: .95rem; }
+.mini { border: 1px solid var(--line); border-radius: 12px; background: var(--inside); padding: 8px; }
+.mini svg { width: 100%; height: auto; }
+.bill { width: 100%; border-collapse: collapse; font-size: .95rem; }
+.bill td { padding: 5px 0; border-bottom: 1px solid var(--line); }
+.bill td:last-child { text-align: right; font-weight: 600; white-space: nowrap; }
+.bill tr.sum td { border-bottom: 0; padding-top: 10px; font-weight: 800; font-size: 1.05rem; }
+.panel .btn { width: 100%; }
+.done { border-radius: 12px; padding: 14px 16px; background: var(--soft); border: 1px solid var(--line); font-size: .95rem; }
+.done strong { display: block; margin-bottom: 4px; }
+.linkbtn { background: none; border: 0; padding: 0; font: inherit; color: var(--link); text-decoration: underline; text-underline-offset: .18em; cursor: pointer; min-height: 24px; text-align: left; }
+.note { margin-top: 14px; color: var(--muted); font-size: .95rem; }
+
+.m-ground { fill: var(--ground); }
+.m-inside { fill: var(--inside); stroke: var(--hedge); stroke-width: 5; stroke-linejoin: round; }
+.m-water { fill: none; stroke: var(--water); stroke-linecap: round; stroke-linejoin: round; }
+.m-road-edge { fill: none; stroke: var(--road-edge); stroke-linecap: round; stroke-linejoin: round; }
+.m-road { fill: none; stroke: var(--road); stroke-linecap: round; stroke-linejoin: round; }
+.m-gravel { fill: none; stroke: var(--gravel); stroke-linecap: round; stroke-linejoin: round; }
+.m-ring { fill: none; stroke: var(--road); }
+.m-area-meadow { fill: var(--meadow); stroke: var(--hedge); stroke-width: 2; stroke-dasharray: 8 6; }
+.m-area-asphalt { fill: var(--road); stroke: var(--road-edge); stroke-width: 2; }
+.m-area-play { fill: var(--play); stroke: var(--build-line); stroke-width: 2; stroke-dasharray: 8 6; }
+.m-tree { fill: var(--tree); }
+.m-build { fill: var(--build); stroke: var(--build-line); stroke-width: 2.5; }
+.m-t { fill: var(--muted); font-size: 21px; font-weight: 700; }
+.m-ctx { opacity: .6; }
+.pc { cursor: pointer; outline: none; }
+.pc .hit { fill: transparent; stroke: none; }
+.pc .body { stroke: rgba(0, 0, 0, .28); stroke-width: 2.5; transition: filter .12s; }
+.pc text { fill: #14211a; font-size: 22px; font-weight: 800; text-anchor: middle; dominant-baseline: central; pointer-events: none; }
+.pc:hover .body { filter: brightness(1.08); }
+.pc.taken .body { fill: url(#hatch) !important; stroke: var(--taken-line); }
+.pc.taken text { fill: var(--muted); }
+.pc.nofit .body { fill-opacity: .18; stroke-dasharray: 7 5; }
+.pc.nofit text { fill: var(--muted); }
+.pc.sel .body { fill: var(--sign) !important; fill-opacity: 1; stroke: var(--sign-deep); stroke-dasharray: none; }
+.pc.sel text { fill: #fff; }
+.pc.mine .body { fill: var(--ok) !important; fill-opacity: 1; stroke: var(--ok); }
+.pc.mine text { fill: #fff; }
+.pc:focus-visible .body { stroke: var(--sign); stroke-width: 6; }
+.hatch-a { fill: var(--taken); }
+.hatch-b { stroke: var(--taken-line); stroke-width: 3; }
+
+.sec { padding-block: clamp(56px, 8vw, 96px); }
+.sec h2 { font-size: clamp(1.7rem, 3vw, 2.3rem); text-wrap: balance; }
+.sec .lead { margin-top: 12px; color: var(--muted); font-size: 1.1rem; max-width: 680px; }
+.render { margin-top: 28px; border-radius: 18px; overflow: hidden; border: 1px solid var(--line); box-shadow: var(--shadow); background: var(--soft); }
+.render img { width: 100%; height: auto; }
+.render figcaption { padding: 12px 16px; color: var(--muted); font-size: .92rem; border-top: 1px solid var(--line); }
+.next { display: grid; grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr); gap: clamp(24px, 4vw, 56px); align-items: start; }
+.next ol { margin: 18px 0 0; padding-left: 1.3em; display: grid; gap: 10px; }
+.next li::marker { font-weight: 800; color: var(--sign); }
+.offer { border: 1px solid var(--line); border-radius: 18px; padding: 24px; background: var(--paper); box-shadow: var(--shadow); }
+.offer h3 { font-size: 1.25rem; }
+.offer p { margin-top: 8px; color: var(--muted); }
+.offer .price { margin-top: 14px; font-size: 1.05rem; color: var(--ink); }
+.offer .price strong { font-size: 1.9rem; letter-spacing: -.02em; }
+.offer .btns { display: grid; gap: 10px; margin-top: 20px; }
+.foot { padding-block: 32px 44px; color: var(--muted); font-size: .92rem; border-top: 1px solid var(--line); }
+
+@media (max-width: 1020px) {
+  .demo-body { grid-template-columns: minmax(0, 1fr); }
+  .map-scroll { border-right: 0; }
+  .panel { border-top: 1px solid var(--line); }
+  .next { grid-template-columns: 1fr; }
+}
+@media (max-width: 820px) { .map-hint { display: block; } }
+@media (max-width: 520px) {
+  .seg { width: 100%; }
+  .seg button { flex: 1 1 auto; }
+  .demo-bar, .legend { padding-inline: 16px; }
+  .panel { padding: 18px 16px 20px; }
+}
+</style>
+</head>
+<body>
+<div class="notice" role="note"><div class="wrap">Ukážka návrhu pre {{NAME}}. Nie je to oficiálna stránka kempu: obsadenosť a ceny sú vymyslené a rezervácia sa nikam neodosiela.</div></div>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <symbol id="logo" viewBox="0 0 32 32"><rect x="1" y="1" width="30" height="30" rx="6" fill="#0a5bab"/><rect x="3.5" y="3.5" width="25" height="25" rx="4" fill="none" stroke="#fff" stroke-width="1.6"/><path d="M16 8.5 23 19H9z" fill="#fff"/><rect x="9" y="21" width="14" height="3" rx="1" fill="#fff"/></symbol>
+</svg>
+<header class="top">
+  <div class="wrap">
+    <a class="brand" href="{{SITE}}"><svg aria-hidden="true"><use href="#logo"/></svg>Parcela</a>
+    <span class="for">Pripravené pre {{NAME}}, {{PLACE}}</span>
+  </div>
+</header>
+<main>
+  <section class="intro">
+    <div class="wrap">
+      <h1>Takto by si hosť vybral parcelu vo vašom kempe</h1>
+      <p>Mapu som prekreslil z plánu areálu na vašom webe. Vyskúšajte si ju ako hosť: vyberte, s čím prídete, a kliknite na parcelu.</p>
+      <div class="demo" aria-label="Ukážka rezervácie na mape kempu">
+        <div class="demo-bar">
+          <div class="demo-title"><strong>{{NAME}}</strong><span id="dates"></span></div>
+          <div class="controls">
+            <div class="seg" role="group" aria-label="S čím prídete">
+              <button type="button" data-v="stan" aria-pressed="false">Stan</button>
+              <button type="button" data-v="autostan" aria-pressed="true">Auto a stan</button>
+              <button type="button" data-v="obytne" aria-pressed="false">Obytné auto</button>
+              <button type="button" data-v="karavan" aria-pressed="false">Karavan s autom</button>
+            </div>
+            <div class="stepper">
+              <button type="button" id="gMinus" aria-label="Menej dospelých">−</button>
+              <output id="gOut" aria-live="polite">2 dospelí</output>
+              <button type="button" id="gPlus" aria-label="Viac dospelých">+</button>
+            </div>
+          </div>
+        </div>
+        <div class="demo-body">
+          <div>
+            <div class="map-scroll"><svg id="map" role="group" aria-label="Mapa kempu s parcelami"></svg></div>
+            <p class="map-hint">Mapu môžete posúvať do strany.</p>
+            <div class="legend" id="legend" aria-hidden="true"></div>
+          </div>
+          <div class="panel" id="panel" aria-live="polite"></div>
+        </div>
+      </div>
+      <p class="note">Rozloženie parciel je podľa plánu na vašom webe. Obsadenosť a ceny sú len na ukážku, v ostrej verzii by boli vaše.</p>
+    </div>
+  </section>
+
+  <section class="sec" aria-labelledby="h3d">
+    <div class="wrap">
+      <h2 id="h3d">Váš kemp v 3D</h2>
+      <p class="lead">Z toho istého plánu som v Blenderi postavil model celého areálu. Hosť si ho môže pozrieť skôr, než príde, a vidí, kde jeho parcela leží.</p>
+      <figure class="render">
+        <img src="{{RENDER}}" width="1600" height="1000" alt="3D model areálu {{NAME}}: farebné parcely podľa veľkosti, cesty, budovy a stromy" loading="lazy">
+        <figcaption>Model z Blendera podľa plánu areálu. V ostrej verzii sa dá otáčať a prechádzať priamo na webe.</figcaption>
+      </figure>
+    </div>
+  </section>
+
+  <section class="sec" style="padding-top:0" aria-labelledby="hnext">
+    <div class="wrap next">
+      <div>
+        <h2 id="hnext">Ako by to fungovalo u vás</h2>
+        <ol>
+          <li>Mapu doladím podľa skutočných rozmerov parciel a vášho cenníka.</li>
+          <li>Vložím ju do vášho webu ako novú podstránku. Na pôvodnom webe sa nič iné nemení.</li>
+          <li>Hostia si vyberú parcelu a zaplatia zálohu kartou priamo na váš účet. Vám príde e-mail s rezerváciou.</li>
+          <li>Obsadenosť sa zosúladí s Bookingom, takže dvojitá rezervácia nevznikne.</li>
+        </ol>
+      </div>
+      <aside class="offer" aria-labelledby="hoffer">
+        <h3 id="hoffer">Priame rezervácie pre váš kemp</h3>
+        <p>Bez provízie z rezervácií. Spustené pred začiatkom sezóny.</p>
+        <p class="price"><strong>2 400 €</strong> jednorazovo + 79 € mesačne</p>
+        <p>Pilot na sezónu 2027: prvé tri kempy majú jednorazovú cenu o polovicu nižšiu.</p>
+        <div class="btns">
+          <a class="btn btn-sign" href="{{SITE}}#kontakt">Chcem to pre náš kemp</a>
+          <a class="btn btn-line" href="{{SITE}}#cennik">Pozrieť všetky balíky</a>
+        </div>
+      </aside>
+    </div>
+  </section>
+</main>
+<footer class="foot"><div class="wrap">Ukážku pripravil Parcela pre {{NAME}}. Zdroj rozloženia: plán areálu zverejnený na webe kempu. Nie je to oficiálna stránka kempu.</div></footer>
+
+<script>
+var CAMP = /*CAMP_DATA*/null;
+(function () {
+  'use strict';
+  var NS = 'http://www.w3.org/2000/svg', NIGHTS = 3, PERSON = 8, ELEC = 5, DEPOSIT = 0.3;
+  var NEEDS = {
+    stan: { w: 4, l: 5, name: 'Stan', items: [['stan', 0.5, 1, 3, 3]] },
+    autostan: { w: 6, l: 6, name: 'Auto a stan', items: [['auto', 0.3, 0.5, 1.9, 4.6], ['stan', 2.7, 1, 3, 3]] },
+    obytne: { w: 5.5, l: 8.5, name: 'Obytné auto', items: [['obytné auto', 0.3, 1, 2.3, 7.5], ['markíza', 2.9, 2.5, 2.5, 4]] },
+    karavan: { w: 8.5, l: 8.5, name: 'Karavan s autom', items: [['auto', 0.3, 0.5, 1.9, 4.6], ['karavan', 2.7, 0.5, 2.5, 7.5], ['predstan', 5.2, 2, 3, 4]] }
+  };
+  var S = CAMP.pxPerM, T = CAMP.types;
+  document.getElementById('dates').textContent = CAMP.dates || '12. – 15. júla, 3 noci';
+  function hash(s) { var h = 7; for (var i = 0; i < s.length; i++) h = (h * 31 + s.charCodeAt(i)) % 1000; return h; }
+  var parcels = CAMP.parcels.map(function (p) {
+    var w = Math.round(p.w / S * 2) / 2, l = Math.round(p.h / S * 2) / 2;
+    if (w > l) { var x = w; w = l; l = x; }
+    var t = T[p.t] || {};
+    return { id: p.id, t: p.t, raw: p, w: w, l: l, price: t.price || 18, feat: t.feat || 'Elektrina', allow: t.allow || null,
+      taken: CAMP.taken ? CAMP.taken.indexOf(p.id) > -1 : (hash(p.id) % 10) < 3 };
+  });
+  var state = { v: 'autostan', guests: 2, sel: null, booked: null };
+  var eur = new Intl.NumberFormat('sk-SK', { maximumFractionDigits: 0 });
+  function money(n) { return eur.format(Math.round(n)) + ' €'; }
+  function num(n) { return String(n).replace('.', ','); }
+  function el(tag, attrs, parent) { var e = document.createElementNS(NS, tag); for (var k in attrs) e.setAttribute(k, attrs[k]); if (parent) parent.appendChild(e); return e; }
+  function fits(p, v) {
+    if (p.allow) return p.allow.indexOf(v) > -1;
+    var n = NEEDS[v]; return (n.w <= p.w && n.l <= p.l) || (n.w <= p.l && n.l <= p.w);
+  }
+  function pts(a) { return a.map(function (p) { return p[0] + ',' + p[1]; }).join(' '); }
+  function rot(c, w, h, ang) {
+    var a = ang * Math.PI / 180, ca = Math.cos(a), sa = Math.sin(a);
+    return [[-w / 2, -h / 2], [w / 2, -h / 2], [w / 2, h / 2], [-w / 2, h / 2]].map(function (d) {
+      return [c[0] + d[0] * ca - d[1] * sa, c[1] + d[0] * sa + d[1] * ca];
+    });
+  }
+
+  /* ---------- map from camp data (image pixel coordinates) ---------- */
+  var svg = document.getElementById('map'), ex = CAMP.extent;
+  svg.setAttribute('viewBox', ex[0] + ' ' + ex[1] + ' ' + (ex[2] - ex[0]) + ' ' + (ex[3] - ex[1]));
+  var defs = el('defs', {}, svg);
+  var pat = el('pattern', { id: 'hatch', width: 12, height: 12, patternUnits: 'userSpaceOnUse', patternTransform: 'rotate(45)' }, defs);
+  el('rect', { width: 12, height: 12, 'class': 'hatch-a' }, pat);
+  el('line', { x1: 0, y1: 0, x2: 0, y2: 12, 'class': 'hatch-b' }, pat);
+  el('rect', { x: ex[0], y: ex[1], width: ex[2] - ex[0], height: ex[3] - ex[1], 'class': 'm-ground' }, svg);
+  el('polygon', { points: pts(CAMP.boundary), 'class': 'm-inside' }, svg);
+  (CAMP.water || []).forEach(function (w) { el('polyline', { points: pts(w.pts), 'class': 'm-water', 'stroke-width': w.w }, svg); });
+  (CAMP.areas || []).forEach(function (a) {
+    el('polygon', { points: pts(a.pts), 'class': 'm-area-' + a.kind }, svg);
+  });
+  (CAMP.roads || []).forEach(function (r) {
+    var tag = r.closed ? 'polygon' : 'polyline', g = r.context ? el('g', { 'class': 'm-ctx' }, svg) : svg;
+    if (r.kind === 'gravel') { el(tag, { points: pts(r.pts), 'class': 'm-gravel', 'stroke-width': r.w }, g); return; }
+    el(tag, { points: pts(r.pts), 'class': 'm-road-edge', 'stroke-width': r.w + 5 }, g);
+  });
+  (CAMP.roads || []).forEach(function (r) {
+    if (r.kind === 'gravel') return;
+    var g = r.context ? el('g', { 'class': 'm-ctx' }, svg) : svg;
+    el(r.closed ? 'polygon' : 'polyline', { points: pts(r.pts), 'class': 'm-road', 'stroke-width': r.w }, g);
+  });
+  (CAMP.roundabouts || []).forEach(function (rb) {
+    el('circle', { cx: rb.c[0], cy: rb.c[1], r: rb.r, 'class': 'm-road-edge', 'stroke-width': rb.w + 5 }, svg);
+    el('circle', { cx: rb.c[0], cy: rb.c[1], r: rb.r, 'class': 'm-ring', 'stroke-width': rb.w }, svg);
+  });
+  (CAMP.trees || []).forEach(function (t) { el('circle', { cx: t[0], cy: t[1], r: Math.max(14, t[2] * 0.7), 'class': 'm-tree' }, svg); });
+  (CAMP.conifers || []).forEach(function (t) { el('circle', { cx: t[0], cy: t[1], r: 13, 'class': 'm-tree' }, svg); });
+  (CAMP.buildings || []).forEach(function (b) {
+    var g = el('g', { 'class': b.context ? 'm-ctx' : '' }, svg);
+    el('polygon', { points: pts(rot(b.c, b.w, b.d, b.ang || 0)), 'class': 'm-build' }, g);
+    var t = el('text', { x: b.c[0], y: b.c[1] + 7, 'class': 'm-t', 'text-anchor': 'middle' }, g);
+    t.textContent = b.short || b.name.split(' ')[0];
+  });
+  (CAMP.areas || []).forEach(function (a) {
+    if (!a.label) return;
+    var cx = 0, cy = 0; a.pts.forEach(function (p) { cx += p[0]; cy += p[1]; }); cx /= a.pts.length; cy /= a.pts.length;
+    var t = el('text', { x: cx, y: cy, 'class': 'm-t', 'text-anchor': 'middle' }, svg); t.textContent = a.label;
+  });
+  parcels.forEach(function (p) {
+    var r = p.raw, g = el('g', { 'class': 'pc', tabindex: 0, role: 'button', 'data-id': p.id }, svg);
+    var hw = Math.max(r.w, 48), hh = Math.max(r.h, 48);
+    el('polygon', { points: pts(rot(r.c, hw, hh, r.ang || 0)), 'class': 'hit' }, g);
+    el('polygon', { points: pts(rot(r.c, r.w, r.h, r.ang || 0)), 'class': 'body', fill: (T[p.t] || {}).color || '#9cc77c' }, g);
+    var t = el('text', { x: r.c[0], y: r.c[1] }, g); t.textContent = p.id;
+    if (r.h < 40) t.setAttribute('font-size', '18');
+    p.g = g;
+    g.addEventListener('click', function () { select(p.id); });
+    g.addEventListener('keydown', function (e) { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); select(p.id); } });
+  });
+  var lg = document.getElementById('legend');
+  Object.keys(T).forEach(function (k) { lg.insertAdjacentHTML('beforeend', '<span><i style="background:' + T[k].color + '"></i>' + T[k].label + '</span>'); });
+  lg.insertAdjacentHTML('beforeend', '<span><i class="lg-taken"></i>Obsadená</span><span><i class="lg-nofit"></i>Nezmestíte sa</span><span><i class="lg-sel"></i>Vybraná</span>');
+
+  function refreshMap() {
+    parcels.forEach(function (p) {
+      var nofit = !fits(p, state.v);
+      p.g.classList.toggle('taken', p.taken);
+      p.g.classList.toggle('nofit', !p.taken && nofit);
+      p.g.classList.toggle('sel', state.sel === p.id && state.booked !== p.id);
+      p.g.classList.toggle('mine', state.booked === p.id);
+      var st = p.taken ? 'obsadená' : (nofit ? 'nezmestíte sa' : 'voľná');
+      p.g.setAttribute('aria-label', 'Parcela ' + p.id + ', ' + num(p.w) + ' × ' + num(p.l) + ' m, ' + st);
+      p.g.setAttribute('aria-pressed', state.sel === p.id ? 'true' : 'false');
+    });
+  }
+
+  /* ---------- panel ---------- */
+  var panel = document.getElementById('panel');
+  function h(tag, cls, html) { var e = document.createElement(tag); if (cls) e.className = cls; if (html != null) e.innerHTML = html; return e; }
+  function miniPlan(p) {
+    var need = NEEDS[state.v], ok = fits(p, state.v), maxW = 260, maxH = 170, pad = 26;
+    var s = Math.min((maxW - pad * 2) / p.w, (maxH - pad * 2) / p.l), W = p.w * s, H = p.l * s, vw = W + pad * 2, vh = H + pad * 2;
+    var m = el('svg', { viewBox: '0 0 ' + vw + ' ' + vh, role: 'img', 'aria-label': 'Plán parcely ' + p.id + ' v mierke: ' + need.name + (ok ? ', zmestí sa' : ', nezmestí sa') });
+    var ox = pad, oy = pad;
+    el('rect', { x: ox, y: oy, width: W, height: H, rx: 3, fill: (T[p.t] || {}).color || '#9cc77c', 'fill-opacity': .45, stroke: 'var(--ink)', 'stroke-opacity': .35, 'stroke-width': 1.5 }, m);
+    el('rect', { x: 0, y: oy + H + 6, width: vw, height: 14, fill: 'var(--road)' }, m);
+    var tr = el('text', { x: vw / 2, y: oy + H + 17, 'text-anchor': 'middle', 'font-size': 10, 'font-weight': 700, fill: 'var(--muted)' }, m); tr.textContent = 'cesta';
+    var tw = el('text', { x: ox + W / 2, y: oy - 8, 'text-anchor': 'middle', 'font-size': 11, 'font-weight': 700, fill: 'var(--muted)' }, m); tw.textContent = num(p.w) + ' m';
+    var tl = el('text', { x: ox - 8, y: oy + H / 2, 'text-anchor': 'middle', 'font-size': 11, 'font-weight': 700, fill: 'var(--muted)', transform: 'rotate(-90 ' + (ox - 8) + ' ' + (oy + H / 2) + ')' }, m); tl.textContent = num(p.l) + ' m';
+    var items = p.allow && p.allow.indexOf(state.v) > -1 ? [['obytné auto', Math.max(0.3, (p.w - 2.3) / 2), 0.5, 2.3, Math.min(7.5, p.l - 1)]] : need.items;
+    items.forEach(function (it) {
+      var x = ox + it[1] * s, w = it[3] * s, hh = it[4] * s, y = oy + H - (it[2] * s) - hh;
+      var over = !p.allow && ((it[1] + it[3] > p.w) || (it[2] + it[4] > p.l));
+      el('rect', { x: x, y: y, width: w, height: hh, rx: 3, fill: over ? 'none' : 'var(--paper)', stroke: over ? 'var(--no)' : 'var(--ink)', 'stroke-width': 1.5, 'stroke-dasharray': over ? '4 3' : '' }, m);
+      var vert = hh > w && it[0].length * 6.2 > w - 6, room = (vert ? hh : w) - 8, fs = Math.max(7, Math.min(11, room / (it[0].length * 0.6)));
+      var t = el('text', { x: x + w / 2, y: y + hh / 2, 'text-anchor': 'middle', 'dominant-baseline': 'central', 'font-size': fs, 'font-weight': 700, fill: over ? 'var(--no)' : 'var(--ink)' }, m);
+      t.textContent = it[0];
+      if (vert) t.setAttribute('transform', 'rotate(-90 ' + (x + w / 2) + ' ' + (y + hh / 2) + ')');
+    });
+    return m;
+  }
+  function firstFree(near) {
+    var c = parcels.filter(function (p) { return !p.taken && fits(p, state.v) && p.id !== state.booked; });
+    if (near) c.sort(function (a, b) { return Math.hypot(a.raw.c[0] - near.raw.c[0], a.raw.c[1] - near.raw.c[1]) - Math.hypot(b.raw.c[0] - near.raw.c[0], b.raw.c[1] - near.raw.c[1]); });
+    return c[0];
+  }
+  function renderPanel() {
+    panel.innerHTML = '';
+    var p = parcels.find(function (q) { return q.id === state.sel; });
+    if (!p) {
+      panel.appendChild(h('h3', '', 'Vyberte si parcelu'));
+      panel.appendChild(h('p', 'muted', 'Farebné parcely sú voľné. Prerušované sú pre vás malé, šrafované sú v tomto termíne obsadené.'));
+      var c = firstFree();
+      if (c) { var b = h('button', 'btn btn-line', 'Odporučiť voľnú parcelu'); b.type = 'button'; b.addEventListener('click', function () { select(c.id); }); panel.appendChild(b); }
+      return;
+    }
+    var ok = fits(p, state.v), head = h('div', 'p-head');
+    head.appendChild(h('h3', '', 'Parcela ' + p.id));
+    head.appendChild(p.taken ? h('span', 'chip no', 'Obsadená') : ok ? h('span', 'chip ok', 'Voľná, zmestíte sa') : h('span', 'chip no', 'Nezmestíte sa'));
+    panel.appendChild(head);
+    var tinfo = T[p.t] || {};
+    panel.appendChild(h('p', 'facts', '<span>' + (tinfo.label || p.t) + '</span><span>približne ' + num(p.w) + ' × ' + num(p.l) + ' m</span><span>' + p.feat + '</span>'));
+    var mini = h('div', 'mini'); mini.appendChild(miniPlan(p)); panel.appendChild(mini);
+    if (state.booked === p.id) {
+      panel.appendChild(h('div', 'done', '<strong>Rezervácia odoslaná</strong>V ostrej verzii by hosť teraz zaplatil zálohu kartou a vám by prišiel e-mail s rezerváciou. Parcela sa hneď ukáže ako obsadená.'));
+      var again = h('button', 'linkbtn', 'Vyskúšať znova'); again.type = 'button';
+      again.addEventListener('click', function () { state.booked = null; state.sel = null; update(); });
+      panel.appendChild(again); return;
+    }
+    if (p.taken || !ok) {
+      var need = NEEDS[state.v];
+      panel.appendChild(h('p', 'muted', p.taken ? 'Táto parcela je v tomto termíne obsadená.' :
+        p.allow ? 'Toto miesto je len pre obytné autá.' :
+        need.name + ' potrebuje aspoň ' + num(need.w) + ' × ' + num(need.l) + ' m. Parcela má približne ' + num(p.w) + ' × ' + num(p.l) + ' m.'));
+      var alt = firstFree(p);
+      if (alt) { var ab = h('button', 'btn btn-line', 'Vybrať najbližšiu vhodnú: ' + alt.id); ab.type = 'button'; ab.addEventListener('click', function () { select(alt.id); }); panel.appendChild(ab); }
+      return;
+    }
+    var g = state.guests, parc = p.price * NIGHTS, pers = g * NIGHTS * PERSON, elc = ELEC * NIGHTS, sum = parc + pers + elc, dep = Math.round(sum * DEPOSIT);
+    panel.appendChild(h('table', 'bill', '<caption class="sr">Cena pobytu</caption><tbody>' +
+      '<tr><td>Parcela ' + NIGHTS + ' × ' + p.price + ' €</td><td>' + money(parc) + '</td></tr>' +
+      '<tr><td>' + g + (g === 1 ? ' dospelý' : g < 5 ? ' dospelí' : ' dospelých') + ' × ' + NIGHTS + ' noci × ' + PERSON + ' €</td><td>' + money(pers) + '</td></tr>' +
+      '<tr><td>Elektrina ' + NIGHTS + ' × ' + ELEC + ' €</td><td>' + money(elc) + '</td></tr>' +
+      '<tr class="sum"><td>Spolu za pobyt</td><td>' + money(sum) + '</td></tr></tbody>'));
+    var go = h('button', 'btn btn-sign', 'Rezervovať, záloha ' + money(dep)); go.type = 'button';
+    go.addEventListener('click', function () { state.booked = p.id; update(); });
+    panel.appendChild(go);
+  }
+  function select(id) { state.sel = id; if (state.booked && state.booked !== id) state.booked = null; update(); }
+  function update() { refreshMap(); renderPanel(); }
+  document.querySelectorAll('.seg button').forEach(function (b) {
+    b.addEventListener('click', function () {
+      state.v = b.getAttribute('data-v');
+      document.querySelectorAll('.seg button').forEach(function (x) { x.setAttribute('aria-pressed', x === b ? 'true' : 'false'); });
+      update();
+    });
+  });
+  var gOut = document.getElementById('gOut');
+  function setGuests(n) { state.guests = Math.max(1, Math.min(6, n)); gOut.textContent = state.guests + (state.guests === 1 ? ' dospelý' : state.guests < 5 ? ' dospelí' : ' dospelých'); renderPanel(); }
+  document.getElementById('gMinus').addEventListener('click', function () { setGuests(state.guests - 1); });
+  document.getElementById('gPlus').addEventListener('click', function () { setGuests(state.guests + 1); });
+  update();
+  var ms = document.querySelector('.map-scroll');
+  if (ms.scrollWidth > ms.clientWidth && CAMP.focusX != null) ms.scrollLeft = (CAMP.focusX - ex[0]) / (ex[2] - ex[0]) * ms.scrollWidth - ms.clientWidth / 2;
+})();
+</script>
+</body>
+</html>

@@ -17,3 +17,11 @@ Stránka je jeden súbor `index.html` bez buildu. Písmo Overpass sa načítava 
 ```
 node ~/.claude/skills/web-audit/scripts/audit.js index.html <výstup>
 ```
+
+## 3D mapy a ukážky pre kempy (`kempy/`)
+
+- `kempy/build_camp.py` postaví v Blenderi 3D kemp z `kempy/<kemp>/camp.json` a vyrenderuje ho:
+  `blender -b --factory-startup -P kempy/build_camp.py -- kempy/<kemp>`
+- `kempy/build-demo.js <kemp>` z tých istých dát vyrobí ukážku rezervácie pre konkrétny kemp (`kempy/<kemp>/index.html`) zo šablóny `kempy/demo-template.html`.
+- Údaje a plány konkrétnych kempov (`kempy/*/`) sa do repozitára nedávajú.
+- `assets/kemp-3d.jpg` je render vymysleného ukážkového kempu z webu.

@@ -69,7 +69,7 @@
 }
 
 *, *::before, *::after { box-sizing: border-box; }
-html { scroll-behavior: smooth; -webkit-text-size-adjust: 100%; }
+html { scroll-behavior: smooth; scroll-padding-top: 84px; -webkit-text-size-adjust: 100%; }
 @media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } *, *::before, *::after { transition: none !important; animation: none !important; } }
 body {
   margin: 0; background: var(--paper); color: var(--ink);
@@ -94,9 +94,12 @@ p { margin: 0; }
   transition: background-color .15s, border-color .15s, color .15s;
 }
 .btn-sign { background: var(--sign); color: var(--on-sign); }
-.btn-sign:hover { background: var(--sign-deep); }
 .btn-line { background: transparent; color: var(--ink); border-color: var(--line); }
-.btn-line:hover { border-color: var(--ink); }
+@media (hover: hover) {
+  .btn-sign:hover { background: var(--sign-deep); }
+  .btn-line:hover { border-color: var(--ink); }
+}
+.nw { white-space: nowrap; }
 
 /* header */
 .top { position: sticky; top: 0; z-index: 20; background: color-mix(in srgb, var(--paper) 92%, transparent); backdrop-filter: blur(8px); border-bottom: 1px solid transparent; transition: border-color .2s; }
@@ -106,7 +109,7 @@ p { margin: 0; }
 .brand svg { width: 34px; height: 34px; flex: none; }
 .nav { display: flex; align-items: center; gap: 4px; }
 .nav a:not(.btn) { color: var(--muted); text-decoration: none; font-weight: 600; font-size: .95rem; padding: 10px 12px; border-radius: 8px; }
-.nav a:not(.btn):hover { color: var(--ink); background: var(--soft); }
+@media (hover: hover) { .nav a:not(.btn):hover { color: var(--ink); background: var(--soft); } }
 .nav .btn { min-height: 44px; margin-left: 8px; font-size: .95rem; }
 @media (max-width: 860px) { .nav a:not(.btn) { display: none; } }
 
@@ -190,7 +193,7 @@ p { margin: 0; }
 .pc { cursor: pointer; outline: none; }
 .pc rect { fill: var(--pitch); stroke: var(--pitch-line); stroke-width: 1.5; transition: fill .12s; }
 .pc text { fill: var(--ink); font-size: 13px; font-weight: 800; text-anchor: middle; dominant-baseline: central; pointer-events: none; }
-.pc:hover rect { fill: color-mix(in srgb, var(--pitch) 70%, var(--sign) 30%); }
+@media (hover: hover) { .pc:hover rect { fill: color-mix(in srgb, var(--pitch) 70%, var(--sign) 30%); } }
 .pc.taken rect { fill: url(#hatch); stroke: var(--taken-line); }
 .pc.taken text { fill: var(--muted); }
 .pc.nofit rect { fill: transparent; stroke-dasharray: 4 3; }
@@ -198,8 +201,8 @@ p { margin: 0; }
 .pc.sel rect { fill: var(--sign); stroke: var(--sign-deep); }
 .pc.sel text { fill: #fff; }
 .pc.mine rect { fill: var(--ok); stroke: var(--ok); }
-.pc.mine text { fill: #fff; }
-.pc:focus-visible rect { stroke: var(--sign); stroke-width: 4; }
+.pc.mine text { fill: var(--paper); }
+.pc:focus-visible rect { stroke: var(--ink); stroke-width: 3; }
 .hatch-a { fill: var(--taken); }
 .hatch-b { stroke: var(--taken-line); stroke-width: 2; }
 
@@ -236,6 +239,11 @@ input[type="range"] { width: 100%; height: 32px; accent-color: var(--sign); curs
 @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .feat svg { color: var(--link); } }
 .feat h3 { font-size: 1.15rem; margin-bottom: 4px; }
 .feat p { color: var(--muted); }
+
+/* 3d render */
+.render { margin: 0; border-radius: 20px; overflow: hidden; border: 1px solid var(--line); box-shadow: var(--shadow); background: var(--soft); }
+.render img { width: 100%; height: auto; }
+.render figcaption { padding: 12px 18px; color: var(--muted); font-size: .92rem; border-top: 1px solid var(--line); }
 
 /* process */
 .proc { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 0; position: relative; }
@@ -290,13 +298,13 @@ input[type="range"] { width: 100%; height: 32px; accent-color: var(--sign); curs
 .direct a { color: #fff; font-weight: 700; display: inline-block; padding-block: 4px; min-height: 30px; }
 .form { display: grid; gap: 14px; }
 .form label { display: grid; gap: 6px; font-weight: 700; font-size: .95rem; }
-.form input, .form textarea { width: 100%; font: inherit; font-size: 16px; padding: 12px 14px; border-radius: 10px; border: 1.5px solid rgba(255, 255, 255, .35); background: rgba(255, 255, 255, .1); color: #fff; }
+.form input, .form textarea { width: 100%; font: inherit; font-size: 16px; font-weight: 400; padding: 12px 14px; border-radius: 10px; border: 1.5px solid rgba(255, 255, 255, .35); background: rgba(255, 255, 255, .1); color: #fff; }
 .form input::placeholder, .form textarea::placeholder { color: rgba(255, 255, 255, .72); }
 .form input:focus-visible, .form textarea:focus-visible { outline: 3px solid #fff; outline-offset: 2px; }
 .form textarea { min-height: 96px; resize: vertical; }
 .form .row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
 .form .btn { background: #fff; color: #084a8c; width: 100%; }
-.form .btn:hover { background: #e8f0fa; }
+@media (hover: hover) { .form .btn:hover { background: #e8f0fa; } }
 .form-note { font-size: .9rem; opacity: .9; }
 .form-err { font-weight: 700; color: #fff; background: rgba(0, 0, 0, .22); border-radius: 8px; padding: 8px 12px; }
 .signbox :focus-visible { outline-color: #fff; }
@@ -374,28 +382,29 @@ input[type="range"] { width: 100%; height: 32px; accent-color: var(--sign); curs
   <section class="hero" aria-labelledby="h1">
     <div class="wrap">
       <div class="hero-text">
-        <h1 id="h1">Hosť si vyberie parcelu na mape a rezervuje priamo u vás.</h1>
-        <p class="hero-lead">Pre kempy, glampingy a chatové osady. Mapu vášho areálu s online rezerváciou pripravím na váš web, bez provízie z rezervácií a pred začiatkom sezóny.</p>
+        <h1 id="h1">Hosť si vyberie parcelu na mape a&nbsp;rezervuje priamo u&nbsp;vás.</h1>
+        <p class="hero-lead">Pre kempy, glampingy a&nbsp;chatové osady. Mapu vášho areálu s&nbsp;online rezerváciou pripravím na váš web, bez provízie z&nbsp;rezervácií a&nbsp;pred začiatkom sezóny.</p>
         <div class="hero-cta">
           <a class="btn btn-sign" href="#kontakt">Chcem ukážku na mape môjho kempu</a>
           <a class="btn btn-line" href="#ukazka">Vyskúšať ukážku</a>
         </div>
         <ul class="ticks">
-          <li><svg aria-hidden="true"><use href="#i-check"/></svg>Žiadna provízia z rezervácií</li>
+          <li><svg aria-hidden="true"><use href="#i-check"/></svg>Žiadna provízia z&nbsp;rezervácií</li>
           <li><svg aria-hidden="true"><use href="#i-check"/></svg>Záloha kartou priamo na váš účet</li>
           <li><svg aria-hidden="true"><use href="#i-check"/></svg>Spustené pred začiatkom sezóny</li>
         </ul>
       </div>
 
-      <div class="demo" id="ukazka" aria-label="Ukážka rezervácie na mape">
+      <div class="demo" id="ukazka" role="region" aria-labelledby="h-demo">
+        <h2 class="sr" id="h-demo">Ukážka rezervácie na mape</h2>
         <div class="demo-bar">
-          <div class="demo-title"><strong>Ukážkový kemp</strong><span>12. – 15. júla, 3 noci</span></div>
+          <div class="demo-title"><strong>Ukážkový kemp</strong><span>12. – 15. júla, 3&nbsp;noci</span></div>
           <div class="controls">
             <div class="seg" role="group" aria-label="S čím prídete">
               <button type="button" data-v="stan" aria-pressed="false">Stan</button>
-              <button type="button" data-v="autostan" aria-pressed="true">Auto a stan</button>
+              <button type="button" data-v="autostan" aria-pressed="true">Auto a&nbsp;stan</button>
               <button type="button" data-v="obytne" aria-pressed="false">Obytné auto</button>
-              <button type="button" data-v="karavan" aria-pressed="false">Karavan s autom</button>
+              <button type="button" data-v="karavan" aria-pressed="false">Karavan s&nbsp;autom</button>
             </div>
             <div class="stepper">
               <button type="button" id="gMinus" aria-label="Menej dospelých">−</button>
@@ -420,7 +429,7 @@ input[type="range"] { width: 100%; height: 32px; accent-color: var(--sign); curs
           <div class="panel" id="panel" aria-live="polite"></div>
         </div>
       </div>
-      <p class="demo-note">Kemp v ukážke je vymyslený. Vyskúšajte si ho ako hosť: vyberte, s čím prídete, a kliknite na parcelu.</p>
+      <p class="demo-note">Kemp v&nbsp;ukážke je vymyslený. Vyskúšajte si ho ako hosť: vyberte, s&nbsp;čím prídete, a&nbsp;kliknite na parcelu.</p>
     </div>
   </section>
 
@@ -428,12 +437,12 @@ input[type="range"] { width: 100%; height: 32px; accent-color: var(--sign); curs
     <div class="wrap">
       <div class="sec-head">
         <h2 id="h-ako">Ako rezervuje hosť</h2>
-        <p>Namiesto telefonátu „máte voľno?“ si hosť všetko vyberie sám, aj o polnoci a z mobilu.</p>
+        <p>Namiesto telefonátu „máte voľno?“ si hosť všetko vyberie sám, aj o&nbsp;polnoci a&nbsp;z&nbsp;mobilu.</p>
       </div>
       <ol class="steps">
-        <li><h3>Zadá termín a s čím príde</h3><p>Stan, auto so stanom, obytné auto alebo karavan. Mapa hneď ukáže parcely, kam sa zmestí.</p></li>
-        <li><h3>Vyberie si konkrétnu parcelu</h3><p>Vidí rozmery, prípojky a cenu za celý pobyt. Obsadené miesta sú vyznačené.</p></li>
-        <li><h3>Rezervuje a zaplatí zálohu</h3><p>Záloha ide kartou priamo na váš účet. Vám príde e-mail s rezerváciou, hosťovi potvrdenie s pokynmi na príchod.</p></li>
+        <li><h3>Zadá termín a&nbsp;s&nbsp;čím príde</h3><p>Stan, auto so stanom, obytné auto alebo karavan. Mapa hneď ukáže parcely, kam sa zmestí.</p></li>
+        <li><h3>Vyberie si konkrétnu parcelu</h3><p>Vidí rozmery, prípojky a&nbsp;cenu za celý pobyt. Obsadené miesta sú vyznačené.</p></li>
+        <li><h3>Rezervuje a&nbsp;zaplatí zálohu</h3><p>Záloha ide kartou priamo na váš účet. Vám príde <span class="nw">e-mail</span> s&nbsp;rezerváciou, hosťovi potvrdenie s&nbsp;pokynmi na príchod.</p></li>
       </ol>
     </div>
   </section>
@@ -442,7 +451,7 @@ input[type="range"] { width: 100%; height: 32px; accent-color: var(--sign); curs
     <div class="wrap">
       <div class="sec-head">
         <h2 id="h-calc">Koľko vás stoja portály</h2>
-        <p>Booking si berie v priemere okolo 15 % z rezervácie, Pitchup 10 až 15 %. Nastavte čísla vášho kempu.</p>
+        <p>Booking si berie v&nbsp;priemere okolo 15&nbsp;% z&nbsp;rezervácie, Pitchup 10 až 15&nbsp;%. Nastavte čísla vášho kempu.</p>
       </div>
       <div class="calc">
         <form class="fields" id="calcForm" onsubmit="return false">
@@ -457,11 +466,11 @@ input[type="range"] { width: 100%; height: 32px; accent-color: var(--sign); curs
           <div class="res-main"><span>Portálom zaplatíte za sezónu</span><strong id="r-com">–</strong></div>
           <dl class="res-list">
             <div><dt>Rezervácií za sezónu</dt><dd id="r-book">–</dd></div>
-            <div><dt>Čas na telefóne a v maile</dt><dd id="r-hrs">–</dd></div>
-            <div class="hl"><dt>Keď polovica prejde k vám, ušetríte ročne</dt><dd id="r-save">–</dd></div>
-            <div><dt>Balík Priame rezervácie sa vráti</dt><dd id="r-back">–</dd></div>
+            <div><dt>Čas na telefóne a&nbsp;pri <span class="nw">e-mailoch</span></dt><dd id="r-hrs">–</dd></div>
+            <div class="hl"><dt>Keď polovica hostí rezervuje cez vašu mapu, ušetríte ročne</dt><dd id="r-save">–</dd></div>
+            <div><dt>Návratnosť balíka Priame rezervácie aj s&nbsp;mesačným poplatkom</dt><dd id="r-back">–</dd></div>
           </dl>
-          <p class="res-note">Orientačný výpočet: priemerný pobyt 3 noci, 10 minút práce na jednu rezerváciu, hodina recepcie 8 €. Presné čísla spočítame spolu na hovore.</p>
+          <p class="res-note">Orientačný výpočet: priemerný pobyt 3&nbsp;noci, 10&nbsp;minút práce na jednu rezerváciu, hodina recepcie 8&nbsp;€. Presné čísla spočítame spolu na hovore.</p>
         </div>
       </div>
     </div>
@@ -471,18 +480,31 @@ input[type="range"] { width: 100%; height: 32px; accent-color: var(--sign); curs
     <div class="wrap">
       <div class="sec-head">
         <h2 id="h-feat">Čo dostanete</h2>
-        <p>Všetko pripravím a nastavím ja. Vy dodáte plán areálu, cenník a pár fotiek.</p>
+        <p>Všetko pripravím a&nbsp;nastavím ja. Vy dodáte plán areálu, cenník a&nbsp;pár fotiek.</p>
       </div>
       <div class="feats">
         <div class="feat"><svg aria-hidden="true"><use href="#i-map"/></svg><div><h3>Mapa vášho areálu</h3><p>Nakreslená podľa vášho plánu, vo farbách vášho webu. Funguje na mobile aj na počítači.</p></div></div>
-        <div class="feat"><svg aria-hidden="true"><use href="#i-fit"/></svg><div><h3>Plánovač „zmestí sa?“</h3><p>Auto, karavan, stan aj predstan v skutočnej mierke na konkrétnej parcele.</p></div></div>
-        <div class="feat"><svg aria-hidden="true"><use href="#i-cube"/></svg><div><h3>3D pohľad na kemp</h3><p>Model areálu z Blendera. Hosť si kemp pozrie zhora aj zblízka skôr, než príde.</p></div></div>
-        <div class="feat"><svg aria-hidden="true"><use href="#i-card"/></svg><div><h3>Záloha kartou na váš účet</h3><p>Platby cez Stripe idú priamo vám. K peniazom hostí nemám prístup.</p></div></div>
-        <div class="feat"><svg aria-hidden="true"><use href="#i-sync"/></svg><div><h3>Bez dvojitých rezervácií</h3><p>Obsadenosť sa zosúladí s Bookingom. Na začiatok môžu rezervácie chodiť ako žiadosť, ktorú potvrdíte.</p></div></div>
-        <div class="feat"><svg aria-hidden="true"><use href="#i-mail"/></svg><div><h3>E-maily za vás</h3><p>Potvrdenie rezervácie, pokyny pred príchodom a pripomienka zálohy odchádzajú samy.</p></div></div>
-        <div class="feat"><svg aria-hidden="true"><use href="#i-lang"/></svg><div><h3>Šesť jazykov</h3><p>Slovenčina, čeština, angličtina, nemčina, poľština a maďarčina.</p></div></div>
-        <div class="feat"><svg aria-hidden="true"><use href="#i-list"/></svg><div><h3>Prehľad pre recepciu</h3><p>Kto príde, na ktorú parcelu a čo už zaplatil, na jednom mieste.</p></div></div>
+        <div class="feat"><svg aria-hidden="true"><use href="#i-fit"/></svg><div><h3>Plánovač „zmestí sa?“</h3><p>Auto, karavan, stan aj predstan v&nbsp;skutočnej mierke na konkrétnej parcele.</p></div></div>
+        <div class="feat"><svg aria-hidden="true"><use href="#i-cube"/></svg><div><h3>3D pohľad na kemp</h3><p>Model areálu z&nbsp;Blendera. Hosť si kemp pozrie zhora aj zblízka skôr, než príde.</p></div></div>
+        <div class="feat"><svg aria-hidden="true"><use href="#i-card"/></svg><div><h3>Záloha kartou na váš účet</h3><p>Platby cez Stripe idú priamo vám. K&nbsp;peniazom hostí nemám prístup.</p></div></div>
+        <div class="feat"><svg aria-hidden="true"><use href="#i-sync"/></svg><div><h3>Bez dvojitých rezervácií</h3><p>Obsadenosť sa zosúladí s&nbsp;Bookingom. Na začiatok môžu rezervácie chodiť ako žiadosti, ktoré potvrdíte.</p></div></div>
+        <div class="feat"><svg aria-hidden="true"><use href="#i-mail"/></svg><div><h3>E-maily za vás</h3><p>Potvrdenie rezervácie, pokyny pred príchodom a&nbsp;pripomienka zálohy odchádzajú samy.</p></div></div>
+        <div class="feat"><svg aria-hidden="true"><use href="#i-lang"/></svg><div><h3>Šesť jazykov</h3><p>Slovenčina, čeština, angličtina, nemčina, poľština a&nbsp;maďarčina.</p></div></div>
+        <div class="feat"><svg aria-hidden="true"><use href="#i-list"/></svg><div><h3>Prehľad pre recepciu</h3><p>Kto príde, na ktorú parcelu a&nbsp;čo už zaplatil, na jednom mieste.</p></div></div>
       </div>
+    </div>
+  </section>
+
+  <section class="sec" id="3d" aria-labelledby="h-3d">
+    <div class="wrap">
+      <div class="sec-head">
+        <h2 id="h-3d">Váš kemp aj v&nbsp;3D</h2>
+        <p>Z&nbsp;plánu areálu postavím v&nbsp;Blenderi model celého kempu: parcely, cesty, budovy aj stromy. Hosť vidí, kde jeho parcela leží, ešte predtým, než príde.</p>
+      </div>
+      <figure class="render">
+        <img src="assets/kemp-3d.jpg" width="1600" height="1000" alt="3D model ukážkového kempu: modré parcely pri jazere, okružná cesta, budovy a stromy" loading="lazy" decoding="async">
+        <figcaption>3D model ukážkového kempu z&nbsp;Blendera. V&nbsp;balíku Sezóna sa dá otáčať a&nbsp;prechádzať priamo na webe.</figcaption>
+      </figure>
     </div>
   </section>
 
@@ -493,10 +515,10 @@ input[type="range"] { width: 100%; height: 32px; accent-color: var(--sign); curs
         <p>Od prvého hovoru po spustenú mapu zvyčajne prejdú tri týždne.</p>
       </div>
       <ol class="proc">
-        <li><div class="dot" aria-hidden="true"></div><span class="when">Deň 1</span><h3>Krátky hovor</h3><p>15 minút. Zistím, ako dnes beriete rezervácie a čo vás najviac zdržiava.</p></li>
-        <li><div class="dot" aria-hidden="true"></div><span class="when">Do týždňa</span><h3>Ukážka na vašej mape</h3><p>Pošlem odkaz na mapu vášho kempu. Zadarmo a nezáväzne.</p></li>
-        <li><div class="dot" aria-hidden="true"></div><span class="when">Do 14 dní od podkladov</span><h3>Spustenie</h3><p>Z plánu areálu, cenníka a fotiek pripravím mapu a vložím ju do vášho webu.</p></li>
-        <li><div class="dot" aria-hidden="true"></div><span class="when">Celá sezóna</span><h3>Podpora a čísla</h3><p>Mesačný prehľad rezervácií a na konci sezóny report, koľko ste ušetrili.</p></li>
+        <li><div class="dot" aria-hidden="true"></div><span class="when">Deň 1</span><h3>Krátky hovor</h3><p>15&nbsp;minút. Zistím, ako dnes beriete rezervácie a&nbsp;čo vás najviac zdržiava.</p></li>
+        <li><div class="dot" aria-hidden="true"></div><span class="when">Do týždňa</span><h3>Ukážka na vašej mape</h3><p>Pošlem odkaz na mapu vášho kempu. Zadarmo a&nbsp;nezáväzne.</p></li>
+        <li><div class="dot" aria-hidden="true"></div><span class="when">Do 14&nbsp;dní od podkladov</span><h3>Spustenie</h3><p>Z&nbsp;plánu areálu, cenníka a&nbsp;fotiek pripravím mapu a&nbsp;vložím ju do vášho webu.</p></li>
+        <li><div class="dot" aria-hidden="true"></div><span class="when">Celá sezóna</span><h3>Podpora a&nbsp;čísla</h3><p>Mesačný prehľad rezervácií a&nbsp;na konci sezóny report, koľko ste ušetrili.</p></li>
       </ol>
     </div>
   </section>
@@ -505,51 +527,51 @@ input[type="range"] { width: 100%; height: 32px; accent-color: var(--sign); curs
     <div class="wrap">
       <div class="sec-head">
         <h2 id="h-price">Cenník</h2>
-        <p>Jednorazovo za prípravu, potom mesačne za prevádzku a podporu. Z rezervácií si neberiem žiadne percentá.</p>
+        <p>Jednorazovo za prípravu, potom mesačne za prevádzku a&nbsp;podporu. Z&nbsp;rezervácií si neberiem žiadne percentá.</p>
       </div>
-      <p class="pilot"><svg aria-hidden="true"><use href="#i-star"/></svg><span><strong>Pilot na sezónu 2027.</strong> Prvé tri kempy dostanú jednorazovú cenu o polovicu nižšiu, výmenou za referenciu.</span></p>
+      <p class="pilot"><svg aria-hidden="true"><use href="#i-star"/></svg><span><strong>Pilot na sezónu 2027.</strong> Prvé tri kempy dostanú jednorazovú cenu o&nbsp;polovicu nižšiu, výmenou za referenciu.</span></p>
       <div class="plans">
         <article class="plan">
           <h3>Mapa</h3>
-          <p class="for">Areál na mape a žiadosti o rezerváciu e-mailom.</p>
-          <p class="price"><strong>990 €</strong> <span>jednorazovo</span><span class="monthly">+ 29 € mesačne</span></p>
+          <p class="for">Areál na mape a&nbsp;žiadosti o&nbsp;rezerváciu <span class="nw">e-mailom</span>.</p>
+          <p class="price"><strong>990&nbsp;€</strong> <span>jednorazovo</span><span class="monthly">+ 29&nbsp;€ mesačne</span></p>
           <ul>
             <li><svg aria-hidden="true"><use href="#i-check"/></svg>Mapa areálu na vašom webe</li>
-            <li><svg aria-hidden="true"><use href="#i-check"/></svg>Voľné a obsadené parcely</li>
-            <li><svg aria-hidden="true"><use href="#i-check"/></svg>Cenník a výpočet pobytu</li>
-            <li><svg aria-hidden="true"><use href="#i-check"/></svg>Žiadosť o rezerváciu e-mailom</li>
+            <li><svg aria-hidden="true"><use href="#i-check"/></svg>Voľné a&nbsp;obsadené parcely</li>
+            <li><svg aria-hidden="true"><use href="#i-check"/></svg>Cenník a&nbsp;výpočet pobytu</li>
+            <li><svg aria-hidden="true"><use href="#i-check"/></svg>Žiadosť o&nbsp;rezerváciu <span class="nw">e-mailom</span></li>
             <li><svg aria-hidden="true"><use href="#i-check"/></svg>Tri jazyky</li>
           </ul>
         </article>
         <article class="plan rec">
           <span class="tag">Odporúčam</span>
           <h3>Priame rezervácie</h3>
-          <p class="for">Hosť si parcelu rezervuje a zálohu zaplatí sám.</p>
-          <p class="price"><strong>2 400 €</strong> <span>jednorazovo</span><span class="monthly">+ 79 € mesačne</span></p>
+          <p class="for">Hosť si parcelu rezervuje a&nbsp;zálohu zaplatí sám.</p>
+          <p class="price"><strong>2&nbsp;400&nbsp;€</strong> <span>jednorazovo</span><span class="monthly">+ 79&nbsp;€ mesačne</span></p>
           <ul>
-            <li><svg aria-hidden="true"><use href="#i-check"/></svg>Všetko z balíka Mapa</li>
+            <li><svg aria-hidden="true"><use href="#i-check"/></svg>Všetko z&nbsp;balíka Mapa</li>
             <li><svg aria-hidden="true"><use href="#i-check"/></svg>Plánovač „zmestí sa?“</li>
             <li><svg aria-hidden="true"><use href="#i-check"/></svg>Záloha kartou na váš účet</li>
-            <li><svg aria-hidden="true"><use href="#i-check"/></svg>Zosúladenie obsadenosti s Bookingom</li>
-            <li><svg aria-hidden="true"><use href="#i-check"/></svg>Automatické e-maily</li>
-            <li><svg aria-hidden="true"><use href="#i-check"/></svg>Šesť jazykov a prehľad pre recepciu</li>
+            <li><svg aria-hidden="true"><use href="#i-check"/></svg>Zosúladenie obsadenosti s&nbsp;Bookingom</li>
+            <li><svg aria-hidden="true"><use href="#i-check"/></svg>Automatické <span class="nw">e-maily</span></li>
+            <li><svg aria-hidden="true"><use href="#i-check"/></svg>Šesť jazykov a&nbsp;prehľad pre recepciu</li>
           </ul>
         </article>
         <article class="plan">
           <h3>Sezóna</h3>
-          <p class="for">Priame rezervácie a kemp, ktorý si hosť prejde v 3D.</p>
-          <p class="price"><strong>3 900 €</strong> <span>jednorazovo</span><span class="monthly">+ 129 € mesačne</span></p>
+          <p class="for">Priame rezervácie a&nbsp;kemp, ktorý si hosť prejde v&nbsp;3D.</p>
+          <p class="price"><strong>3&nbsp;900&nbsp;€</strong> <span>jednorazovo</span><span class="monthly">+ 129&nbsp;€ mesačne</span></p>
           <ul>
-            <li><svg aria-hidden="true"><use href="#i-check"/></svg>Všetko z balíka Priame rezervácie</li>
-            <li><svg aria-hidden="true"><use href="#i-check"/></svg>3D model areálu z Blendera</li>
-            <li><svg aria-hidden="true"><use href="#i-check"/></svg>3D prechádzka s výberom parcely</li>
-            <li><svg aria-hidden="true"><use href="#i-check"/></svg>Report sezóny s ušetrenou províziou</li>
+            <li><svg aria-hidden="true"><use href="#i-check"/></svg>Všetko z&nbsp;balíka Priame rezervácie</li>
+            <li><svg aria-hidden="true"><use href="#i-check"/></svg>3D model areálu z&nbsp;Blendera</li>
+            <li><svg aria-hidden="true"><use href="#i-check"/></svg>3D prechádzka s&nbsp;výberom parcely</li>
+            <li><svg aria-hidden="true"><use href="#i-check"/></svg>Report sezóny s&nbsp;ušetrenou províziou</li>
           </ul>
         </article>
       </div>
-      <p class="plans-note">Konečnú cenu potvrdím po hovore podľa veľkosti areálu a toho, čo už máte.</p>
+      <p class="plans-note">Konečnú cenu potvrdím po hovore podľa veľkosti areálu a&nbsp;toho, čo už máte.</p>
       <div class="sure">
-        <div><h3>Žiadna provízia</h3><p>Z rezervácií si neberiem nič, ani pri plnej sezóne.</p></div>
+        <div><h3>Žiadna provízia</h3><p>Z&nbsp;rezervácií si neberiem nič, ani pri plnej sezóne.</p></div>
         <div><h3>Všetko patrí vám</h3><p>Doména, údaje hostí aj platobný účet sú vaše.</p></div>
         <div><h3>Spustené pred sezónou</h3><p>Ak to nestihnem, prvá sezóna je bez mesačného poplatku.</p></div>
       </div>
@@ -560,14 +582,14 @@ input[type="range"] { width: 100%; height: 32px; accent-color: var(--sign); curs
     <div class="wrap">
       <div class="sec-head"><h2 id="h-faq">Časté otázky</h2></div>
       <div class="faq">
-        <details><summary>Musím odísť z Bookingu alebo Pitchupu?</summary><p>Nie. Portály vám nosia nových hostí a môžete na nich zostať. Cieľom je, aby priamo u vás rezervovali vracajúci sa hostia a tí, čo vás nájdu na Googli.</p></details>
-        <details><summary>Čo ak si tú istú parcelu rezervuje niekto cez Booking?</summary><p>Obsadenosť sa medzi mapou a Bookingom zosúlaďuje. Na začiatok môže mapa posielať rezervácie ako žiadosť, ktorú potvrdíte vy, takže dvojitá rezervácia nevznikne.</p></details>
+        <details><summary>Musím odísť z&nbsp;Bookingu alebo Pitchupu?</summary><p>Nie. Portály vám nosia nových hostí a&nbsp;môžete na nich zostať. Cieľom je, aby priamo u&nbsp;vás rezervovali vracajúci sa hostia a&nbsp;tí, čo vás nájdu na Googli.</p></details>
+        <details><summary>Čo ak si tú istú parcelu rezervuje niekto cez Booking?</summary><p>Obsadenosť sa medzi mapou a&nbsp;Bookingom zosúlaďuje. Na začiatok môže mapa posielať rezervácie ako žiadosti, ktoré potvrdíte vy, takže dvojitá rezervácia nevznikne.</p></details>
         <details><summary>Mám už web. Dá sa mapa vložiť doň?</summary><p>Áno, ako nová podstránka alebo priamo do existujúcej stránky, vo vzhľade vášho webu. Na pôvodnom webe sa nič iné nemení.</p></details>
-        <details><summary>Nemám web alebo je starý. Čo teraz?</summary><p>Mapa môže fungovať aj samostatne na vlastnej adrese. Jednoduchý a moderný web kempu viem pripraviť spolu s ňou.</p></details>
-        <details><summary>Ako chodia peniaze od hostí?</summary><p>Záloha sa platí kartou cez Stripe a ide priamo na váš bankový účet. Ja k peniazom hostí prístup nemám.</p></details>
-        <details><summary>Čo odo mňa potrebujete?</summary><p>Plán alebo mapu areálu (stačí aj ručne kreslená), rozmery parciel, cenník a pár fotiek. Zvyšok pripravím ja.</p></details>
-        <details><summary>Funguje to na mobile?</summary><p>Áno. Väčšina hostí rezervuje z telefónu, preto mapu robím najprv pre mobil.</p></details>
-        <details><summary>Ako dlho trvá spustenie?</summary><p>Ukážku na vašej mape pošlem do týždňa po hovore. Ostrá verzia beží do 14 dní od chvíle, keď mám podklady.</p></details>
+        <details><summary>Nemám web alebo je starý. Čo teraz?</summary><p>Mapa môže fungovať aj samostatne na vlastnej adrese. Jednoduchý a&nbsp;moderný web kempu viem pripraviť spolu s&nbsp;ňou.</p></details>
+        <details><summary>Ako chodia peniaze od hostí?</summary><p>Záloha sa platí kartou cez Stripe a&nbsp;ide priamo na váš bankový účet. Ja k&nbsp;peniazom hostí prístup nemám.</p></details>
+        <details><summary>Čo odo mňa potrebujete?</summary><p>Plán alebo mapu areálu (stačí aj ručne kreslená), rozmery parciel, cenník a&nbsp;pár fotiek. Zvyšok pripravím ja.</p></details>
+        <details><summary>Funguje to na mobile?</summary><p>Áno. Väčšina hostí rezervuje z&nbsp;telefónu, preto mapu robím najprv pre mobil.</p></details>
+        <details><summary>Ako dlho trvá spustenie?</summary><p>Ukážku na vašej mape pošlem do týždňa po hovore. Ostrá verzia beží do 14&nbsp;dní od chvíle, keď mám podklady.</p></details>
       </div>
     </div>
   </section>
@@ -578,7 +600,7 @@ input[type="range"] { width: 100%; height: 32px; accent-color: var(--sign); curs
         <div class="signbox-in">
           <div>
             <h2 id="h-kontakt">Pošlite názov kempu. Ukážku pripravím do týždňa.</h2>
-            <p class="lead">Nakreslím mapu vášho areálu a pošlem vám odkaz, kde si ju vyskúšate ako hosť. Zadarmo a nezáväzne.</p>
+            <p class="lead">Nakreslím mapu vášho areálu a&nbsp;pošlem vám odkaz, kde si ju vyskúšate ako hosť. Zadarmo a&nbsp;nezáväzne.</p>
             <div class="direct">
               <span>Telefón: <a href="tel:+421000000000" data-contact="phone">+421 000 000 000</a></span>
               <span>E-mail: <a href="mailto:kontakt@example.com" data-contact="email">kontakt@example.com</a></span>
@@ -587,13 +609,13 @@ input[type="range"] { width: 100%; height: 32px; accent-color: var(--sign); curs
           <form class="form" id="contactForm" novalidate>
             <div class="row2">
               <label>Vaše meno<input name="meno" autocomplete="name" placeholder="Ján Novák"></label>
-              <label>Telefón<input name="tel" type="tel" autocomplete="tel" placeholder="0900 000 000"></label>
+              <label>Telefón<input name="tel" type="tel" autocomplete="tel" required placeholder="0900 000 000"></label>
             </div>
-            <label>Kemp a obec<input name="kemp" placeholder="Kemp Pri jazere, Liptovský Trnovec"></label>
+            <label>Kemp a&nbsp;obec<input name="kemp" required placeholder="Kemp Pri jazere, Liptovský Trnovec"></label>
             <label>Poznámka (nepovinné)<textarea name="sprava" placeholder="Napríklad koľko máte parciel alebo ako dnes beriete rezervácie."></textarea></label>
-            <p class="form-err" id="formErr" hidden></p>
-            <button class="btn" type="submit">Poslať žiadosť o ukážku</button>
-            <p class="form-note">Otvorí sa váš e-mail s vyplnenou správou, stačí ju odoslať.</p>
+            <p class="form-err" id="formErr" role="alert" hidden></p>
+            <button class="btn" type="submit">Poslať žiadosť o&nbsp;ukážku</button>
+            <p class="form-note">Otvorí sa váš <span class="nw">e-mail</span> s&nbsp;vyplnenou správou, stačí ju odoslať.</p>
           </form>
         </div>
       </div>
@@ -604,7 +626,7 @@ input[type="range"] { width: 100%; height: 32px; accent-color: var(--sign); curs
 <footer class="foot">
   <div class="wrap">
     <a class="brand" href="#top"><svg aria-hidden="true"><use href="#logo"/></svg>Parcela</a>
-    <p>Online rezervácie s mapou pre kempy, glampingy a chatové osady. © <span id="yr">2026</span></p>
+    <p>Online rezervácie s&nbsp;mapou pre kempy, glampingy a&nbsp;chatové osady. © <span id="yr">2026</span></p>
   </div>
 </footer>
 
@@ -628,7 +650,7 @@ input[type="range"] { width: 100%; height: 32px; accent-color: var(--sign); curs
   var NEEDS = {
     stan: { w: 4, l: 5, name: 'Stan', items: [['stan', 0.5, 1, 3, 3]] },
     autostan: { w: 6, l: 6, name: 'Auto a stan', items: [['auto', 0.3, 0.5, 1.9, 4.6], ['stan', 2.7, 1, 3, 3]] },
-    obytne: { w: 5.5, l: 8.5, name: 'Obytné auto', items: [['obytné auto', 0.3, 0.5, 2.3, 7.5], ['markíza', 2.9, 2, 2.5, 4]] },
+    obytne: { w: 5.5, l: 8.5, name: 'Obytné auto', items: [['obytné auto', 0.3, 1, 2.3, 7.5], ['markíza', 2.9, 2.5, 2.5, 4]] },
     karavan: { w: 8.5, l: 8.5, name: 'Karavan s autom', items: [['auto', 0.3, 0.5, 1.9, 4.6], ['karavan', 2.7, 0.5, 2.5, 7.5], ['predstan', 5.2, 2, 3, 4]] }
   };
   var state = { v: 'autostan', guests: 2, sel: null, booked: null };
@@ -641,7 +663,8 @@ input[type="range"] { width: 100%; height: 32px; accent-color: var(--sign); curs
     }
   });
   var eur = new Intl.NumberFormat('sk-SK', { maximumFractionDigits: 0 });
-  function money(n) { return eur.format(Math.round(n)) + ' €'; }
+  function money(n) { return eur.format(Math.round(n)) + ' €'; }
+  function dim(n) { return String(n).replace('.', ','); }
   function el(tag, attrs, parent) {
     var e = document.createElementNS(NS, tag);
     for (var k in attrs) e.setAttribute(k, attrs[k]);
@@ -716,7 +739,9 @@ input[type="range"] { width: 100%; height: 32px; accent-color: var(--sign); curs
     var need = NEEDS[state.v], ok = fits(p, state.v);
     var maxW = 260, maxH = 170, pad = 26;
     var s = Math.min((maxW - pad * 2) / p.w, (maxH - pad * 2) / p.l);
-    var W = p.w * s, H = p.l * s, vw = W + pad * 2, vh = H + pad * 2;
+    // items that stick out of the parcel (e.g. a predstan) must stay inside the drawing
+    var overR = need.items.reduce(function (a, it) { return Math.max(a, (it[1] + it[3] - p.w) * s); }, 0);
+    var W = p.w * s, H = p.l * s, vw = W + pad * 2 + Math.max(0, overR - pad + 6), vh = H + pad * 2;
     var m = el('svg', { viewBox: '0 0 ' + vw + ' ' + vh, role: 'img', 'aria-label': 'Plán parcely ' + p.id + ' v mierke s vecami: ' + need.name + (ok ? ', zmestí sa' : ', nezmestí sa') });
     var ox = pad, oy = pad;
     el('rect', { x: ox, y: oy, width: W, height: H, rx: 3, fill: 'var(--pitch)', stroke: 'var(--pitch-line)', 'stroke-width': 1.5 }, m);
@@ -749,11 +774,17 @@ input[type="range"] { width: 100%; height: 32px; accent-color: var(--sign); curs
     return c[0];
   }
   function renderPanel() {
+    // the panel is rebuilt from scratch; keep keyboard focus from falling back to <body>
+    var hadFocus = panel.contains(document.activeElement);
+    drawPanel();
+    if (hadFocus) { var t = panel.querySelector('h3'); t.tabIndex = -1; t.focus(); }
+  }
+  function drawPanel() {
     panel.innerHTML = '';
     var p = parcels.find(function (q) { return q.id === state.sel; });
     if (!p) {
       panel.appendChild(h('h3', '', 'Vyberte si parcelu'));
-      panel.appendChild(h('p', 'muted', 'Zelené parcely sú voľné. Prerušované sú pre vás malé, šrafované sú v tomto termíne obsadené.'));
+      panel.appendChild(h('p', 'muted', 'Zelené parcely sú voľné. Prerušované sú pre vás malé, šrafované sú v&nbsp;tomto termíne obsadené.'));
       var c = firstFree();
       if (c) {
         var b = h('button', 'btn btn-line', 'Odporučiť voľnú parcelu');
@@ -768,11 +799,11 @@ input[type="range"] { width: 100%; height: 32px; accent-color: var(--sign); curs
     var chip = p.taken ? h('span', 'chip no', 'Obsadená') : ok ? h('span', 'chip ok', 'Voľná, zmestíte sa') : h('span', 'chip no', 'Nezmestíte sa');
     head.appendChild(chip);
     panel.appendChild(head);
-    panel.appendChild(h('p', 'facts', '<span>' + p.w + ' × ' + p.l + ' m</span><span>' + p.feat + '</span>' + (p.lake ? '<span>Pri jazere</span>' : '')));
+    panel.appendChild(h('p', 'facts', '<span class="nw">' + p.w + ' × ' + p.l + ' m</span><span>' + p.feat + '</span>' + (p.lake ? '<span>Pri jazere</span>' : '')));
     var mini = h('div', 'mini'); mini.appendChild(miniPlan(p)); panel.appendChild(mini);
 
     if (state.booked === p.id) {
-      panel.appendChild(h('div', 'done', '<strong>Rezervácia odoslaná</strong>V ostrej verzii by hosť teraz zaplatil zálohu kartou a vám by prišiel e-mail s rezerváciou. Parcela sa hneď ukáže ako obsadená.'));
+      panel.appendChild(h('div', 'done', '<strong>Rezervácia odoslaná</strong>V&nbsp;ostrej verzii by hosť teraz zaplatil zálohu kartou a&nbsp;vám by prišiel <span class="nw">e-mail</span> s&nbsp;rezerváciou. Parcela sa hneď ukáže ako obsadená.'));
       var again = h('button', 'linkbtn', 'Vyskúšať znova');
       again.type = 'button';
       again.addEventListener('click', function () { state.booked = null; state.sel = null; update(); });
@@ -781,8 +812,8 @@ input[type="range"] { width: 100%; height: 32px; accent-color: var(--sign); curs
     }
     if (p.taken || !ok) {
       var need = NEEDS[state.v];
-      panel.appendChild(h('p', 'muted', p.taken ? 'Táto parcela je v termíne 12. – 15. júla obsadená.' :
-        need.name + ' potrebuje aspoň ' + String(need.w).replace('.', ',') + ' × ' + String(need.l).replace('.', ',') + ' m. Parcela má ' + p.w + ' × ' + p.l + ' m.'));
+      panel.appendChild(h('p', 'muted', p.taken ? 'Táto parcela je v&nbsp;termíne <span class="nw">12. – 15. júla</span> obsadená.' :
+        need.name + ' potrebuje aspoň <span class="nw">' + dim(need.w) + ' × ' + dim(need.l) + ' m</span>. Parcela má <span class="nw">' + p.w + ' × ' + p.l + ' m</span>.'));
       var alt = firstFree(p);
       if (alt) {
         var ab = h('button', 'btn btn-line', 'Vybrať najbližšiu vhodnú: ' + alt.id);
@@ -820,7 +851,7 @@ input[type="range"] { width: 100%; height: 32px; accent-color: var(--sign); curs
   drawMap();
   update();
   var ms = document.querySelector('.map-scroll');
-  if (ms.scrollWidth > ms.clientWidth) ms.scrollLeft = ms.scrollWidth * (125 / 920);
+  requestAnimationFrame(function () { if (ms.scrollWidth > ms.clientWidth) ms.scrollLeft = ms.scrollWidth * (125 / 920); });
 
   /* ---------- calculator ---------- */
   var C = {
@@ -841,15 +872,18 @@ input[type="range"] { width: 100%; height: 32px; accent-color: var(--sign); curs
     });
     var nights = v.p * v.d * v.o / 100, revenue = nights * v.c;
     var commission = revenue * v.s / 100 * v.r / 100;
-    var bookings = nights / 3, hours = bookings * 10 / 60;
-    var save = commission / 2 + bookings * (1 - v.s / 100) / 2 * 10 / 60 * 8;
-    var back = save > 0 ? 2400 / save : Infinity;
+    // phone and e-mail time = bookings that do not come through a portal
+    var bookings = nights / 3, direct = bookings * (1 - v.s / 100), hours = direct * 10 / 60;
+    var save = commission / 2 + direct / 2 * 10 / 60 * 8;
+    // payback of the 2 400 EUR package after its 79 EUR monthly fee (948 EUR a year)
+    var net = save - 79 * 12, back = net > 0 ? Math.round(2400 / net * 10) / 10 : Infinity;
     document.getElementById('r-com').textContent = money(commission);
     document.getElementById('r-book').textContent = eur.format(Math.round(bookings));
     document.getElementById('r-hrs').textContent = eur.format(Math.round(hours)) + ' h';
     document.getElementById('r-save').textContent = money(save);
-    document.getElementById('r-back').textContent = !isFinite(back) ? '–' : back <= 1 ? 'do 1 sezóny' :
-      'za ' + back.toLocaleString('sk-SK', { maximumFractionDigits: 1 }) + (back < 5 ? ' sezóny' : ' sezón');
+    // 2–4 sezóny, 5+ sezón, desatinné číslo vždy sezóny (2,5 sezóny, 7,5 sezóny)
+    document.getElementById('r-back').textContent = !isFinite(back) ? 'pri týchto číslach žiadna' : back <= 1 ? 'do 1 sezóny' :
+      back >= 5 ? '5 a viac sezón' : back.toLocaleString('sk-SK', { maximumFractionDigits: 1 }) + ' sezóny';
   }
   Object.keys(C).forEach(function (k) { document.getElementById(C[k].el).addEventListener('input', calc); });
   calc();
@@ -859,10 +893,14 @@ input[type="range"] { width: 100%; height: 32px; accent-color: var(--sign); curs
   form.addEventListener('submit', function (e) {
     e.preventDefault();
     var f = new FormData(form), meno = (f.get('meno') || '').trim(), tel = (f.get('tel') || '').trim(), kemp = (f.get('kemp') || '').trim();
+    form.querySelectorAll('[aria-invalid]').forEach(function (x) { x.removeAttribute('aria-invalid'); x.removeAttribute('aria-describedby'); });
     if (!kemp || !tel) {
+      var bad = form.querySelector(!kemp ? '[name="kemp"]' : '[name="tel"]');
       err.hidden = false;
       err.textContent = !kemp ? 'Doplňte názov kempu a obec, nech viem, ktorú mapu pripraviť.' : 'Doplňte telefón, nech vám viem dať vedieť, keď bude ukážka hotová.';
-      form.querySelector(!kemp ? '[name="kemp"]' : '[name="tel"]').focus();
+      bad.setAttribute('aria-invalid', 'true');
+      bad.setAttribute('aria-describedby', 'formErr');
+      bad.focus();
       return;
     }
     err.hidden = true;

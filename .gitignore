@@ -2,3 +2,4 @@ node_modules/
 audit*/
 shots/
 *.blend1
+kempy/*/
