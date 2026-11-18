@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>{{NAME}} – ukážka rezervácie s mapou</title>
-<meta name="description" content="Ukážka návrhu online rezervácie s mapou parciel pre {{NAME}}. Nie je to oficiálna stránka kempu.">
+<meta name="description" content="Ukážka návrhu online rezervácie s mapou {{MAPOF}} pre {{NAME}}. Nie je to oficiálna stránka kempu.">
 <meta name="robots" content="noindex">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect x='1' y='1' width='30' height='30' rx='6' fill='%230a5bab'/%3E%3Crect x='3.5' y='3.5' width='25' height='25' rx='4' fill='none' stroke='%23fff' stroke-width='1.6'/%3E%3Cpath d='M16 8.5 23 19H9z' fill='%23fff'/%3E%3Crect x='9' y='21' width='14' height='3' rx='1' fill='%23fff'/%3E%3C/svg%3E">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -58,8 +58,8 @@ p { margin: 0; }
 .sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
 @media (prefers-reduced-motion: reduce) { *, *::before, *::after { transition: none !important; } }
 
-.notice { position: sticky; top: 0; z-index: 30; background: #fff4c7; color: #3d3200; border-bottom: 1px solid #ecd98b; font-size: .92rem; font-weight: 600; }
-.notice .wrap { padding-block: 8px; }
+.notice { position: sticky; top: 0; z-index: 30; padding: 10px 16px; background: #fff4c7; color: #3d3200; border-bottom: 1px solid #ecd98b; font-size: .92rem; font-weight: 600; }
+.notice .wrap { width: min(1180px, 100%); } /* bočný okraj 16 px dáva samotný pás, text ostáva zarovnaný so stránkou */
 .top .wrap { display: flex; align-items: center; justify-content: space-between; gap: 16px; min-height: 64px; flex-wrap: wrap; }
 .brand { display: inline-flex; align-items: center; gap: 10px; min-height: 44px; color: var(--ink); text-decoration: none; font-weight: 800; font-size: 1.15rem; }
 .brand svg { width: 30px; height: 30px; }
@@ -127,6 +127,7 @@ p { margin: 0; }
 .m-area-meadow { fill: var(--meadow); stroke: var(--hedge); stroke-width: 2; stroke-dasharray: 8 6; }
 .m-area-asphalt { fill: var(--road); stroke: var(--road-edge); stroke-width: 2; }
 .m-area-play { fill: var(--play); stroke: var(--build-line); stroke-width: 2; stroke-dasharray: 8 6; }
+.m-area-pitch { fill: var(--meadow); stroke: var(--paper); stroke-width: 2.5; }
 .m-tree { fill: var(--tree); }
 .m-build { fill: var(--build); stroke: var(--build-line); stroke-width: 2.5; }
 .m-t { fill: var(--muted); font-size: calc(21px * var(--mk, 1)); font-weight: 700; }
@@ -135,6 +136,7 @@ p { margin: 0; }
 .pc .hit { fill: transparent; stroke: none; }
 .pc .body { stroke: rgba(0, 0, 0, .28); stroke-width: 2.5; transition: filter .12s; }
 .pc text { fill: #14211a; font-size: calc(22px * var(--mk, 1)); font-weight: 800; text-anchor: middle; dominant-baseline: central; pointer-events: none; }
+.pc.cabin text { font-size: calc(16px * var(--mk, 1)); }
 .pc:hover .body { filter: brightness(1.08); }
 .pc.taken .body { fill: url(#hatch) !important; stroke: var(--taken-line); }
 .pc.taken text { fill: var(--muted); }
@@ -181,7 +183,7 @@ p { margin: 0; }
 </style>
 </head>
 <body>
-<div class="notice" role="note"><div class="wrap">Ukážka návrhu pre {{NAME}}. Nie je to oficiálna stránka kempu: obsadenosť a ceny sú vymyslené a rezervácia sa nikam neodosiela.</div></div>
+<div class="notice" role="note"><div class="wrap">{{NOTICE}}</div></div>
 <svg width="0" height="0" style="position:absolute" aria-hidden="true">
   <symbol id="logo" viewBox="0 0 32 32"><rect x="1" y="1" width="30" height="30" rx="6" fill="#0a5bab"/><rect x="3.5" y="3.5" width="25" height="25" rx="4" fill="none" stroke="#fff" stroke-width="1.6"/><path d="M16 8.5 23 19H9z" fill="#fff"/><rect x="9" y="21" width="14" height="3" rx="1" fill="#fff"/></symbol>
 </svg>
@@ -194,8 +196,8 @@ p { margin: 0; }
 <main>
   <section class="intro">
     <div class="wrap">
-      <h1>Takto by si hosť vybral parcelu vo vašom kempe</h1>
-      <p>Mapu som prekreslil z plánu areálu na vašom webe. Vyskúšajte si ju ako hosť: vyberte, s čím prídete, a kliknite na parcelu.</p>
+      <h1>{{H1}}</h1>
+      <p>{{LEAD}}</p>
       <div class="demo" aria-label="Ukážka rezervácie na mape kempu">
         <div class="demo-bar">
           <div class="demo-title"><strong>{{NAME}}</strong><span id="dates"></span></div>
@@ -222,16 +224,16 @@ p { margin: 0; }
           <div class="panel" id="panel" aria-live="polite"></div>
         </div>
       </div>
-      <p class="note">Rozloženie parciel je podľa plánu na vašom webe. Obsadenosť a ceny sú len na ukážku, v ostrej verzii by boli vaše.</p>
+      <p class="note">{{NOTE}}</p>
     </div>
   </section>
 
   <section class="sec" aria-labelledby="h3d">
     <div class="wrap">
       <h2 id="h3d">Váš kemp v 3D</h2>
-      <p class="lead">Z toho istého plánu som v Blenderi postavil model celého areálu. Hosť si ho môže pozrieť skôr, než príde, a vidí, kde jeho parcela leží.</p>
+      <p class="lead">{{LEAD3D}}</p>
       <figure class="render">
-        <img src="{{RENDER}}" width="1600" height="1000" alt="3D model areálu {{NAME}}: farebné parcely podľa veľkosti, cesty, budovy a stromy" loading="lazy">
+        <img src="{{RENDER}}" width="1600" height="1000" alt="{{ALT3D}}" loading="lazy">
         <figcaption>Model z Blendera podľa plánu areálu. V ostrej verzii sa dá otáčať a prechádzať priamo na webe.</figcaption>
       </figure>
     </div>
@@ -242,9 +244,9 @@ p { margin: 0; }
       <div>
         <h2 id="hnext">Ako by to fungovalo u vás</h2>
         <ol>
-          <li>Mapu doladím podľa skutočných rozmerov parciel a vášho cenníka.</li>
+          <li>{{STEP1}}</li>
           <li>Vložím ju do vášho webu ako novú podstránku. Na pôvodnom webe sa nič iné nemení.</li>
-          <li>Hostia si vyberú parcelu a zaplatia zálohu kartou priamo na váš účet. Vám príde e-mail s rezerváciou.</li>
+          <li>Hostia si vyberú {{PICK}} a zaplatia zálohu kartou priamo na váš účet. Vám príde e-mail s rezerváciou.</li>
           <li>Obsadenosť sa zosúladí s Bookingom, takže dvojitá rezervácia nevznikne.</li>
         </ol>
       </div>
@@ -267,8 +269,10 @@ p { margin: 0; }
 var CAMP = /*CAMP_DATA*/null;
 (function () {
   'use strict';
-  var NS = 'http://www.w3.org/2000/svg', NIGHTS = 3, PERSON = 8, ELEC = 5, DEPOSIT = 0.3;
+  // ceny za osobu, elektrinu a miestny poplatok môže mať kemp vlastné (camp.json: person, elec, tax)
+  var NS = 'http://www.w3.org/2000/svg', NIGHTS = 3, PERSON = CAMP.person || 8, ELEC = CAMP.elec || 5, TAX = CAMP.tax || 0, DEPOSIT = 0.3;
   var NEEDS = {
+    chatka: { name: 'Chatka' },
     stan: { w: 4, l: 5, name: 'Stan', items: [['stan', 0.5, 1, 3, 3]] },
     autostan: { w: 6, l: 6, name: 'Auto a stan', items: [['auto', 0.3, 0.5, 1.9, 4.6], ['stan', 2.7, 1, 3, 3]] },
     obytne: { w: 5.5, l: 8.5, name: 'Obytné auto', items: [['obytné auto', 0.3, 1, 2.3, 7.5], ['markíza', 2.9, 2.5, 2.5, 4]] },
@@ -281,17 +285,38 @@ var CAMP = /*CAMP_DATA*/null;
     var w = Math.round(p.w / S * 2) / 2, l = Math.round(p.h / S * 2) / 2;
     if (w > l) { var x = w; w = l; l = x; }
     var t = T[p.t] || {};
+    // unit: parcel (parcela pre vozidlo), cabin (chatka s počtom lôžok), zone (plocha pre stany a karavany bez pevných miest)
     return { id: p.id, t: p.t, raw: p, w: w, l: l, price: t.price || 18, feat: t.feat || 'Elektrina', allow: t.allow || null,
+      unit: t.unit || 'parcel', beds: t.beds || 0, vprice: t.vprice || null,
       taken: CAMP.taken ? CAMP.taken.indexOf(p.id) > -1 : (hash(p.id) % 10) < 3 };
   });
-  var state = { v: 'autostan', guests: 2, sel: null, booked: null };
-  var eur = new Intl.NumberFormat('sk-SK', { maximumFractionDigits: 0 });
-  function money(n) { return eur.format(Math.round(n)) + ' €'; }
+  var HAS_CABINS = parcels.some(function (p) { return p.unit === 'cabin'; });
+  var state = { v: CAMP.startV || 'autostan', guests: 2, sel: null, booked: null };
+  var seg = document.querySelector('.seg');
+  if (HAS_CABINS) {
+    seg.insertAdjacentHTML('afterbegin', '<button type="button" data-v="chatka">Chatka</button>');
+    seg.setAttribute('aria-label', 'Čo hľadáte');
+  }
+  seg.querySelectorAll('button').forEach(function (b) { b.setAttribute('aria-pressed', b.getAttribute('data-v') === state.v ? 'true' : 'false'); });
+  var eur0 = new Intl.NumberFormat('sk-SK', { maximumFractionDigits: 0 }), eur2 = new Intl.NumberFormat('sk-SK', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  function money(n) { var r = Math.round(n * 100) / 100; return (r % 1 ? eur2 : eur0).format(r) + ' €'; }
   function num(n) { return String(n).replace('.', ','); }
   function el(tag, attrs, parent) { var e = document.createElementNS(NS, tag); for (var k in attrs) e.setAttribute(k, attrs[k]); if (parent) parent.appendChild(e); return e; }
   function fits(p, v) {
+    if (p.unit === 'cabin') return v === 'chatka' && state.guests <= p.beds;
+    if (v === 'chatka') return false;
     if (p.allow) return p.allow.indexOf(v) > -1;
+    if (p.unit === 'zone') return true;
     var n = NEEDS[v]; return (n.w <= p.w && n.l <= p.l) || (n.w <= p.l && n.l <= p.w);
+  }
+  function unitName(p) { return p.unit === 'cabin' ? 'Chatka' : p.unit === 'zone' ? 'Plocha' : 'Parcela'; }
+  function beds(n) { return n + (n >= 2 && n <= 4 ? ' lôžka' : n === 1 ? ' lôžko' : ' lôžok'); }
+  function people(n) { return n + (n === 1 ? ' osobu' : n < 5 ? ' osoby' : ' osôb'); }
+  function zoneFor(p) { return ((T[p.t] || {}).label || '').replace(/^plocha\s*/i, '') || 'pre stany a karavany'; } // „Plocha pre stany a karavany“ → „pre stany a karavany“
+  function nofitWhy(p) { // krátky dôvod pre štítok v paneli (chatka, plocha aj parcela sú ženského rodu)
+    if (p.unit === 'cabin') return state.v === 'chatka' ? 'pre vás malá' : 'nehodí sa';
+    if (p.unit === 'zone') return zoneFor(p);
+    return 'nezmestíte sa';
   }
   function pts(a) { return a.map(function (p) { return p[0] + ',' + p[1]; }).join(' '); }
   function rot(c, w, h, ang) {
@@ -347,20 +372,40 @@ var CAMP = /*CAMP_DATA*/null;
   // klikacia plocha parcely aspoň ~26 css px pri najužšej mape (min-width 780 px), najviac 48 jednotiek plánu;
   // na malom pláne by väčšia plocha prekryla susednú parcelu a ťuk na jej okraj by vybral suseda
   var HIT = Math.min(48, (ex[2] - ex[0]) / 30);
+  // zväčšené plochy dvoch blízkych chatiek sa v medzere prekrývajú: ťuk tam dostane chatka alebo plocha, ku ktorej je bližšie
+  function bodyDist(q, x, y) {
+    var r = q.raw, a = -(r.ang || 0) * Math.PI / 180, dx = x - r.c[0], dy = y - r.c[1];
+    var lx = dx * Math.cos(a) - dy * Math.sin(a), ly = dx * Math.sin(a) + dy * Math.cos(a);
+    return Math.hypot(Math.max(Math.abs(lx) - r.w / 2, 0), Math.max(Math.abs(ly) - r.h / 2, 0));
+  }
+  // to isté platí pre parcely: pri otočených parcelách (Leharo S1/S2) presahuje plocha 48 jednotiek do suseda
+  function nearestUnit(p, e) {
+    if (!e || (!e.clientX && !e.clientY)) return p;
+    var m = svg.getScreenCTM(); if (!m) return p;
+    var pt = new DOMPoint(e.clientX, e.clientY).matrixTransform(m.inverse()), best = p, bd = bodyDist(p, pt.x, pt.y);
+    parcels.forEach(function (q) { var d = bodyDist(q, pt.x, pt.y); if (d < bd) { bd = d; best = q; } });
+    return best;
+  }
   parcels.forEach(function (p) {
-    var r = p.raw, g = el('g', { 'class': 'pc', tabindex: 0, role: 'button', 'data-id': p.id }, svg);
+    var r = p.raw, g = el('g', { 'class': 'pc' + (p.unit !== 'parcel' ? ' ' + p.unit : ''), tabindex: 0, role: 'button', 'data-id': p.id }, svg);
     var hw = Math.max(r.w, HIT), hh = Math.max(r.h, HIT);
+    if (p.unit !== 'parcel') { // chatky a plochy stoja ďaleko od seba: klikacia plocha aspoň 52 jednotiek, kým nezasiahne k susedovi
+      var nn = Infinity;
+      parcels.forEach(function (q) { if (q !== p) nn = Math.min(nn, Math.hypot(q.raw.c[0] - r.c[0], q.raw.c[1] - r.c[1]) - Math.max(q.raw.w, q.raw.h) / 2); });
+      var cap = Math.min(52, 2 * (nn - 2));
+      hw = Math.max(r.w, cap); hh = Math.max(r.h, cap);
+    }
     el('polygon', { points: pts(rot(r.c, hw, hh, r.ang || 0)), 'class': 'hit' }, g);
     el('polygon', { points: pts(rot(r.c, r.w, r.h, r.ang || 0)), 'class': 'body', fill: (T[p.t] || {}).color || '#9cc77c' }, g);
     var t = el('text', { x: r.c[0], y: r.c[1] }, g); t.textContent = p.id;
     if (r.h < 40) t.setAttribute('font-size', '18');
     p.g = g;
-    g.addEventListener('click', function () { select(p.id, true); });
+    g.addEventListener('click', function (e) { select(nearestUnit(p, e).id, true); });
     g.addEventListener('keydown', function (e) { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); select(p.id); } });
   });
   var lg = document.getElementById('legend');
   Object.keys(T).forEach(function (k) { lg.insertAdjacentHTML('beforeend', '<span><i style="background:' + T[k].color + '"></i>' + T[k].label + '</span>'); });
-  lg.insertAdjacentHTML('beforeend', '<span><i class="lg-taken"></i>Obsadená</span><span><i class="lg-nofit"></i>Nezmestíte sa</span><span><i class="lg-sel"></i>Vybraná</span>');
+  lg.insertAdjacentHTML('beforeend', '<span><i class="lg-taken"></i>Obsadená</span><span><i class="lg-nofit"></i>' + (HAS_CABINS ? 'Nehodí sa' : 'Nezmestíte sa') + '</span><span><i class="lg-sel"></i>Vybraná</span>');
 
   function refreshMap() {
     parcels.forEach(function (p) {
@@ -369,8 +414,9 @@ var CAMP = /*CAMP_DATA*/null;
       p.g.classList.toggle('nofit', !p.taken && nofit);
       p.g.classList.toggle('sel', state.sel === p.id && state.booked !== p.id);
       p.g.classList.toggle('mine', state.booked === p.id);
-      var st = p.taken ? 'obsadená' : (nofit ? 'nezmestíte sa' : 'voľná');
-      p.g.setAttribute('aria-label', 'Parcela ' + p.id + ', ' + num(p.w) + ' × ' + num(p.l) + ' m, ' + st);
+      var st = p.taken ? 'obsadená' : !nofit ? 'voľná' : p.unit === 'zone' ? 'nehodí sa' : nofitWhy(p);
+      var size = p.unit === 'cabin' ? beds(p.beds) : p.unit === 'zone' ? zoneFor(p) : num(p.w) + ' × ' + num(p.l) + ' m';
+      p.g.setAttribute('aria-label', unitName(p) + ' ' + p.id + ', ' + size + ', ' + st);
       p.g.setAttribute('aria-pressed', state.sel === p.id ? 'true' : 'false');
     });
   }
@@ -406,48 +452,68 @@ var CAMP = /*CAMP_DATA*/null;
     return c[0];
   }
   function noneFree() { // no free parcel fits the chosen vehicle: say so instead of silently hiding the button
+    if (state.v === 'chatka') {
+      var most = Math.max.apply(null, parcels.filter(function (q) { return q.unit === 'cabin'; }).map(function (q) { return q.beds; }));
+      return h('p', 'done', state.guests > most ? 'Najväčšie chatky tu majú ' + beds(most) + '. Skúste plochu pre stan alebo rezervujte dve chatky.' :
+        'Pre ' + people(state.guests) + ' tu v tomto termíne nie je voľná chatka. Skúste menej osôb alebo plochu pre stan.');
+    }
     var n = NEEDS[state.v].name;
-    return h('p', 'done', 'Pre ' + n.charAt(0).toLowerCase() + n.slice(1) + ' tu v tomto termíne nie je voľná parcela. Skúste inú možnosť vyššie.');
+    return h('p', 'done', 'Pre ' + n.charAt(0).toLowerCase() + n.slice(1) + ' tu v tomto termíne nie je voľná ' + (HAS_CABINS ? 'plocha' : 'parcela') + '. Skúste inú možnosť vyššie.');
   }
   function renderPanel() {
     panel.innerHTML = '';
     var p = parcels.find(function (q) { return q.id === state.sel; });
     if (!p) {
-      panel.appendChild(h('h3', '', 'Vyberte si parcelu'));
-      panel.appendChild(h('p', 'muted', 'Farebné parcely sú voľné. Prerušované sú pre vás malé, šrafované sú v tomto termíne obsadené.'));
+      panel.appendChild(h('h3', '', HAS_CABINS ? 'Vyberte si chatku alebo plochu' : 'Vyberte si parcelu'));
+      panel.appendChild(h('p', 'muted', HAS_CABINS ? 'Farebné sú voľné. Prerušované sa pre vašu voľbu nehodia, šrafované sú v tomto termíne obsadené.' : 'Farebné parcely sú voľné. Prerušované sú pre vás malé, šrafované sú v tomto termíne obsadené.'));
       var c = firstFree();
-      if (c) { var b = h('button', 'btn btn-line', 'Odporučiť voľnú parcelu'); b.type = 'button'; b.addEventListener('click', function () { select(c.id); }); panel.appendChild(b); }
+      var rec = !HAS_CABINS ? 'Odporučiť voľnú parcelu' : state.v === 'chatka' ? 'Odporučiť voľnú chatku' : 'Odporučiť voľnú plochu';
+      if (c) { var b = h('button', 'btn btn-line', rec); b.type = 'button'; b.addEventListener('click', function () { select(c.id); }); panel.appendChild(b); }
       else panel.appendChild(noneFree());
       return;
     }
     var ok = fits(p, state.v), head = h('div', 'p-head');
-    head.appendChild(h('h3', '', 'Parcela ' + p.id));
-    head.appendChild(p.taken ? h('span', 'chip no', 'Obsadená') : ok ? h('span', 'chip ok', 'Voľná, zmestíte sa') : h('span', 'chip no', 'Nezmestíte sa'));
+    head.appendChild(h('h3', '', unitName(p) + ' ' + p.id));
+    head.appendChild(p.taken ? h('span', 'chip no', 'Obsadená') : ok ? h('span', 'chip ok', p.unit === 'parcel' ? 'Voľná, zmestíte sa' : 'Voľná') : h('span', 'chip no', nofitWhy(p).charAt(0).toUpperCase() + nofitWhy(p).slice(1)));
     panel.appendChild(head);
     var tinfo = T[p.t] || {};
-    panel.appendChild(h('p', 'facts', '<span>' + (tinfo.label || p.t) + '</span><span>približne ' + num(p.w) + ' × ' + num(p.l) + ' m</span><span>' + p.feat + '</span>'));
-    var mini = h('div', 'mini'); mini.appendChild(miniPlan(p)); panel.appendChild(mini);
+    var facts = p.unit === 'cabin' ? [tinfo.label || p.t, beds(p.beds), p.feat] : p.unit === 'zone' ? [tinfo.label || p.t, p.feat] : [tinfo.label || p.t, 'približne ' + num(p.w) + ' × ' + num(p.l) + ' m', p.feat];
+    panel.appendChild(h('p', 'facts', facts.map(function (f) { return '<span>' + f + '</span>'; }).join('')));
+    if (p.unit === 'parcel') { var mini = h('div', 'mini'); mini.appendChild(miniPlan(p)); panel.appendChild(mini); }
     if (state.booked === p.id) {
-      panel.appendChild(h('div', 'done', '<strong>Rezervácia odoslaná</strong>V ostrej verzii by hosť teraz zaplatil zálohu kartou a vám by prišiel e-mail s rezerváciou. Parcela sa hneď ukáže ako obsadená.'));
+      panel.appendChild(h('div', 'done', '<strong>Rezervácia odoslaná</strong>V ostrej verzii by hosť teraz zaplatil zálohu kartou a vám by prišiel e-mail s rezerváciou. ' +
+        (p.unit === 'zone' ? 'Miesto sa hneď odpočíta z kapacity plochy.' : unitName(p) + ' sa hneď ukáže ako obsadená.')));
       var again = h('button', 'linkbtn', 'Vyskúšať znova'); again.type = 'button';
       again.addEventListener('click', function () { state.booked = null; state.sel = null; update(); });
       panel.appendChild(again); return;
     }
     if (p.taken || !ok) {
-      var need = NEEDS[state.v];
-      panel.appendChild(h('p', 'muted', p.taken ? 'Táto parcela je v tomto termíne obsadená.' :
-        p.allow ? 'Toto miesto je len pre obytné autá.' :
-        need.name + ' potrebuje aspoň ' + num(need.w) + ' × ' + num(need.l) + ' m. Parcela má približne ' + num(p.w) + ' × ' + num(p.l) + ' m.'));
+      var need = NEEDS[state.v], why;
+      if (p.taken) why = 'Táto ' + unitName(p).toLowerCase() + ' je v tomto termíne obsadená.';
+      else if (p.unit === 'cabin') why = state.v === 'chatka' ? 'Chatka má ' + beds(p.beds) + ', vás je ' + state.guests + '.' : 'Chatka je na ubytovanie bez stanu či karavanu. Ak chcete chatku, vyberte hore Chatka.';
+      else if (state.v === 'chatka') why = 'Na plochu prichádzate so stanom, obytným autom alebo karavanom. Na ubytovanie si vyberte chatku.';
+      else if (p.allow) why = 'Toto miesto je len pre obytné autá.';
+      else why = need.name + ' potrebuje aspoň ' + num(need.w) + ' × ' + num(need.l) + ' m. Parcela má približne ' + num(p.w) + ' × ' + num(p.l) + ' m.';
+      panel.appendChild(h('p', 'muted', why));
       var alt = firstFree(p);
-      if (alt) { var ab = h('button', 'btn btn-line', 'Vybrať najbližšiu vhodnú: ' + alt.id); ab.type = 'button'; ab.addEventListener('click', function () { select(alt.id); }); panel.appendChild(ab); }
+      if (alt) { var ab = h('button', 'btn btn-line', 'Vybrať najbližšiu vhodnú: ' + (alt.unit === 'cabin' ? 'chatku ' : alt.unit === 'zone' ? 'plochu ' : '') + alt.id); ab.type = 'button'; ab.addEventListener('click', function () { select(alt.id); }); panel.appendChild(ab); }
       else panel.appendChild(noneFree());
       return;
     }
-    var g = state.guests, parc = p.price * NIGHTS, pers = g * NIGHTS * PERSON, elc = ELEC * NIGHTS, sum = parc + pers + elc, dep = Math.round(sum * DEPOSIT);
-    panel.appendChild(h('table', 'bill', '<caption class="sr">Cena pobytu</caption><tbody>' +
-      '<tr><td>Parcela ' + NIGHTS + ' × ' + p.price + ' €</td><td>' + money(parc) + '</td></tr>' +
-      '<tr><td>' + g + (g === 1 ? ' dospelý' : g < 5 ? ' dospelí' : ' dospelých') + ' × ' + NIGHTS + ' noci × ' + PERSON + ' €</td><td>' + money(pers) + '</td></tr>' +
-      '<tr><td>Elektrina ' + NIGHTS + ' × ' + ELEC + ' €</td><td>' + money(elc) + '</td></tr>' +
+    var g = state.guests, rows = [], sum = 0;
+    function row(t, v) { rows.push('<tr><td>' + t + '</td><td>' + money(v) + '</td></tr>'); sum += v; }
+    var dosp = g + (g === 1 ? ' dospelý' : g < 5 ? ' dospelí' : ' dospelých');
+    if (p.unit === 'cabin') {
+      row('Chatka ' + NIGHTS + ' noci × ' + money(p.price), p.price * NIGHTS);
+    } else {
+      var vp = p.unit === 'zone' && p.vprice ? p.vprice[state.v] || 0 : p.price;
+      row((p.unit === 'zone' ? NEEDS[state.v].name + ' ' + NIGHTS + ' noci' : 'Parcela ' + NIGHTS) + ' × ' + money(vp), vp * NIGHTS);
+      row(dosp + ' × ' + NIGHTS + ' noci × ' + money(PERSON), g * NIGHTS * PERSON);
+      row('Elektrina ' + NIGHTS + ' × ' + money(ELEC), ELEC * NIGHTS);
+    }
+    if (TAX) row('Miestny poplatok ' + g + ' × ' + NIGHTS + ' noci × ' + money(TAX), g * NIGHTS * TAX);
+    var dep = Math.round(sum * DEPOSIT);
+    panel.appendChild(h('table', 'bill', '<caption class="sr">Cena pobytu</caption><tbody>' + rows.join('') +
       '<tr class="sum"><td>Spolu za pobyt</td><td>' + money(sum) + '</td></tr></tbody>'));
     var go = h('button', 'btn btn-sign', 'Rezervovať, záloha ' + money(dep)); go.type = 'button';
     go.addEventListener('click', function () { state.booked = p.id; update(); });
@@ -469,7 +535,7 @@ var CAMP = /*CAMP_DATA*/null;
     });
   });
   var gOut = document.getElementById('gOut');
-  function setGuests(n) { state.guests = Math.max(1, Math.min(6, n)); gOut.textContent = state.guests + (state.guests === 1 ? ' dospelý' : state.guests < 5 ? ' dospelí' : ' dospelých'); renderPanel(); }
+  function setGuests(n) { state.guests = Math.max(1, Math.min(6, n)); gOut.textContent = state.guests + (state.guests === 1 ? ' dospelý' : state.guests < 5 ? ' dospelí' : ' dospelých'); update(); } // počet osôb rozhoduje aj o chatkách
   document.getElementById('gMinus').addEventListener('click', function () { setGuests(state.guests - 1); });
   document.getElementById('gPlus').addEventListener('click', function () { setGuests(state.guests + 1); });
   update();

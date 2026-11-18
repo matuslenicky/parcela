@@ -51,6 +51,7 @@ PAL = {
     'hedge': ('#4a8a4f', .95), 'play': ('#d9c49a', .95), 'white': ('#f5f5f2', .5), 'tent': ('#e8a33d', .8),
     'tent2': ('#4f8fbf', .8), 'car': ('#c94f4f', .45), 'car2': ('#5d7fa3', .45), 'glass': ('#2c3a44', .1), 'tyre': ('#2a2a2a', .9),
     'parcel_line': ('#ffffff', .6), 'label': ('#ffffff', .5), 'sand': ('#e9dcb8', .95), 'wood': ('#a07a55', .8),
+    'logwall': ('#9a6b47', .85), 'roof2': ('#5a4a3f', .75), 'pitch': ('#78b860', .95), 'labeldark': ('#2b2118', .6),
 }
 def M(n): c, r = PAL[n]; return mat('m_' + n, c, r)
 for t, info in D['types'].items():
@@ -147,7 +148,7 @@ CX, CY = (x0 + x1) / 2, (y0 + y1) / 2
 
 # ---------------------------------------------------------------- ground
 mb = MB()
-G = 90  # extra meadow around the map so the oblique camera never sees the void
+G = max(90, max(x1 - x0, y1 - y0) * 1.1)  # extra meadow around the map so the oblique camera never sees the void
 mb.prism([(x0 - G, y0 - G), (x1 + G, y0 - G), (x1 + G, y1 + G), (x0 - G, y1 + G)], -1.0, 0.0, 'outside')
 bnd = [P(p) for p in D['boundary']]
 mb.flat(bnd, 0.012, 'inside')
@@ -169,8 +170,16 @@ for lk in D.get('lakes', []):
 # ---------------------------------------------------------------- areas, roads
 for a in D.get('areas', []):
     mb = MB(); kind = a['kind']
-    z = {'meadow': 0.03, 'asphalt': 0.05, 'play': 0.04, 'gravel': 0.04}.get(kind, 0.03)
+    z = {'meadow': 0.03, 'asphalt': 0.05, 'play': 0.04, 'gravel': 0.04, 'pitch': 0.04}.get(kind, 0.03)
     mb.flat([P(p) for p in a['pts']], z, kind if kind in PAL else 'meadow')
+    if kind == 'pitch':  # biele čiary: obrys, stredová čiara
+        apts = [P(p) for p in a['pts']]
+        for q in ribbon(apts, 0.14, True):
+            mb.face([mb.bm.verts.new((v.x, v.y, z + 0.006)) for v in q], 'line')
+        if len(apts) == 4:
+            m1 = ((apts[0][0] + apts[3][0]) / 2, (apts[0][1] + apts[3][1]) / 2); m2 = ((apts[1][0] + apts[2][0]) / 2, (apts[1][1] + apts[2][1]) / 2)
+            for q in ribbon([m1, m2], 0.14):
+                mb.face([mb.bm.verts.new((v.x, v.y, z + 0.006)) for v in q], 'line')
     mb.obj('plocha ' + a['name'], C_ROADS)
 
 for ri, r in enumerate(D.get('roads', [])):
@@ -211,11 +220,11 @@ for k, bx in enumerate(D.get('boxes', [])):
     mb.obj('plosina %d' % k, C_PROPS)
 
 # ---------------------------------------------------------------- buildings
-for b in D.get('buildings', []):
-    c = P(b['c']); w = b['w'] / S; d = b['d'] / S; hgt = b['height']; ang = b.get('ang', 0)
+def house(c, w, d, hgt, ang, wall='wall', roof='roof', windows=True):
+    """Dom so sedlovou strechou nad dlhšou stranou; c, w, d v metroch. Vráti MB."""
     wall_h = hgt * 0.62
     mb = MB()
-    mb.prism(rect(c, w, d, ang), 0.0, wall_h, 'wall')
+    mb.prism(rect(c, w, d, ang), 0.0, wall_h, wall)
     # gable roof along the longer side
     a = -math.radians(ang); ca, sa = math.cos(a), math.sin(a)
     def rot(dx, dy): return (c[0] + dx * ca - dy * sa, c[1] + dx * sa + dy * ca)
@@ -230,24 +239,27 @@ for b in D.get('buildings', []):
     for side in (A, B):
         v = [mb.bm.verts.new((side[0][0], side[0][1], ze)), mb.bm.verts.new((side[1][0], side[1][1], ze)),
              mb.bm.verts.new((side[2][0], side[2][1], zr)), mb.bm.verts.new((side[3][0], side[3][1], zr))]
-        mb.face(v, 'roof'); mb.face(v[::-1], 'roof')
+        mb.face(v, roof); mb.face(v[::-1], roof)
     # gable ends
     if w >= d:
         for sx in (-w / 2, w / 2):
             p1, p2, p3 = rot(sx, -d / 2), rot(sx, d / 2), rot(sx, 0)
             v = [mb.bm.verts.new((p1[0], p1[1], wall_h)), mb.bm.verts.new((p2[0], p2[1], wall_h)), mb.bm.verts.new((p3[0], p3[1], zr - 0.1))]
-            mb.face(v, 'wall'); mb.face(v[::-1], 'wall')
+            mb.face(v, wall); mb.face(v[::-1], wall)
     else:
         for sy in (-d / 2, d / 2):
             p1, p2, p3 = rot(-w / 2, sy), rot(w / 2, sy), rot(0, sy)
             v = [mb.bm.verts.new((p1[0], p1[1], wall_h)), mb.bm.verts.new((p2[0], p2[1], wall_h)), mb.bm.verts.new((p3[0], p3[1], zr - 0.1))]
-            mb.face(v, 'wall'); mb.face(v[::-1], 'wall')
-    # door and two windows on the south face
-    for dx, wdt, z0, z1, m in ((-w * 0.22, 1.0, 0.0, 2.05, 'door'), (w * 0.12, 1.1, 1.0, 1.9, 'window'), (w * 0.32, 1.1, 1.0, 1.9, 'window')):
-        p1, p2 = rot(dx - wdt / 2, -d / 2 - 0.03), rot(dx + wdt / 2, -d / 2 - 0.03)
-        mb.face([mb.bm.verts.new((p1[0], p1[1], z0 + 0.02)), mb.bm.verts.new((p2[0], p2[1], z0 + 0.02)),
-                 mb.bm.verts.new((p2[0], p2[1], z1)), mb.bm.verts.new((p1[0], p1[1], z1))], m)
-    mb.obj('budova ' + b['name'], C_BUILD)
+            mb.face(v, wall); mb.face(v[::-1], wall)
+    if windows:  # door and two windows on the south face
+        for dx, wdt, z0, z1, m in ((-w * 0.22, 1.0, 0.0, 2.05, 'door'), (w * 0.12, 1.1, 1.0, 1.9, 'window'), (w * 0.32, 1.1, 1.0, 1.9, 'window')):
+            p1, p2 = rot(dx - wdt / 2, -d / 2 - 0.03), rot(dx + wdt / 2, -d / 2 - 0.03)
+            mb.face([mb.bm.verts.new((p1[0], p1[1], z0 + 0.02)), mb.bm.verts.new((p2[0], p2[1], z0 + 0.02)),
+                     mb.bm.verts.new((p2[0], p2[1], z1)), mb.bm.verts.new((p1[0], p1[1], z1))], m)
+    return mb
+
+for b in D.get('buildings', []):
+    house(P(b['c']), b['w'] / S, b['d'] / S, b['height'], b.get('ang', 0), b.get('wall', 'wall'), b.get('roof', 'roof'), b.get('windows', True)).obj('budova ' + b['name'], C_BUILD)
 
 # ---------------------------------------------------------------- parcels + labels
 font_mat = M('label')
@@ -264,11 +276,24 @@ for pi, p in enumerate(D['parcels']):
         mb.prism(corners, 0.0, top, 'type_' + t)
     ob = mb.obj('parcela ' + p['id'], C_PARC)
     ob['parcel_id'] = p['id']; ob['parcel_type'] = t
+    unit = D['types'].get(t, {}).get('unit', 'parcel')
+    a_ = -math.radians(p['ang']); ca_, sa_ = math.cos(a_), math.sin(a_)
+    def off(dx, dy): return (c[0] + dx * ca_ - dy * sa_, c[1] + dx * sa_ + dy * ca_)
+    lc = c; lmat = font_mat
+    if unit == 'cabin':  # zrubová chatka v zadnej časti pozemku, číslo vpredu (kamera sa pozerá od juhu)
+        cw, cd, chh = D['types'][t].get('cabin', [4.4, 3.6, 3.4])
+        house(off(0, h * 0.17), cw, cd, chh, p['ang'], 'logwall', 'roof2').obj('chatka ' + p['id'], C_BUILD)
+        lc = off(0, -h * 0.29); lmat = M('labeldark')
+    elif unit == 'zone':
+        lc = off(-w * 0.3, 0)
     cu = bpy.data.curves.new('txt_' + p['id'], 'FONT'); cu.body = p['id']
-    cu.align_x = 'CENTER'; cu.align_y = 'CENTER'; cu.size = min(w / (0.62 * len(p['id']) + 0.6), h * 0.32) if not p.get('flat') else h * 0.55; cu.extrude = 0.02
+    cu.align_x = 'CENTER'; cu.align_y = 'CENTER'; cu.extrude = 0.02
+    if unit == 'cabin': cu.size = min(w / (0.62 * len(p['id']) + 0.5), h * 0.34)
+    elif unit == 'zone': cu.size = h * 0.38
+    else: cu.size = min(w / (0.62 * len(p['id']) + 0.6), h * 0.32) if not p.get('flat') else h * 0.55
     cu.font = bpy.data.fonts.load('C:/Windows/Fonts/arialbd.ttf', check_existing=True) if os.path.exists('C:/Windows/Fonts/arialbd.ttf') else cu.font
-    to = bpy.data.objects.new('stitok ' + p['id'], cu); to.data.materials.append(font_mat)
-    to.location = (c[0], c[1], top + (0.03 if not p.get('flat') else 0.025))
+    to = bpy.data.objects.new('stitok ' + p['id'], cu); to.data.materials.append(lmat)
+    to.location = (lc[0], lc[1], top + (0.03 if not p.get('flat') else 0.025))
     to.rotation_euler = (0, 0, -math.radians(p['ang']))
     link(to, C_PARC)
 
@@ -302,8 +327,8 @@ def put_tree(x, y, r, kind):
 
 for x, y, r in D.get('trees', []):
     mx, my = P((x, y)); put_tree(mx, my, max(1.6, r / S * 0.9), random.choice(['leaf1', 'leaf2', 'leaf3']))
-for x, y in D.get('conifers', []):
-    mx, my = P((x, y)); put_tree(mx, my, random.uniform(1.4, 2.0), 'pine')
+for cf in D.get('conifers', []):
+    mx, my = P((cf[0], cf[1])); put_tree(mx, my, cf[2] if len(cf) > 2 else random.uniform(1.5, 2.3), 'pine')
 tr = D.get('treeRow')
 if tr:
     a = Vector(tr['from']); b = Vector(tr['to']); n = int((b - a).length / tr['step'])
