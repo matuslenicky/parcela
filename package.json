@@ -1,0 +1,14 @@
+{
+  "name": "parcela",
+  "private": true,
+  "description": "Predajný web Parcela a nástroje na ukážky pre kempy (2D mapa, 3D model z Blendera, 3D prehliadka).",
+  "scripts": {
+    "demo": "node kempy/build-demo.js",
+    "viewer": "node kempy/build-viewer.js"
+  },
+  "devDependencies": {
+    "@gltf-transform/cli": "4.5.1",
+    "esbuild": "0.28.2",
+    "three": "0.186.1"
+  }
+}

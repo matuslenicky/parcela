@@ -28,6 +28,14 @@ Object.assign(TEXT, {
   STEP1: CABINS ? 'Mapu doladím podľa skutočného rozloženia chatiek a plôch a vášho cenníka.' : 'Mapu doladím podľa skutočných rozmerov parciel a vášho cenníka.',
   PICK: CABINS ? 'chatku alebo miesto' : 'parcelu',
 });
+// 3D prehliadka: ak je pri kempe camp3d.js (node kempy/build-viewer.js <slug>), stránka dostane tlačidlo a dialóg
+const HAS3D = fs.existsSync(path.join(dir, 'camp3d.js'));
+const RAW = {
+  TOUR_BTN: HAS3D ? '<p class="tour-go"><button type="button" class="btn btn-sign" id="open3d">Prejsť sa po kempe v 3D</button><span>Kemp si otočíte, priblížite a prejdete vo výške očí. Výber miesta ostáva rovnaký ako na mape.</span></p>' : '',
+  TOUR_DLG: HAS3D ? `<dialog class="tour" id="tour" aria-label="3D prehliadka: ${esc0(camp.name)}"><div class="tour-bar"><strong>${esc0(camp.name)} v 3D</strong><button type="button" class="tour-x" id="tourX">Zavrieť</button></div><div id="tourHost"></div></dialog>` : '',
+};
+TEXT.CAP3D = HAS3D ? 'Model z Blendera podľa plánu areálu. Tlačidlom nad obrázkom ho otvoríte ako prehliadku priamo v prehliadači.' : 'Model z Blendera podľa plánu areálu. V ostrej verzii sa dá otáčať a prechádzať priamo na webe.';
+function esc0(x) { return String(x).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/"/g, '&quot;'); }
 const data = {};
 for (const k of keep) if (camp[k] !== undefined) data[k] = camp[k];
 
@@ -41,7 +49,8 @@ let html = tpl
   .replace(/\{\{PLACE\}\}/g, esc(camp.place || ''))
   .replace(/\{\{SITE\}\}/g, SITE)
   .replace('{{RENDER}}', render)
-  .replace(/\{\{(H1|LEAD3D|LEAD|NOTICE|NOTE|ALT3D|MAPOF|STEP1|PICK)\}\}/g, (m, k) => esc(TEXT[k]));
+  .replace(/\{\{(H1|LEAD3D|LEAD|NOTICE|NOTE|ALT3D|CAP3D|MAPOF|STEP1|PICK)\}\}/g, (m, k) => esc(TEXT[k]))
+  .replace(/\{\{(TOUR_BTN|TOUR_DLG)\}\}/g, (m, k) => RAW[k]);
 if (!render) html = html.replace(/<section class="sec" aria-labelledby="h3d">[\s\S]*?<\/section>/, '');
 fs.writeFileSync(path.join(dir, 'index.html'), html);
 console.log('wrote', path.join(dir, 'index.html'), Math.round(html.length / 1024) + ' kB');
