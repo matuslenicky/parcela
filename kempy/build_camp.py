@@ -251,21 +251,24 @@ for b in D.get('buildings', []):
 
 # ---------------------------------------------------------------- parcels + labels
 font_mat = M('label')
-for p in D['parcels']:
+for pi, p in enumerate(D['parcels']):
     c = P(p['c']); w = p['w'] / S; h = p['h'] / S; t = p['t']
     mb = MB()
     corners = rect(c, w, h, p['ang'])
+    # susedné parcely sa na odčítanom pláne často o pár px prekrývajú: rovnako vysoké koplanárne plochy kreslí Cycles
+    # čierno, preto má každá parcela vlastnú výšku (o 1 mm vyššie než predchádzajúca), štítok ide nad ňu
+    top = (0.075 if p.get('flat') else 0.09) + pi * 0.001
     if p.get('flat'):
-        mb.flat(corners, 0.075, 'type_' + t)
+        mb.flat(corners, top, 'type_' + t)
     else:
-        mb.prism(corners, 0.0, 0.09, 'type_' + t)
+        mb.prism(corners, 0.0, top, 'type_' + t)
     ob = mb.obj('parcela ' + p['id'], C_PARC)
     ob['parcel_id'] = p['id']; ob['parcel_type'] = t
     cu = bpy.data.curves.new('txt_' + p['id'], 'FONT'); cu.body = p['id']
     cu.align_x = 'CENTER'; cu.align_y = 'CENTER'; cu.size = min(w / (0.62 * len(p['id']) + 0.6), h * 0.32) if not p.get('flat') else h * 0.55; cu.extrude = 0.02
     cu.font = bpy.data.fonts.load('C:/Windows/Fonts/arialbd.ttf', check_existing=True) if os.path.exists('C:/Windows/Fonts/arialbd.ttf') else cu.font
     to = bpy.data.objects.new('stitok ' + p['id'], cu); to.data.materials.append(font_mat)
-    to.location = (c[0], c[1], 0.12 if not p.get('flat') else 0.1)
+    to.location = (c[0], c[1], top + (0.03 if not p.get('flat') else 0.025))
     to.rotation_euler = (0, 0, -math.radians(p['ang']))
     link(to, C_PARC)
 
@@ -307,6 +310,21 @@ if tr:
     for k in range(n + 1):
         p = a + (b - a) * (k / max(1, n)); jx = random.uniform(-1, 1) * tr['jitter']; jy = random.uniform(-1, 1) * tr['jitter']
         mx, my = P((p.x + jx, p.y + jy)); put_tree(mx, my, random.uniform(1.4, 2.1), 'pine' if k % 3 else random.choice(['leaf1', 'leaf3']))
+def inside(pt, poly):
+    x, y = pt; c = False; n = len(poly)
+    for k in range(n):
+        x1, y1 = poly[k]; x2, y2 = poly[(k + 1) % n]
+        if (y1 > y) != (y2 > y) and x < (x2 - x1) * (y - y1) / (y2 - y1) + x1: c = not c
+    return c
+fo = D.get('forest')
+if fo:  # dense forest around a camp that sits in a clearing
+    exb = D['extent']; placed = 0; tries = 0
+    while placed < fo['count'] and tries < fo['count'] * 20:
+        tries += 1
+        px_ = random.uniform(exb[0] - 60, exb[2] + 60); py_ = random.uniform(exb[1] - 60, exb[3] + 60)
+        if inside((px_, py_), D['boundary']): continue
+        mx, my = P((px_, py_)); placed += 1
+        put_tree(mx, my, random.uniform(1.8, 3.0), 'pine' if random.random() < 0.55 else random.choice(['leaf1', 'leaf2', 'leaf3']))
 for kind, mb in buckets.items():
     mb.obj('stromy ' + kind, C_GREEN)
 
