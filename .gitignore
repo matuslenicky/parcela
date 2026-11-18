@@ -3,3 +3,4 @@ audit*/
 shots/
 *.blend1
 kempy/*/
+!kempy/viewer/
