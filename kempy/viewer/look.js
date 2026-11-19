@@ -70,6 +70,26 @@ function leafTexture() {
   }
   const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = 4; return t;
 }
+/* kôra: zvislé ryhy, textúra sa opakuje okolo kmeňa aj po výške */
+function barkTexture() {
+  const c = document.createElement('canvas'); c.width = 64; c.height = 128; const g = c.getContext('2d'), r = rng(29); g.fillStyle = '#8a7058'; g.fillRect(0, 0, 64, 128);
+  for (let i = 0; i < 90; i++) { const x = r() * 64, y = r() * 128, l = 14 + r() * 50, d = r() > 0.45; g.strokeStyle = d ? 'rgba(40,28,18,' + (0.25 + r() * 0.35) + ')' : 'rgba(190,170,140,' + (0.1 + r() * 0.2) + ')'; g.lineWidth = 1 + r() * 2.2; for (const dy of [-128, 0, 128]) { g.beginPath(); g.moveTo(x, y + dy); g.bezierCurveTo(x + (r() - 0.5) * 5, y + dy + l * 0.3, x + (r() - 0.5) * 5, y + dy + l * 0.7, x + (r() - 0.5) * 4, y + dy + l); g.stroke(); } }
+  const t = new THREE.CanvasTexture(c); t.wrapS = t.wrapT = THREE.RepeatWrapping; t.repeat.set(2, 3); t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = 4; return t;
+}
+/* kmeň sa pri zemi rozširuje do koreňových nábehov; vetvy vychádzajú z vrchu kmeňa do koruny (v jednotkách koruny) */
+function trunkGeo() {
+  const g = new THREE.CylinderGeometry(0.62, 1, 1, 10, 5).translate(0, 0.5, 0), p = g.attributes.position;
+  for (let i = 0; i < p.count; i++) { const y = p.getY(i), a = Math.atan2(p.getZ(i), p.getX(i)), k = 1 + Math.pow(1 - y, 5) * (0.55 + 0.25 * Math.sin(a * 3 + 1)) + 0.04 * Math.sin(a * 5 + y * 9); p.setX(i, p.getX(i) * k); p.setZ(i, p.getZ(i) * k); }
+  g.computeVertexNormals(); return g;
+}
+function branchGeo(seed) {
+  const r = rng(seed + 70), parts = [], up = new THREE.Vector3(0, 1, 0), a = new THREE.Vector3(), b = new THREE.Vector3(), d = new THREE.Vector3(), q = new THREE.Quaternion();
+  for (let i = 0; i < 5; i++) {
+    const an = i / 5 * 6.28 + r() * 0.8, out = 0.3 + r() * 0.28; a.set(0, -0.98, 0); b.set(Math.cos(an) * out, -0.25 + r() * 0.45, Math.sin(an) * out); d.subVectors(b, a); const len = d.length();
+    const c = new THREE.CylinderGeometry(0.012, 0.04, len, 5, 1, true).translate(0, len / 2, 0); q.setFromUnitVectors(up, d.normalize()); c.applyQuaternion(q); c.translate(a.x, a.y, a.z); parts.push(c);
+  }
+  const g = mergeGeometries(parts, false); parts.forEach((x) => x.dispose()); return g;
+}
 function cardGeo(seed, crown, n) {
   const r = rng(seed + 40), p = crown.attributes.position, nm = crown.attributes.normal, pos = [], nor = [], uv = [], col = [], idx = [];
   const c = new THREE.Vector3(), nn = new THREE.Vector3(), t1 = new THREE.Vector3(), t2 = new THREE.Vector3(), up = new THREE.Vector3(0, 1, 0), X = new THREE.Vector3(1, 0, 0);
@@ -102,25 +122,28 @@ export function waterize(root) {
 /* v izbe parcely koruny spriehľadnejú, aby neprekrývali parcelu; kmene a tiene ostávajú */
 export function fadeTrees(grp, on) { if (!grp || !grp.userData.mats) return; grp.userData.mats.forEach((m, i) => { m.transparent = on; m.opacity = on ? (i ? 0.3 : 0.16) : 1; m.depthWrite = !on; m.needsUpdate = true; }); }
 export function waterTick(dt) { if (waterMap) { waterMap.offset.x += dt * 0.035; waterMap.offset.y += dt * 0.012; } }
+/* polomer kmeňa pri zemi podľa výšky a šírky stromu (rovnaký pre kreslenie aj pre prekážky pri chôdzi) */
+export function trunkRadius(t, S) { return Math.min(0.42, Math.max(0.09, Math.max(t[3] * 0.028, t[2] / S * 0.07))); }
 /* stromy z camp.json [x px, y px, polomer koruny px, výška m]: vráti skupinu, alebo null, keď kemp výšky stromov nemá */
 export function buildTrees(CAMP) {
   const T = (CAMP.trees || []).filter((t) => t.length > 3 && t[3] > 0); if (!T.length) return null;
   const S = CAMP.pxPerM, OX = CAMP.origin[0], OY = CAMP.origin[1], grp = new THREE.Group(), VAR = 3, r = rng(11);
-  const leaf = new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.92 }), cardMat = new THREE.MeshStandardMaterial({ map: leafTexture(), vertexColors: true, alphaTest: 0.42, side: THREE.DoubleSide, roughness: 0.85 }), bark = new THREE.MeshStandardMaterial({ color: 0x6d5642, roughness: 0.95 });
+  const leaf = new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.92 }), cardMat = new THREE.MeshStandardMaterial({ map: leafTexture(), vertexColors: true, alphaTest: 0.42, side: THREE.DoubleSide, roughness: 0.85 }), bark = new THREE.MeshStandardMaterial({ map: barkTexture(), roughness: 0.95 });
   const by = Array.from({ length: VAR }, () => []); T.forEach((t, i) => by[i % VAR].push(t));
   const m4 = new THREE.Matrix4(), q = new THREE.Quaternion(), up = new THREE.Vector3(0, 1, 0), c = new THREE.Color(), GREENS = [0x4f9a4a, 0x3f8a45, 0x5aa24c, 0x47914f, 0x66a850];
-  const trunk = new THREE.InstancedMesh(new THREE.CylinderGeometry(0.7, 1, 1, 7).translate(0, 0.5, 0), bark, T.length); let ti = 0;
+  const trunk = new THREE.InstancedMesh(trunkGeo(), bark, T.length); let ti = 0;
   by.forEach((list, k) => {
     if (!list.length) return;
-    const cg = crownGeo(k + 1), im = new THREE.InstancedMesh(cg, leaf, list.length), cards = new THREE.InstancedMesh(cardGeo(k + 1, cg, 260), cardMat, list.length);
+    const cg = crownGeo(k + 1), im = new THREE.InstancedMesh(cg, leaf, list.length), cards = new THREE.InstancedMesh(cardGeo(k + 1, cg, 300), cardMat, list.length), br = new THREE.InstancedMesh(branchGeo(k + 1), bark, list.length);
     list.forEach((t, i) => {
-      const rad = Math.max(0.6, t[2] / S), h = Math.max(rad * 1.6, t[3]), x = (t[0] - OX) / S, z = (t[1] - OY) / S, sy = Math.min(1.5, Math.max(0.75, (h * 0.62) / rad)) * rad, yc = Math.max(sy * 0.8, h - sy * 0.72);
-      q.setFromAxisAngle(up, r() * 6.28); m4.compose(new THREE.Vector3(x, yc, z), q, new THREE.Vector3(rad * 1.12, sy, rad * 1.12)); im.setMatrixAt(i, m4); cards.setMatrixAt(i, m4);
+      const rad = Math.max(0.6, t[2] / S), h = Math.max(rad * 1.6, t[3]), x = (t[0] - OX) / S, z = (t[1] - OY) / S, clear = h > 3 ? Math.min(3.2, Math.max(1.5, h * 0.32)) : h * 0.3, sy = Math.max(rad * 0.42, (h - clear) / 2), yc = clear + sy * 0.95;
+      q.setFromAxisAngle(up, r() * 6.28); m4.compose(new THREE.Vector3(x, yc, z), q, new THREE.Vector3(rad * 1.12, sy, rad * 1.12)); im.setMatrixAt(i, m4); cards.setMatrixAt(i, m4); br.setMatrixAt(i, m4);
       c.set(GREENS[Math.floor(r() * GREENS.length)]).multiplyScalar(0.9 + r() * 0.22); cards.setColorAt(i, c); c.multiplyScalar(0.84); im.setColorAt(i, c);   // vnútro koruny je tmavšie než lístie na povrchu
-      const tr = Math.min(0.32, Math.max(0.06, rad * 0.09)); m4.compose(new THREE.Vector3(x, 0, z), q, new THREE.Vector3(tr, yc, tr)); trunk.setMatrixAt(ti++, m4);
+      const tr = trunkRadius(t, S); m4.compose(new THREE.Vector3(x, 0, z), q, new THREE.Vector3(tr, yc, tr)); trunk.setMatrixAt(ti++, m4);
     });
     im.castShadow = im.receiveShadow = true; im.userData.tree = true; im.frustumCulled = false; grp.add(im);
     cards.receiveShadow = true; cards.userData.tree = true; cards.frustumCulled = false; grp.add(cards);
+    br.receiveShadow = true; br.userData.tree = true; br.frustumCulled = false; grp.add(br);
   });
   trunk.castShadow = true; trunk.userData.tree = true; trunk.frustumCulled = false; grp.add(trunk); grp.name = 'stromy z dat'; grp.userData.mats = [leaf, cardMat];
   const SH = CAMP.shrubs || [];        // kríky medzi parcelami: malá koruna s lístím pri zemi
@@ -134,8 +157,9 @@ export function buildTrees(CAMP) {
 
 /* ---------------- budovy s fasádou: steny s oknami, dverami a soklom nakreslené do textúry, strecha s presahom.
    camp.json: buildings[].style = { wall, plinth, roof, type: gable|mono|flat, clad: 'larch', win: { every, w, h, sill, frame }, door } */
+const COARSE = typeof matchMedia === 'function' && matchMedia('(pointer: coarse)').matches;
 function facade(L, Hh, st, long, seed) {
-  const PX = Math.max(40, Math.min(112, 1792 / Math.max(L, Hh))), c = document.createElement('canvas'); c.width = Math.max(64, Math.round(L * PX)); c.height = Math.max(64, Math.round(Hh * PX)); const g = c.getContext('2d'), r = rng(seed), W = c.width, Hc = c.height;
+  const PX = Math.max(COARSE ? 28 : 40, Math.min(COARSE ? 64 : 112, (COARSE ? 1024 : 1792) / Math.max(L, Hh))), c = document.createElement('canvas'); c.width = Math.max(64, Math.round(L * PX)); c.height = Math.max(64, Math.round(Hh * PX)); const g = c.getContext('2d'), r = rng(seed), W = c.width, Hc = c.height;
   g.fillStyle = st.wall; g.fillRect(0, 0, W, Hc);
   if (st.clad === 'larch') { for (let y = 0; y < Hc; y += PX * 0.14) { g.fillStyle = 'rgba(' + (r() > 0.5 ? '255,235,200' : '70,40,10') + ',' + (0.05 + r() * 0.12) + ')'; g.fillRect(0, y, W, PX * 0.14 - 1); g.fillStyle = 'rgba(40,22,8,0.45)'; g.fillRect(0, y + PX * 0.14 - 1.5, W, 1.5); } }
   else for (let i = 0; i < W * Hc / 900; i++) { g.fillStyle = 'rgba(' + (r() > 0.5 ? '255,255,255' : '120,110,90') + ',0.02)'; g.fillRect(r() * W, r() * Hc, 20 + r() * 60, 14 + r() * 40); }

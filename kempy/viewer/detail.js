@@ -140,7 +140,7 @@ export function makeGrass(renderer, scene, hide, box) {
    pr = podiel rozlíšenia obrazovky, grass = hustota trávy (2 plná, 1 redšia, 0 žiadna) */
 export const LEVELS = [{ pr: 1, grass: 2 }, { pr: 0.85, grass: 2 }, { pr: 0.72, grass: 2 }, { pr: 0.72, grass: 1 }, { pr: 0.6, grass: 1 }, { pr: 0.6, grass: 0 }, { pr: 0.5, grass: 0 }];
 export function makeGovernor(start, apply) {
-  let level = start, ema = 16.7, hold = 1500, good = 0, block = 0, wait = 20000;
+  let level = start, ema = 16.7, hold = 1500, good = 0, block = 0, wait = 20000, streak = 0, before = 0, frozen = 0, freeze = 60000, calm = 0;
   apply(LEVELS[level]);
   return {
     level: () => level,
@@ -149,8 +149,10 @@ export function makeGovernor(start, apply) {
       if (ms > 250) { hold = Math.max(hold, 600); return; }  // jednorazové zaseknutie (iná karta, načítanie) nie je dôvod uberať
       // do priemeru ide najviac 50 ms: jedna dlhá snímka (preklad shaderov, nová obloha) sama stupeň neuberie, trvalo pomalé áno
       ema += (Math.min(ms, 50) - ema) * 0.07; block -= ms; if ((hold -= ms) > 0) return;
-      if (ema > 23.5 && level < LEVELS.length - 1) { level++; apply(LEVELS[level]); hold = 1100; ema = 17; good = 0; block = wait; wait = Math.min(wait * 2, 300000); return; }   // pod ~43 snímok za sekundu
-      good = ema < 17.6 ? good + ms : 0;
+      if ((frozen -= ms) > 0) return;
+      if (ema > 23.5 && streak >= 2 && ema > before * 0.93) { level -= streak; apply(LEVELS[level]); streak = 0; frozen = freeze; freeze = Math.min(freeze * 2, 300000); hold = 1500; ema = 17; return; }   // dve ubratia nič nezrýchlili: brzdí niečo iné, kvalita sa vráti
+      if (ema > 23.5 && level < LEVELS.length - 1) { if (!streak) before = ema; streak++; level++; apply(LEVELS[level]); hold = 1100; ema = 17; good = 0; calm = 0; block = wait; wait = Math.min(wait * 2, 300000); return; }   // pod ~43 snímok za sekundu
+      good = ema < 17.6 ? good + ms : 0; calm = ema <= 23.5 ? calm + ms : 0; if (good > 1000 || calm > 3000) streak = 0;   // ubratie zabralo: neskoršie spomalenie sa posudzuje odznova
       if (good > 4000 && level > 0 && block <= 0) { level--; apply(LEVELS[level]); hold = 1500; ema = 16.7; good = 0; }
     },
   };

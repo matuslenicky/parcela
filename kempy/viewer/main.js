@@ -13,8 +13,10 @@ import { MeshoptDecoder } from 'three/examples/jsm/libs/meshopt_decoder.module.j
 import { mergeGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils.js';
 import { makeEnv } from './env.js';
 import { createRoom, registerModel } from './room.js';
-import { texturize, buildTrees, buildBuildings, waterize, waterTick, fadeTrees } from './look.js';
+import { texturize, buildTrees, buildBuildings, waterize, waterTick, fadeTrees, trunkRadius } from './look.js';
 import { makeSky, makeGrass, makeGovernor } from './detail.js';
+import { buildContext } from './town.js';
+import { makeHolo } from './holo.js';
 import CAMP from 'camp-json';
 import GLB from 'camp-glb';
 
@@ -157,14 +159,17 @@ function mount(host, api) {
   (CAMP.boxes || []).forEach((b) => { if ((b.height || 0) > 0.4) solids.push(rectPts(b.c, b.w + PADP, b.d + PADP, b.ang || 0).map(W)); });
   const OUTSIDE = 8;     // chodec môže vyjsť najviac 8 m za hranicu areálu (k príjazdovej ceste), ďalej je na pláne len prázdna krajina
   const inArea = (x, z) => inPoly(x, z, bnd) || bnd.some((a, i) => segDist(x, z, a, bnd[(i + 1) % bnd.length]) < OUTSIDE);
-  const blocked = (x, z) => x < LIM.x0 || x > LIM.x1 || z < LIM.z0 || z > LIM.z1 || !inArea(x, z) || solids.some((s) => inPoly(x, z, s));
+  const TRUNKS = (CAMP.trees || []).filter((t) => t.length > 3 && t[3] > 0).map((t) => { const w = W(t), r = trunkRadius(t, S) + 0.45; return [w[0], w[1], r * r]; });   // kmeňom sa neprechádza
+  const blocked = (x, z) => x < LIM.x0 || x > LIM.x1 || z < LIM.z0 || z > LIM.z1 || !inArea(x, z) || solids.some((s) => inPoly(x, z, s)) || TRUNKS.some((t) => (x - t[0]) * (x - t[0]) + (z - t[1]) * (z - t[1]) < t[2]);
+  /* hologramy: názov a stav parcely vo výške očí, tabule miest v kempe */
+  const holo = makeHolo({ CAMP, units: UNITS, api, still, font: getComputedStyle(host).fontFamily }); scene.add(holo.mesh);
   function freeSpot(x, z) {              // najbližšie miesto, kde sa dá stáť
     for (let r = 0; r < SPAN * 1.5; r += 2) for (let k = 0; k < (r ? 16 : 1); k++) { const a = k / 16 * Math.PI * 2, nx = x + Math.cos(a) * r, nz = z + Math.sin(a) * r; if (!blocked(nx, nz)) return [nx, nz]; }
     return [x, z];
   }
 
   /* ---------------- model z Blendera */
-  let ready = false, ground = [], niceTrees = null, grass = null, grassQ = 2;
+  let ready = false, ground = [], niceTrees = null, grass = null, grassQ = 2, town = null;
   const bin = GLB.buffer.slice(GLB.byteOffset, GLB.byteOffset + GLB.byteLength);
   new GLTFLoader().setMeshoptDecoder(MeshoptDecoder).parse(bin, '', (gltf) => {
     const root = gltf.scene;
@@ -199,8 +204,9 @@ function mount(host, api) {
     waterize(root);
     const nice = niceTrees = buildTrees(CAMP); if (nice) { root.children.filter((c) => /^stromy/i.test(c.name) || (nice.userData.shrubs && /^kriky/i.test(c.name))).forEach((c) => { c.visible = false; c.castShadow = false; }); scene.add(nice); }
     const houses = buildBuildings(CAMP); if (houses) { root.traverse((o) => { if (houses.names.includes(o.name) || (o.parent && houses.names.includes(o.parent.name))) { o.visible = false; o.castShadow = false; } }); scene.add(houses.group); }
+    town = buildContext(CAMP); if (town) { root.traverse((o) => { if (town.hide.test(o.name) || (o.parent && town.hide.test(o.parent.name))) { o.visible = false; o.castShadow = false; } }); scene.add(town.group); }
     scene.add(root); scene.updateMatrixWorld(true);
-    grass = makeGrass(renderer, scene, [overlays, sky.mesh].concat(nice ? [nice] : []), { x0: Math.min(...bx) - 30, x1: Math.max(...bx) + 30, z0: Math.min(...bz) - 30, z1: Math.max(...bz) + 30 }); grass.quality(grassQ);
+    grass = makeGrass(renderer, scene, [overlays, sky.mesh, holo.mesh].concat(nice ? [nice] : []), { x0: Math.min(...bx) - 30, x1: Math.max(...bx) + 30, z0: Math.min(...bz) - 30, z1: Math.max(...bz) + 30 }); grass.quality(grassQ);
     ready = true; renderer.shadowMap.needsUpdate = true; $('.c3-load').remove(); update(); startView(); gov.reset();   // prvé snímky s modelom (preklad shaderov) sa do plynulosti nepočítajú
   }, (err) => { $('.c3-load').textContent = '3D model sa nepodarilo načítať.'; console.error(err); });
 
@@ -239,6 +245,7 @@ function mount(host, api) {
       else m.opacity = 0;
       u.ring.visible = !!s.sel;
     });
+    holo.update();
     if (cardId) showCard(cardId);
   }
   function showCard(id) {
@@ -424,6 +431,7 @@ function mount(host, api) {
       controls.update();
     }
     sky.tick(mdt, camera);
+    holo.tick(dt, mode === 'walk' || camera.position.distanceTo(controls.target) < 75 ? 1 : 0, mode !== 'room');
     if (grass) { const w = mode === 'walk'; if (w) grass.update(walk.x, walk.z, 0, mdt); else grass.update(controls.target.x, controls.target.z, camera.position.distanceTo(controls.target), mdt); }
     renderer.render(scene, camera);
   }
@@ -431,7 +439,7 @@ function mount(host, api) {
   function pause() { running = false; cancelAnimationFrame(raf); walk.keys = {}; }
   setHint();
   return window.Camp3D.view = { ok: true, setHour, startFly, flying: () => !!fly, flyAt(t) { startFly(); if (fly) { fly.t = t; const p = fly.curve.getPointAt(t), a = fly.curve.getPointAt(Math.min(1, t + 6 / fly.len)); walk.yaw = Math.atan2(a.x - p.x, -(a.z - p.z)); } }, sun: () => { const q = sunAt(hour); return { hour, el: +(q.el * 180 / Math.PI).toFixed(1), az: +(q.az * 180 / Math.PI).toFixed(1) }; }, update, pause, resume, setMode, enterRoom, leaveRoom, room, focusUnit(id) { if (byId[id]) { showCard(id); flyTo(byId[id]); } },
-    state: () => ({ mode, ready, room: room.state(), cam: camera.position.toArray().map((v) => Math.round(v * 10) / 10), walk: { x: Math.round(walk.x * 10) / 10, z: Math.round(walk.z * 10) / 10 }, card: cardId, calls: renderer.info.render.calls, tris: renderer.info.render.triangles, level: gov.level(), pr: +renderer.getPixelRatio().toFixed(2), grass: grass ? grass.count() : 0 }),
-    destroy() { pause(); clearTimeout(envT); if (scene.environment) { scene.environment.dispose(); scene.environment = null; } room.destroy(); sky.dispose(); if (grass) grass.dispose(); ro.disconnect(); window.removeEventListener('keydown', kd); window.removeEventListener('keyup', ku); window.removeEventListener('blur', kb); renderer.dispose(); host.innerHTML = ''; } };
+    state: () => ({ mode, ready, room: room.state(), cam: camera.position.toArray().map((v) => Math.round(v * 10) / 10), walk: { x: Math.round(walk.x * 10) / 10, z: Math.round(walk.z * 10) / 10 }, card: cardId, calls: renderer.info.render.calls, tris: renderer.info.render.triangles, holo: holo.count(), level: gov.level(), pr: +renderer.getPixelRatio().toFixed(2), grass: grass ? grass.count() : 0 }),
+    destroy() { pause(); clearTimeout(envT); if (scene.environment) { scene.environment.dispose(); scene.environment = null; } room.destroy(); sky.dispose(); holo.dispose(); if (town) town.dispose(); if (grass) grass.dispose(); ro.disconnect(); window.removeEventListener('keydown', kd); window.removeEventListener('keyup', ku); window.removeEventListener('blur', kb); renderer.dispose(); host.innerHTML = ''; } };
 }
 window.Camp3D = { mount, model: registerModel };
