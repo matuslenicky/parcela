@@ -13,12 +13,21 @@ export function makeHolo(o) {
   const at = (o) => (o.c ? W(o.c) : o.pts && o.pts.length ? W(mid(o.pts)) : null);          // stred objektu v metroch
   const props = (CAMP.props || []).map((p) => W(p.c));
 
+  const crowns = (CAMP.trees || []).filter((t) => t.length > 3 && t[3] > 0).map((t) => { const w = W(t); return [w[0], w[1], Math.max(0.6, t[2] / S) * 1.15]; });
+  const open = (x, z) => crowns.reduce((m, c) => Math.min(m, Math.hypot(x - c[0], z - c[1]) - c[2]), 99);      // odstup od najbližšej koruny (záporný = pod korunou)
+  function spot(u) {
+    let best = [u.c[0], u.c[1]], bs = open(u.c[0], u.c[1]); if (bs > 1.2) return best;
+    [[1, 2], [3, 0], [0, 1], [2, 3]].forEach(([i, j]) => { const x = u.c[0] + ((u.pts[i][0] + u.pts[j][0]) / 2 - u.c[0]) * 0.55, z = u.c[1] + ((u.pts[i][1] + u.pts[j][1]) / 2 - u.c[1]) * 0.55, s = open(x, z); if (s > bs + 0.5) { bs = s; best = [x, z]; } });
+    return best;
+  }
+
   /* ---- zoznam tabúľ */
   const L = [];
   units.forEach((u) => {
     const raw = CAMP.parcels.find((p) => p.id === u.id) || {}, t = CAMP.types[raw.t] || {}, busy = props.some((p) => inPoly(p[0], p[1], u.pts));
     const roof = u.unit === 'cabin' ? ((t.cabin || [])[2] || 3.4) + 1.2 : 0;          // stred pozemku chatky leží v chatke: tabuľa patrí nad strechu
-    L.push({ kind: 'unit', id: u.id, x: u.c[0], z: u.c[1], y: roof || (busy ? 3.5 : 1.75), w: 1.9, far: 46, grow: 0.07, top: t.label || (u.unit === 'zone' ? 'Plocha' : u.unit === 'cabin' ? 'Chatka' : 'Parcela'), title: u.id, sub: '', state: '' });
+    const at2 = roof ? u.c : spot(u);
+    L.push({ kind: 'unit', id: u.id, x: at2[0], z: at2[1], y: roof || (busy ? 3.5 : 1.75), w: 1.9, far: 46, grow: 0.07, top: t.label || (u.unit === 'zone' ? 'Plocha' : u.unit === 'cabin' ? 'Chatka' : 'Parcela'), title: u.id, sub: '', state: '' });
   });
   const poi = (name, x, z, y) => { if (name && !L.some((l) => l.kind === 'poi' && l.title === name)) L.push({ kind: 'poi', x, z, y, w: 2.9, far: 900, grow: 0.027, top: '', title: name, sub: '', state: 'poi' }); };
   (CAMP.buildings || []).forEach((b) => { if (b.context || !(b.short || b.name)) return; const k = at(b); if (k) poi(b.short || b.name, k[0], k[1], (b.height || 3) + 1.5); });

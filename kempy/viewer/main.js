@@ -163,9 +163,12 @@ function mount(host, api) {
   const blocked = (x, z) => x < LIM.x0 || x > LIM.x1 || z < LIM.z0 || z > LIM.z1 || !inArea(x, z) || solids.some((s) => inPoly(x, z, s)) || TRUNKS.some((t) => (x - t[0]) * (x - t[0]) + (z - t[1]) * (z - t[1]) < t[2]);
   /* hologramy: názov a stav parcely vo výške očí, tabule miest v kempe */
   const holo = makeHolo({ CAMP, units: UNITS, api, still, font: getComputedStyle(host).fontFamily }); scene.add(holo.mesh);
+  const roomy = (x, z) => { let n = 0; for (let k = 0; k < 8; k++) if (!blocked(x + Math.cos(k * 0.7854) * 1.5, z + Math.sin(k * 0.7854) * 1.5)) n++; return n >= 6; };
+  const treeGap = (x, z) => TRUNKS.reduce((m, t) => Math.min(m, Math.hypot(x - t[0], z - t[1])), 99);
   function freeSpot(x, z) {              // najbližšie miesto, kde sa dá stáť
-    for (let r = 0; r < SPAN * 1.5; r += 2) for (let k = 0; k < (r ? 16 : 1); k++) { const a = k / 16 * Math.PI * 2, nx = x + Math.cos(a) * r, nz = z + Math.sin(a) * r; if (!blocked(nx, nz)) return [nx, nz]; }
-    return [x, z];
+    let tight = null;                    // voľné, ale stiesnené miesto: lepšie než stáť v prekážke, ak sa priestranné nenájde
+    for (let r = 0; r < SPAN * 1.5; r += 2) for (let k = 0; k < (r ? 16 : 1); k++) { const a = k / 16 * Math.PI * 2, nx = x + Math.cos(a) * r, nz = z + Math.sin(a) * r; if (blocked(nx, nz)) continue; if (roomy(nx, nz)) return [nx, nz]; if (!tight) tight = [nx, nz]; }
+    return tight || [x, z];
   }
 
   /* ---------------- model z Blendera */
@@ -265,7 +268,7 @@ function mount(host, api) {
   function flyTo(u) {
     if (mode === 'walk') {                 // v prechádzke: postaviť sa pred miesto a pozrieť sa naň
       let best = null;
-      for (let k = 0; k < 16; k++) { const a = k / 16 * Math.PI * 2, d = u.r + 6, x = u.c[0] + Math.cos(a) * d, z = u.c[1] + Math.sin(a) * d; if (!blocked(x, z) && (!best || Math.abs(Math.sin(a) - 1) < best.s)) best = { x, z, s: Math.abs(Math.sin(a) - 1) }; }
+      for (let k = 0; k < 16; k++) { const a = k / 16 * Math.PI * 2, d = u.r + 6, x = u.c[0] + Math.cos(a) * d, z = u.c[1] + Math.sin(a) * d; if (blocked(x, z)) continue; const s = Math.abs(Math.sin(a) - 1) + (treeGap(x, z) < 4 ? 3 : 0); if (!best || s < best.s) best = { x, z, s }; }
       if (best) { walk.x = best.x; walk.z = best.z; walk.yaw = Math.atan2(u.c[0] - best.x, -(u.c[1] - best.z)); walk.pitch = -0.12; walk.go = null; }
       return;
     }
@@ -438,8 +441,11 @@ function mount(host, api) {
   function resume() { if (running) return; running = true; gov.reset(); renderer.shadowMap.needsUpdate = true; applyTheme(); size(); update(); last = performance.now(); raf = requestAnimationFrame(frame); }
   function pause() { running = false; cancelAnimationFrame(raf); walk.keys = {}; }
   setHint();
-  return window.Camp3D.view = { ok: true, setHour, startFly, flying: () => !!fly, flyAt(t) { startFly(); if (fly) { fly.t = t; const p = fly.curve.getPointAt(t), a = fly.curve.getPointAt(Math.min(1, t + 6 / fly.len)); walk.yaw = Math.atan2(a.x - p.x, -(a.z - p.z)); } }, sun: () => { const q = sunAt(hour); return { hour, el: +(q.el * 180 / Math.PI).toFixed(1), az: +(q.az * 180 / Math.PI).toFixed(1) }; }, update, pause, resume, setMode, enterRoom, leaveRoom, room, focusUnit(id) { if (byId[id]) { showCard(id); flyTo(byId[id]); } },
+  const view = { ok: true, setHour, startFly, flying: () => !!fly, flyAt(t) { startFly(); if (fly) { fly.t = t; const p = fly.curve.getPointAt(t), a = fly.curve.getPointAt(Math.min(1, t + 6 / fly.len)); walk.yaw = Math.atan2(a.x - p.x, -(a.z - p.z)); } }, sun: () => { const q = sunAt(hour); return { hour, el: +(q.el * 180 / Math.PI).toFixed(1), az: +(q.az * 180 / Math.PI).toFixed(1) }; }, update, pause, resume, setMode, enterRoom, leaveRoom, room, focusUnit(id) { if (byId[id]) { showCard(id); flyTo(byId[id]); } },
     state: () => ({ mode, ready, room: room.state(), cam: camera.position.toArray().map((v) => Math.round(v * 10) / 10), walk: { x: Math.round(walk.x * 10) / 10, z: Math.round(walk.z * 10) / 10 }, card: cardId, calls: renderer.info.render.calls, tris: renderer.info.render.triangles, holo: holo.count(), level: gov.level(), pr: +renderer.getPixelRatio().toFixed(2), grass: grass ? grass.count() : 0 }),
-    destroy() { pause(); clearTimeout(envT); if (scene.environment) { scene.environment.dispose(); scene.environment = null; } room.destroy(); sky.dispose(); holo.dispose(); if (town) town.dispose(); if (grass) grass.dispose(); ro.disconnect(); window.removeEventListener('keydown', kd); window.removeEventListener('keyup', ku); window.removeEventListener('blur', kb); renderer.dispose(); host.innerHTML = ''; } };
+    destroy() { pause(); clearTimeout(envT);
+      scene.traverse((o) => { if (o.geometry) o.geometry.dispose(); (Array.isArray(o.material) ? o.material : o.material ? [o.material] : []).forEach((m) => { Object.keys(m).forEach((k) => { if (m[k] && m[k].isTexture) m[k].dispose(); }); m.dispose(); }); });
+      if (window.Camp3D.view === view) window.Camp3D.view = null; if (scene.environment) { scene.environment.dispose(); scene.environment = null; } room.destroy(); sky.dispose(); holo.dispose(); if (town) town.dispose(); if (grass) grass.dispose(); ro.disconnect(); window.removeEventListener('keydown', kd); window.removeEventListener('keyup', ku); window.removeEventListener('blur', kb); renderer.dispose(); host.innerHTML = ''; } };
+  return window.Camp3D.view = view;
 }
 window.Camp3D = { mount, model: registerModel };
