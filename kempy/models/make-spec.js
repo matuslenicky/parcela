@@ -57,10 +57,13 @@ if (fs.existsSync(vsrc)) {
   fs.writeFileSync(path.join(__dirname, 'campers.json'), JSON.stringify(vans, null, 1));
   console.log('campers.json: ' + vans.map((v) => v.id).join(', '));
 }
-// kempingové vybavenie (stany, altánky, markízy, stoly): dims-gear.json bez úprav
+// kempingové vybavenie (stany, strešné stany, altánky, markízy, predstany, stoly, grily, bicykle, bazény, ležadlá): dims-gear.json bez úprav
 const gsrc = path.join(path.dirname(src), 'dims-gear.json');
 if (fs.existsSync(gsrc)) {
-  const gear = Object.values(JSON.parse(fs.readFileSync(gsrc, 'utf8'))).filter((x) => ['tent23', 'tentfam', 'gazebo', 'awning', 'tableset'].includes(x.cat)).map((x) => { const y = Object.assign({}, x); delete y.note; return y; });
+  const CATS = ['tent23', 'tentfam', 'rooftent', 'gazebo', 'awning', 'awningtent', 'tableset', 'grill', 'bike', 'pool', 'relax'];
+  const gear = Object.values(JSON.parse(fs.readFileSync(gsrc, 'utf8'))).filter((x) => CATS.includes(x.cat)).map((x) => { const y = Object.assign({}, x); delete y.note; return y; });
+  // doplnky bez rozmerov výrobcu (plachty v bežných rozmeroch): kempy/models/gear-extra.json, poznámka pri položke hovorí, čo je odhad
+  const gx = path.join(__dirname, 'gear-extra.json'); if (fs.existsSync(gx)) JSON.parse(fs.readFileSync(gx, 'utf8')).forEach((x) => gear.push(x));
   fs.writeFileSync(path.join(__dirname, 'gear.json'), JSON.stringify(gear, null, 1));
   console.log('gear.json: ' + gear.map((v) => v.id).join(', '));
 }

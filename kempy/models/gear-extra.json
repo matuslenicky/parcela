@@ -1,0 +1,24 @@
+[
+ {
+  "id": "tarp3",
+  "cat": "tarp",
+  "name": "Plachta (tarp) 3 × 3 m na dvoch tyčiach",
+  "L": 3000,
+  "W": 3000,
+  "H": 2100,
+  "shape": "rect",
+  "parts": { "poleHeight": 2100, "edgeHeight": 1200 },
+  "note": "Bežný rozmer kempingovej plachty, nie konkrétny výrobok: plátno 3 × 3 m, tyče 2,1 m, okraje vypnuté vo výške 1,2 m (odhad postavenia)."
+ },
+ {
+  "id": "tarp4",
+  "cat": "tarp",
+  "name": "Plachta (tarp) 4 × 3 m na dvoch tyčiach",
+  "L": 4000,
+  "W": 3000,
+  "H": 2200,
+  "shape": "rect",
+  "parts": { "poleHeight": 2200, "edgeHeight": 1300 },
+  "note": "Bežný rozmer kempingovej plachty, nie konkrétny výrobok: plátno 4 × 3 m, tyče 2,2 m, okraje vypnuté vo výške 1,3 m (odhad postavenia)."
+ }
+]
