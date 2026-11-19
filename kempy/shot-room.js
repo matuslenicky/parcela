@@ -52,7 +52,7 @@ server.listen(0, '127.0.0.1', async () => {
     console.log(await page.$$eval('.c3r-cards.kit li', (l) => l.map((x) => x.innerText.replace(/\s+/g, ' ').trim()).join('\n')));
     // ovládanie: vec sa chytí myšou a posunie, tlačidlom otočí, košom odstráni; Hotovo zavrie prehliadku a stránka ukáže zostavu
     const st = () => page.evaluate(() => window.Camp3D.view.state().room), fail = (m) => { console.log('ZLYHALO: ' + m); code = 1; };
-    const n0 = (await st()).items.length, top = (await st()).items.findIndex((i) => !i.host);
+    const n0 = (await st()).items.length; const all0 = (await st()).items, top = all0.findIndex((i) => !i.host && !all0.some((c) => c.host === i.id));   // vec bez pripojenej markízy: tá by ju z niektorých uhlov prekryla
     if (!phone) {
       const a = (await st()).items[top], [sx, sy] = await page.evaluate((i) => window.Camp3D.view.room.screenOf(i), top);
       await page.mouse.move(sx, sy); await page.mouse.down(); await page.mouse.move(sx + 30, sy + 10, { steps: 4 }); await page.mouse.move(sx + 70, sy + 24, { steps: 6 }); await page.mouse.up();
