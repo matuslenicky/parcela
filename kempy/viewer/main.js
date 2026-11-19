@@ -13,7 +13,7 @@ import { MeshoptDecoder } from 'three/examples/jsm/libs/meshopt_decoder.module.j
 import { mergeGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils.js';
 import { makeEnv } from './env.js';
 import { createRoom, registerModel } from './room.js';
-import { texturize, buildTrees, buildBuildings, waterize, waterTick } from './look.js';
+import { texturize, buildTrees, buildBuildings, waterize, waterTick, fadeTrees } from './look.js';
 import CAMP from 'camp-json';
 import GLB from 'camp-glb';
 
@@ -167,7 +167,7 @@ function mount(host, api) {
   }
 
   /* ---------------- model z Blendera */
-  let ready = false, ground = [];
+  let ready = false, ground = [], niceTrees = null;
   const bin = GLB.buffer.slice(GLB.byteOffset, GLB.byteOffset + GLB.byteLength);
   new GLTFLoader().setMeshoptDecoder(MeshoptDecoder).parse(bin, '', (gltf) => {
     const root = gltf.scene;
@@ -200,7 +200,7 @@ function mount(host, api) {
     /* vzhľad: kresba povrchov, voda s odrazom oblohy, stromy s plnými korunami (keď má kemp ich výšky) */
     texturize(ground);
     waterize(root);
-    const nice = buildTrees(CAMP); if (nice) { root.children.filter((c) => /^stromy/i.test(c.name) || (nice.userData.shrubs && /^kriky/i.test(c.name))).forEach((c) => { c.visible = false; c.castShadow = false; }); scene.add(nice); }
+    const nice = niceTrees = buildTrees(CAMP); if (nice) { root.children.filter((c) => /^stromy/i.test(c.name) || (nice.userData.shrubs && /^kriky/i.test(c.name))).forEach((c) => { c.visible = false; c.castShadow = false; }); scene.add(nice); }
     const houses = buildBuildings(CAMP); if (houses) { root.traverse((o) => { if (houses.names.includes(o.name) || (o.parent && houses.names.includes(o.parent.name))) { o.visible = false; o.castShadow = false; } }); scene.add(houses.group); }
     scene.add(root);
     ready = true; renderer.shadowMap.needsUpdate = true; $('.c3-load').remove(); update(); startView();
@@ -301,12 +301,12 @@ function mount(host, api) {
     const d = clamp(Math.hypot(P.w, P.h) / 2 * 1.2 * f.full / (Math.tan(camera.fov * Math.PI / 360) * Math.max(120, Math.min(f.w, f.h))), 10, 140); controls.maxDistance = d * 2.2;
     const from = { t: controls.target.clone(), p: camera.position.clone() }, t = new THREE.Vector3(u.c[0], 0, u.c[1]), p = new THREE.Vector3(t.x + d * 0.3, d * 0.74, t.z + d * 0.6);
     if (still) { controls.target.copy(t); camera.position.copy(p); } else anim = { t0: performance.now(), dur: 900, step(k) { controls.target.lerpVectors(from.t, t, k); camera.position.lerpVectors(from.p, p, k); } };
-    size(); update();
+    fadeTrees(niceTrees, true); size(); update();
   }
   function leaveRoom(done) {
     const id = roomId; if (mode !== 'room') return;
     if (api.kit) api.kit(room.summary());
-    room.exit(); mode = 'map'; anim = null; host.classList.remove('rooming');
+    room.exit(); fadeTrees(niceTrees, false); mode = 'map'; anim = null; host.classList.remove('rooming');
     controls.mouseButtons.LEFT = THREE.MOUSE.PAN; controls.mouseButtons.RIGHT = THREE.MOUSE.ROTATE; controls.touches.ONE = THREE.TOUCH.PAN; controls.touches.TWO = THREE.TOUCH.DOLLY_ROTATE;
     controls.zoomToCursor = true; controls.minDistance = 8; controls.maxDistance = SPAN * 1.7; controls.maxPolarAngle = 1.36;
     size(); update();

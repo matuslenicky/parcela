@@ -88,6 +88,8 @@ export function waterize(root) {
     mats.forEach((x) => { if (!/water/.test(x.name || '') || done.has(x)) return; done.add(x); x.normalMap = waterMap; x.normalScale = new THREE.Vector2(0.35, 0.35); x.roughness = 0.1; x.metalness = 0; x.envMapIntensity = 1.5; x.color.multiplyScalar(0.8); x.needsUpdate = true; });
   });
 }
+/* v izbe parcely koruny spriehľadnejú, aby neprekrývali parcelu; kmene a tiene ostávajú */
+export function fadeTrees(grp, on) { if (!grp || !grp.userData.mats) return; grp.userData.mats.forEach((m, i) => { m.transparent = on; m.opacity = on ? (i ? 0.3 : 0.16) : 1; m.depthWrite = !on; m.needsUpdate = true; }); }
 export function waterTick(dt) { if (waterMap) { waterMap.offset.x += dt * 0.035; waterMap.offset.y += dt * 0.012; } }
 /* stromy z camp.json [x px, y px, polomer koruny px, výška m]: vráti skupinu, alebo null, keď kemp výšky stromov nemá */
 export function buildTrees(CAMP) {
@@ -109,7 +111,7 @@ export function buildTrees(CAMP) {
     im.castShadow = im.receiveShadow = true; im.userData.tree = true; im.frustumCulled = false; grp.add(im);
     cards.receiveShadow = true; cards.userData.tree = true; cards.frustumCulled = false; grp.add(cards);
   });
-  trunk.castShadow = true; trunk.userData.tree = true; trunk.frustumCulled = false; grp.add(trunk); grp.name = 'stromy z dat';
+  trunk.castShadow = true; trunk.userData.tree = true; trunk.frustumCulled = false; grp.add(trunk); grp.name = 'stromy z dat'; grp.userData.mats = [leaf, cardMat];
   const SH = CAMP.shrubs || [];        // kríky medzi parcelami: malá koruna s lístím pri zemi
   if (SH.length) {
     const cg = crownGeo(9), body = new THREE.InstancedMesh(cg, leaf, SH.length), lv = new THREE.InstancedMesh(cardGeo(9, cg, 60), cardMat, SH.length);
