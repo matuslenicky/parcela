@@ -13,6 +13,7 @@ import { MeshoptDecoder } from 'three/examples/jsm/libs/meshopt_decoder.module.j
 import { mergeGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils.js';
 import { makeEnv } from './env.js';
 import { createRoom, registerModel } from './room.js';
+import { texturize, buildTrees } from './look.js';
 import CAMP from 'camp-json';
 import GLB from 'camp-glb';
 
@@ -25,7 +26,7 @@ const ICON = {
   map: '<path d="M9 4 3 6v14l6-2 6 2 6-2V4l-6 2-6-2zM9 4v14M15 6v14"/>',
   walk: '<circle cx="13" cy="4.5" r="1.8"/><path d="M9.5 21l2.2-6.2L14 17v4M11.7 14.8l.8-5.3-3 1.6-1.3 3M12.5 9.5l2.6 2.7 2.9.8"/>',
   plus: '<path d="M12 5v14M5 12h14"/>', minus: '<path d="M5 12h14"/>', close: '<path d="M6 6l12 12M18 6 6 18"/>',
-  up: '<path d="M12 19V5M5 12l7-7 7 7"/>',
+  up: '<path d="M12 19V5M5 12l7-7 7 7"/>', play: '<path d="M7 5l12 7-12 7z"/>',
 };
 const ico = (n) => '<svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">' + ICON[n] + '</svg>';
 
@@ -63,7 +64,7 @@ function mount(host, api) {
     '<div class="c3-stage"></div>'
     + '<div class="c3-top"><div class="c3-go"><select aria-label="Prejsť na miesto"><option value="">Prejsť na miesto…</option></select></div></div>'
     + '<div class="c3-ctl">'
-    + '<div class="c3-seg" role="group" aria-label="Režim pohľadu"><button type="button" data-mode="map" aria-pressed="true">' + ico('map') + '<span>Prehľad</span></button><button type="button" data-mode="walk" aria-pressed="false">' + ico('walk') + '<span>Prechádzka</span></button></div>'
+    + '<div class="c3-seg" role="group" aria-label="Režim pohľadu"><button type="button" data-mode="map" aria-pressed="true">' + ico('map') + '<span>Prehľad</span></button><button type="button" data-mode="walk" aria-pressed="false">' + ico('walk') + '<span>Prechádzka</span></button>' + (CAMP.tour ? '<button type="button" data-mode="fly" aria-pressed="false">' + ico('play') + '<span>Prelet</span></button>' : '') + '</div>'
     + '<div class="c3-stack c3-zoom"><button type="button" class="c3-zin" aria-label="Priblížiť">' + ico('plus') + '</button><button type="button" class="c3-zout" aria-label="Oddialiť">' + ico('minus') + '</button></div>'
     + '<button type="button" class="c3-fwd" aria-label="Ísť dopredu" hidden>' + ico('up') + '</button>'
     + '</div>'
@@ -81,7 +82,7 @@ function mount(host, api) {
   }
   renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, touch ? 1.5 : 2));
   renderer.outputColorSpace = THREE.SRGBColorSpace; renderer.toneMapping = THREE.NeutralToneMapping;
-  renderer.shadowMap.enabled = true; renderer.shadowMap.type = THREE.PCFShadowMap;
+  renderer.shadowMap.enabled = true; renderer.shadowMap.type = THREE.PCFSoftShadowMap;
   renderer.shadowMap.autoUpdate = false;       // scéna stojí: tiene sa prepočítajú len po načítaní modelu a pri otvorení prehliadky
   renderer.domElement.setAttribute('aria-hidden', 'true'); renderer.domElement.style.touchAction = 'none';
   stage.appendChild(renderer.domElement);
@@ -196,6 +197,10 @@ function mount(host, api) {
       const mesh = new THREE.Mesh(g, m); mesh.name = 'vozidla'; mesh.castShadow = mesh.receiveShadow = true; root.add(mesh);
     });
     cars.forEach((v) => { v.traverse((o) => { if (o.isMesh) o.geometry.dispose(); }); root.remove(v); });
+    /* vzhľad: kresba povrchov, voda s odrazom oblohy, stromy s plnými korunami (keď má kemp ich výšky) */
+    texturize(ground);
+    root.traverse((o) => { if (o.isMesh) (Array.isArray(o.material) ? o.material : [o.material]).forEach((m) => { if (/water/.test(m.name || '')) { m.roughness = 0.08; m.metalness = 0.0; m.envMapIntensity = 1.6; m.color.multiplyScalar(0.82); } }); });
+    const nice = buildTrees(CAMP); if (nice) { root.children.filter((c) => /^stromy/i.test(c.name)).forEach((c) => { c.visible = false; c.castShadow = false; }); scene.add(nice); }
     scene.add(root);
     ready = true; renderer.shadowMap.needsUpdate = true; $('.c3-load').remove(); update(); startView();
   }, (err) => { $('.c3-load').textContent = '3D model sa nepodarilo načítať.'; console.error(err); });
@@ -264,6 +269,7 @@ function mount(host, api) {
     anim = { t0: performance.now(), dur: 900, step(k) { controls.target.lerpVectors(from.t, t, k); camera.position.lerpVectors(from.p, p, k); } };
   }
   function setMode(m) {
+    stopFly();
     if (m === mode) return;
     mode = m; anim = null; walk.go = null;
     host.querySelectorAll('.c3-seg button').forEach((b) => b.setAttribute('aria-pressed', b.dataset.mode === m ? 'true' : 'false'));
@@ -329,6 +335,7 @@ function mount(host, api) {
   }
   renderer.domElement.addEventListener('pointerdown', (e) => {
     if (mode === 'room') { down = null; return; }         // v izbe parcely má ukazovateľ room.js
+    stopFly();
     if (e.isPrimary) fingers.clear();
     fingers.add(e.pointerId);
     if (fingers.size > 1) { down = null; return; }               // druhý prst = priblíženie alebo otáčanie, nie výber
@@ -356,14 +363,29 @@ function mount(host, api) {
     if (!KEY[e.code]) return;
     if (!v) { walk.keys[KEY[e.code]] = false; return; }           // pustenie platí vždy, aj keď fokus medzitým prešiel do rolety
     if (mode !== 'walk' || !running || e.ctrlKey || e.metaKey || e.altKey || /^(SELECT|INPUT|TEXTAREA)$/.test((e.target.tagName || ''))) return;   // Ctrl+S, Ctrl+D… patria prehliadaču
-    walk.keys[KEY[e.code]] = true; walk.go = null; e.preventDefault();
+    stopFly(); walk.keys[KEY[e.code]] = true; walk.go = null; e.preventDefault();
   };
   const kd = (e) => onKey(e, true), ku = (e) => onKey(e, false), kb = () => { walk.keys = {}; };   // strata fokusu okna: keyup by už neprišiel
   window.addEventListener('keydown', kd); window.addEventListener('keyup', ku); window.addEventListener('blur', kb);
   fwd.addEventListener('pointerdown', () => { walk.keys.f = true; walk.go = null; });
   ['pointerup', 'pointerleave', 'pointercancel'].forEach((n) => fwd.addEventListener(n, () => { walk.keys.f = false; }));
 
-  host.querySelectorAll('.c3-seg button').forEach((b) => b.addEventListener('click', () => setMode(b.dataset.mode)));
+  host.querySelectorAll('.c3-seg button').forEach((b) => b.addEventListener('click', () => (b.dataset.mode === 'fly' ? startFly() : setMode(b.dataset.mode))));
+  /* prelet: plynulý pohyb po trase kempu vo výške očí (camp.json: tour); zastaví ho dotyk, kláves alebo koniec trasy, hosť potom pokračuje pešo */
+  let fly = null;
+  function startFly() {
+    if (!ready || !CAMP.tour) return; setMode('walk');
+    const curve = new THREE.CatmullRomCurve3(CAMP.tour.map((p) => { const w = W(p); return new THREE.Vector3(w[0], EYE, w[1]); }), false, 'centripetal');
+    fly = { curve, len: curve.getLength(), t: 0 }; walk.go = null; walk.pitch = -0.04;
+    const b = host.querySelector('.c3-seg [data-mode="fly"]'); if (b) b.setAttribute('aria-pressed', 'true'); host.querySelector('.c3-seg [data-mode="walk"]').setAttribute('aria-pressed', 'false');
+    hint.textContent = 'Prelet kempom. Dotykom alebo klávesom ho zastavíte a pokračujete pešo.';
+  }
+  function stopFly() { if (!fly) return; fly = null; const b = host.querySelector('.c3-seg [data-mode="fly"]'); if (b) b.setAttribute('aria-pressed', 'false'); if (mode === 'walk') { host.querySelector('.c3-seg [data-mode="walk"]').setAttribute('aria-pressed', 'true'); setHint(); } }
+  function flyStep(dt) {
+    fly.t += (still ? 6 : 3.2) * dt / fly.len; if (fly.t >= 0.995) { stopFly(); return; }
+    const p = fly.curve.getPointAt(fly.t), a = fly.curve.getPointAt(Math.min(1, fly.t + 6 / fly.len)), want = Math.atan2(a.x - p.x, -(a.z - p.z));
+    let d = want - walk.yaw; d = Math.atan2(Math.sin(d), Math.cos(d)); walk.yaw += d * Math.min(1, dt * 2.2); walk.x = p.x; walk.z = p.z;
+  }
   const zoom = (k) => { const v = camera.position.clone().sub(controls.target); v.setLength(clamp(v.length() * k, controls.minDistance, controls.maxDistance)); camera.position.copy(controls.target).add(v); };
   $('.c3-zin').addEventListener('click', () => zoom(0.7)); $('.c3-zout').addEventListener('click', () => zoom(1.4));
   $('.c3-x').addEventListener('click', () => { card.hidden = true; cardId = null; });
@@ -385,6 +407,7 @@ function mount(host, api) {
     raf = requestAnimationFrame(frame);
     const dt = Math.min(0.05, (now - last) / 1000 || 0.016); last = now;
     if (mode === 'walk') {
+      if (fly) flyStep(dt);
       const k = walk.keys, fx = Math.sin(walk.yaw), fz = -Math.cos(walk.yaw);
       if (k.tl) walk.yaw += 1.6 * dt; if (k.tr) walk.yaw -= 1.6 * dt;
       let mx = 0, mz = 0;
@@ -404,7 +427,7 @@ function mount(host, api) {
   function resume() { if (running) return; running = true; renderer.shadowMap.needsUpdate = true; applyTheme(); size(); update(); last = performance.now(); raf = requestAnimationFrame(frame); }
   function pause() { running = false; cancelAnimationFrame(raf); walk.keys = {}; }
   setHint();
-  return window.Camp3D.view = { ok: true, setHour, sun: () => { const q = sunAt(hour); return { hour, el: +(q.el * 180 / Math.PI).toFixed(1), az: +(q.az * 180 / Math.PI).toFixed(1) }; }, update, pause, resume, setMode, enterRoom, leaveRoom, room, focusUnit(id) { if (byId[id]) { showCard(id); flyTo(byId[id]); } },
+  return window.Camp3D.view = { ok: true, setHour, startFly, flying: () => !!fly, flyAt(t) { startFly(); if (fly) { fly.t = t; const p = fly.curve.getPointAt(t), a = fly.curve.getPointAt(Math.min(1, t + 6 / fly.len)); walk.yaw = Math.atan2(a.x - p.x, -(a.z - p.z)); } }, sun: () => { const q = sunAt(hour); return { hour, el: +(q.el * 180 / Math.PI).toFixed(1), az: +(q.az * 180 / Math.PI).toFixed(1) }; }, update, pause, resume, setMode, enterRoom, leaveRoom, room, focusUnit(id) { if (byId[id]) { showCard(id); flyTo(byId[id]); } },
     state: () => ({ mode, ready, room: room.state(), cam: camera.position.toArray().map((v) => Math.round(v * 10) / 10), walk: { x: Math.round(walk.x * 10) / 10, z: Math.round(walk.z * 10) / 10 }, card: cardId, calls: renderer.info.render.calls, tris: renderer.info.render.triangles }),
     destroy() { pause(); room.destroy(); ro.disconnect(); window.removeEventListener('keydown', kd); window.removeEventListener('keyup', ku); window.removeEventListener('blur', kb); renderer.dispose(); host.innerHTML = ''; } };
 }

@@ -1,4 +1,4 @@
-// Zábery prehliadky v rôznu dennú dobu: node kempy/shot-sun.js <slug> <out dir> [--walk] [hodiny, napr. 8,13,19]
+// Zábery prehliadky v rôznu dennú dobu: node kempy/shot-sun.js <slug> <out dir> [--walk] [--fly=0.3 (miesto na trase preletu, 0 – 1)] [hodiny, napr. 8,13,19]
 // Vypíše aj výšku a azimut slnka, aby sa dali porovnať s tabuľkami (azimut od severu v smere hodinových ručičiek).
 'use strict';
 const http = require('http'), fs = require('fs'), path = require('path');
@@ -20,7 +20,9 @@ server.listen(0, '127.0.0.1', async () => {
     await page.goto('http://127.0.0.1:' + server.address().port + '/' + slug + '/index.html');
     await page.click('#open3d');
     await page.waitForFunction(() => document.querySelector('.c3-stage canvas') && !document.querySelector('.c3-load'));
-    if (argv.includes('--walk')) { await page.click('.c3-seg [data-mode="walk"]'); await page.waitForTimeout(1500); }
+    const flyT = (argv.find((a) => a.startsWith('--fly=')) || '').slice(6);
+    if (flyT) { await page.evaluate((t) => window.Camp3D.view.flyAt(t), +flyT); await page.waitForTimeout(1200); }
+    else if (argv.includes('--walk')) { await page.click('.c3-seg [data-mode="walk"]'); await page.waitForTimeout(1500); }
     else for (let i = 0; i < 2; i++) { await page.click('.c3-zin'); await page.waitForTimeout(300); }
     for (const h of hours) {
       await page.evaluate((x) => window.Camp3D.view.setHour(x), h); await page.waitForTimeout(2200);
