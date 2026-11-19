@@ -4,6 +4,7 @@
      api.units()  -> [{id, taken, fit, sel}]     stav jednotiek pre zvolený termín a voľbu hosťa
      api.info(id) -> {title, chip, ok, facts: [], total}   texty pre kartu (rovnaké ako v paneli stránky)
      api.select(id)   vyberie jednotku na stránke          api.book(id)   zavrie prehliadku a ukáže panel s cenou
+     api.kit(names)   (nepovinné) zostava, ktorú si hosť poskladal v izbe parcely (room.js)
    Jednotky: metre, x východ, z juh, y hore (Blender exportuje glTF s osou Y nahor). */
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
@@ -11,6 +12,7 @@ import { MapControls } from 'three/examples/jsm/controls/MapControls.js';
 import { MeshoptDecoder } from 'three/examples/jsm/libs/meshopt_decoder.module.js';
 import { mergeGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils.js';
 import { makeEnv } from './env.js';
+import { createRoom, registerModel } from './room.js';
 import CAMP from 'camp-json';
 import GLB from 'camp-glb';
 
@@ -65,7 +67,7 @@ function mount(host, api) {
     + '<div class="c3-stack c3-zoom"><button type="button" class="c3-zin" aria-label="Priblížiť">' + ico('plus') + '</button><button type="button" class="c3-zout" aria-label="Oddialiť">' + ico('minus') + '</button></div>'
     + '<button type="button" class="c3-fwd" aria-label="Ísť dopredu" hidden>' + ico('up') + '</button>'
     + '</div>'
-    + '<div class="c3-card" hidden role="group" aria-label="Vybrané miesto"><button type="button" class="c3-x" aria-label="Zavrieť kartu">' + ico('close') + '</button><div class="c3-tip"></div><button type="button" class="btn btn-sign c3-book">Pokračovať k rezervácii</button></div>'
+    + '<div class="c3-card" hidden role="group" aria-label="Vybrané miesto"><button type="button" class="c3-x" aria-label="Zavrieť kartu">' + ico('close') + '</button><div class="c3-tip"></div><button type="button" class="btn btn-sign c3-fit">Zariadiť parcelu</button><button type="button" class="btn btn-line c3-book">Pokračovať k rezervácii</button></div>'
     + '<p class="c3-hint"></p><p class="sr c3-say" role="status"></p><div class="c3-load" role="status">Načítavam 3D model kempu…</div>';
   const $ = (s) => host.querySelector(s);
   const stage = $('.c3-stage'), card = $('.c3-card'), hint = $('.c3-hint'), pick = $('.c3-go select'), fwd = $('.c3-fwd');
@@ -188,7 +190,8 @@ function mount(host, api) {
   controls.touches.ONE = THREE.TOUCH.PAN; controls.touches.TWO = THREE.TOUCH.DOLLY_ROTATE;
   controls.addEventListener('change', () => {
     const t = controls.target; t.y = 0;
-    const cx = clamp(t.x, LIM.x0, LIM.x1), cz = clamp(t.z, LIM.z0, LIM.z1);
+    const u = mode === 'room' && byId[roomId];           // v izbe parcely sa pohľad drží pri parcele
+    const cx = u ? clamp(t.x, u.c[0] - 10, u.c[0] + 10) : clamp(t.x, LIM.x0, LIM.x1), cz = u ? clamp(t.z, u.c[1] - 10, u.c[1] + 10) : clamp(t.z, LIM.z0, LIM.z1);
     if (cx !== t.x || cz !== t.z) { camera.position.x += cx - t.x; camera.position.z += cz - t.z; t.x = cx; t.z = cz; }
   });
   function startView() {
@@ -197,7 +200,7 @@ function mount(host, api) {
   }
 
   /* ---------------- stav */
-  let mode = 'map', running = false, anim = null, cardId = null;
+  let mode = 'map', running = false, anim = null, cardId = null, roomId = null;
   const walk = { x: CENTER.x, z: CENTER.z, yaw: 0, pitch: -0.06, keys: {}, go: null };
   function setHint() {
     hint.textContent = mode === 'walk'
@@ -209,7 +212,7 @@ function mount(host, api) {
     (api.units() || []).forEach((s) => {
       const u = byId[s.id]; if (!u) return;
       const m = u.fill.material;
-      if (s.sel) { m.color.set(0x0a5bab); m.opacity = 0.62; }
+      if (s.sel) { m.color.set(0x0a5bab); m.opacity = mode === 'room' ? 0.14 : 0.62; }
       else if (s.taken) { m.color.set(0x8d969b); m.opacity = 0.78; }
       else if (!s.fit) { m.color.set(0xf2f5f3); m.opacity = 0.6; }
       else m.opacity = 0;
@@ -222,7 +225,7 @@ function mount(host, api) {
     cardId = id;
     card.querySelector('.c3-tip').innerHTML = '<div class="c3-h"><strong>' + esc(i.title) + '</strong><span class="chip ' + (i.ok ? 'ok' : 'no') + '">' + esc(i.chip) + '</span></div>'
       + '<p class="c3-f">' + i.facts.map((f) => '<span>' + esc(f) + '</span>').join('') + '</p>' + (i.total ? '<p class="c3-sum">' + esc(i.total) + '</p>' : '');
-    card.querySelector('.c3-book').hidden = !i.ok;
+    card.querySelector('.c3-book').hidden = !i.ok; card.querySelector('.c3-fit').hidden = !i.ok || byId[id].unit === 'cabin';
     card.hidden = false;
   }
   function choose(id, fly) {
@@ -262,6 +265,30 @@ function mount(host, api) {
     camera.updateProjectionMatrix(); setHint();
   }
 
+  /* ---------------- izba parcely (room.js): hosť si na parcele poskladá, s čím príde */
+  const room = createRoom({ host, stage, scene, camera, renderer, controls, CAMP, api, touch, shadows: () => { renderer.shadowMap.needsUpdate = true; }, exit: (done) => leaveRoom(done) });
+  function enterRoom(id) {
+    const u = byId[id], raw = CAMP.parcels.find((p) => p.id === id); if (!u || !raw || !ready || u.unit === 'cabin') return;
+    if (mode === 'walk') setMode('map');
+    api.select(id); mode = 'room'; roomId = id; anim = null; card.hidden = true; cardId = null; host.classList.add('rooming');
+    controls.enabled = true; controls.mouseButtons.LEFT = THREE.MOUSE.ROTATE; controls.mouseButtons.RIGHT = THREE.MOUSE.PAN; controls.touches.ONE = THREE.TOUCH.ROTATE; controls.touches.TWO = THREE.TOUCH.DOLLY_PAN;
+    controls.zoomToCursor = false; controls.minDistance = 4; controls.maxPolarAngle = 1.45;
+    const P = room.enter(u, raw), f = room.free();        // vzdialenosť, z ktorej sa celá parcela zmestí do voľnej časti obrazu
+    const d = clamp(Math.hypot(P.w, P.h) / 2 * 1.02 * f.full / (Math.tan(camera.fov * Math.PI / 360) * Math.max(120, Math.min(f.w, f.h))), 10, 140); controls.maxDistance = d * 2.2;
+    const from = { t: controls.target.clone(), p: camera.position.clone() }, t = new THREE.Vector3(u.c[0], 0, u.c[1]), p = new THREE.Vector3(t.x + d * 0.3, d * 0.74, t.z + d * 0.6);
+    if (still) { controls.target.copy(t); camera.position.copy(p); } else anim = { t0: performance.now(), dur: 900, step(k) { controls.target.lerpVectors(from.t, t, k); camera.position.lerpVectors(from.p, p, k); } };
+    size(); update();
+  }
+  function leaveRoom(done) {
+    const id = roomId; if (mode !== 'room') return;
+    if (api.kit) api.kit(room.summary());
+    room.exit(); mode = 'map'; anim = null; host.classList.remove('rooming');
+    controls.mouseButtons.LEFT = THREE.MOUSE.PAN; controls.mouseButtons.RIGHT = THREE.MOUSE.ROTATE; controls.touches.ONE = THREE.TOUCH.PAN; controls.touches.TWO = THREE.TOUCH.DOLLY_ROTATE;
+    controls.zoomToCursor = true; controls.minDistance = 8; controls.maxDistance = SPAN * 1.7; controls.maxPolarAngle = 1.36;
+    size(); update();
+    if (done) api.book(id); else { showCard(id); flyTo(byId[id]); }
+  }
+
   /* ---------------- ukazovateľ: klik na miesto, v prechádzke rozhliadanie a chôdza */
   const ray = new THREE.Raycaster(), ndc = new THREE.Vector2(), fingers = new Set(); let down = null;
   function hitGround(e) {
@@ -284,6 +311,7 @@ function mount(host, api) {
     return best;
   }
   renderer.domElement.addEventListener('pointerdown', (e) => {
+    if (mode === 'room') { down = null; return; }         // v izbe parcely má ukazovateľ room.js
     if (e.isPrimary) fingers.clear();
     fingers.add(e.pointerId);
     if (fingers.size > 1) { down = null; return; }               // druhý prst = priblíženie alebo otáčanie, nie výber
@@ -298,7 +326,7 @@ function mount(host, api) {
   });
   renderer.domElement.addEventListener('pointerup', (e) => {
     fingers.delete(e.pointerId);
-    const d = down; down = null; if (!d || d.id !== e.pointerId || d.moved || !ready) return;
+    const d = down; down = null; if (!d || d.id !== e.pointerId || d.moved || !ready || mode === 'room') return;
     const p = hitGround(e); if (!p) return;
     const u = mode === 'map' ? unitNear(p, e) : unitAt(p.x, p.z);
     if (mode === 'map') { if (u) choose(u.id, false); else { card.hidden = true; cardId = null; } return; }
@@ -323,11 +351,12 @@ function mount(host, api) {
   $('.c3-zin').addEventListener('click', () => zoom(0.7)); $('.c3-zout').addEventListener('click', () => zoom(1.4));
   $('.c3-x').addEventListener('click', () => { card.hidden = true; cardId = null; });
   $('.c3-book').addEventListener('click', () => { if (cardId) api.book(cardId); });
+  $('.c3-fit').addEventListener('click', () => { if (cardId) enterRoom(cardId); });
   pick.addEventListener('change', () => { if (pick.value) { choose(pick.value, true); pick.value = ''; } });
 
   /* ---------------- slučka */
   let last = 0, raf = 0;
-  function size() { const w = stage.clientWidth, h = stage.clientHeight; if (!w || !h) return; renderer.setSize(w, h, false); camera.aspect = w / h; camera.updateProjectionMatrix(); }
+  function size() { const w = stage.clientWidth, h = stage.clientHeight; if (!w || !h) return; renderer.setSize(w, h, false); camera.aspect = w / h; camera.updateProjectionMatrix(); room.layout(); }
   const ro = new ResizeObserver(size); ro.observe(stage);
   function tryMove(nx, nz) { if (!blocked(nx, nz)) { walk.x = nx; walk.z = nz; return true; } if (!blocked(nx, walk.z)) { walk.x = nx; return true; } if (!blocked(walk.x, nz)) { walk.z = nz; return true; } return false; }
   function frame(now) {
@@ -354,8 +383,8 @@ function mount(host, api) {
   function resume() { if (running) return; running = true; renderer.shadowMap.needsUpdate = true; applyTheme(); size(); update(); last = performance.now(); raf = requestAnimationFrame(frame); }
   function pause() { running = false; cancelAnimationFrame(raf); walk.keys = {}; }
   setHint();
-  return { ok: true, update, pause, resume, setMode, focusUnit(id) { if (byId[id]) { showCard(id); flyTo(byId[id]); } },
-    state: () => ({ mode, ready, cam: camera.position.toArray().map((v) => Math.round(v * 10) / 10), walk: { x: Math.round(walk.x * 10) / 10, z: Math.round(walk.z * 10) / 10 }, card: cardId, calls: renderer.info.render.calls, tris: renderer.info.render.triangles }),
-    destroy() { pause(); ro.disconnect(); window.removeEventListener('keydown', kd); window.removeEventListener('keyup', ku); window.removeEventListener('blur', kb); renderer.dispose(); host.innerHTML = ''; } };
+  return { ok: true, update, pause, resume, setMode, enterRoom, leaveRoom, room, focusUnit(id) { if (byId[id]) { showCard(id); flyTo(byId[id]); } },
+    state: () => ({ mode, ready, room: room.state(), cam: camera.position.toArray().map((v) => Math.round(v * 10) / 10), walk: { x: Math.round(walk.x * 10) / 10, z: Math.round(walk.z * 10) / 10 }, card: cardId, calls: renderer.info.render.calls, tris: renderer.info.render.triangles }),
+    destroy() { pause(); room.destroy(); ro.disconnect(); window.removeEventListener('keydown', kd); window.removeEventListener('keyup', ku); window.removeEventListener('blur', kb); renderer.dispose(); host.innerHTML = ''; } };
 }
-window.Camp3D = { mount };
+window.Camp3D = { mount, model: registerModel };

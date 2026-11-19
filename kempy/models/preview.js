@@ -1,5 +1,5 @@
 // Rýchly náhľad modelov (.glb) v three.js s rovnakým svetlom ako 3D prehliadka: hárok pohľadov do PNG za pár sekúnd.
-//   node kempy/models/preview.js <out.png> <model.glb> [ďalšie.glb …] [--views=front34,side,rear34,front,rear,top] [--cols=3] [--tile=640x420] [--ground=#8f948c]
+//   node kempy/models/preview.js <out.png> <model.glb> [ďalšie.glb …] [--views=front34,side,rear34,front,rear,top] [--cols=3] [--tile=640x420] [--ground=#8f948c] [--bg=#dfe9ee] [--nolabel] [--json=rozmery.json]
 // Jeden model = hárok všetkých pohľadov; viac modelov = riadok na model. Spúšťa si vlastný headless Chromium (softvérové WebGL) a sám ho zatvorí.
 'use strict';
 const http = require('http'), fs = require('fs'), path = require('path');
@@ -20,14 +20,14 @@ import * as THREE from 'three';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { MeshoptDecoder } from 'three/addons/libs/meshopt_decoder.module.js';
 import { makeEnv } from '/kempy/viewer/env.js';
-const C = ${JSON.stringify({ n: glbs.length, names: glbs.map((g) => path.basename(g, '.glb')), views, cols, rows, tw, th, ground: flag('ground', '#8f948c') })};
+const C = ${JSON.stringify({ n: glbs.length, names: glbs.map((g) => path.basename(g, '.glb')), views, cols, rows, tw, th, ground: flag('ground', '#8f948c'), bg: flag('bg', '#dfe9ee'), nolabel: argv.includes('--nolabel') })};
 const VIEW = { front34: [38, 13, 30], rear34: [142, 13, 30], side: [90, 3, 22], front: [0, 5, 24], rear: [180, 5, 24], top: [90, 89.5, 24], hi34: [42, 32, 30], low34: [28, 5, 32], back34: [215, 16, 30] };
 const renderer = new THREE.WebGLRenderer({ antialias: true, preserveDrawingBuffer: true });
 renderer.setPixelRatio(1); renderer.setSize(C.cols * C.tw, C.rows * C.th);
 renderer.outputColorSpace = THREE.SRGBColorSpace; renderer.toneMapping = THREE.NeutralToneMapping; renderer.toneMappingExposure = 1.1;
 renderer.shadowMap.enabled = true; renderer.shadowMap.type = THREE.PCFShadowMap;
 document.body.appendChild(renderer.domElement);
-const scene = new THREE.Scene(); scene.background = new THREE.Color('#dfe9ee');
+const scene = new THREE.Scene(); scene.background = new THREE.Color(C.bg);
 const sunDir = new THREE.Vector3(0.35, 0.8, 0.45).normalize();
 scene.environment = makeEnv(renderer, { sun: sunDir }); scene.environmentIntensity = 0.85;
 scene.add(new THREE.HemisphereLight(0xe6f2fa, 0x6b7466, 0.55));
@@ -43,7 +43,7 @@ models.forEach((g, i) => {
   g.scene.traverse((o) => { if (o.isMesh) { o.castShadow = o.receiveShadow = true; meshes++; tris += (o.geometry.index ? o.geometry.index.count : o.geometry.attributes.position.count) / 3; } });
   g.scene.visible = false; scene.add(g.scene);
   const b = new THREE.Box3().setFromObject(g.scene), s = b.getSize(new THREE.Vector3());
-  stats.push({ name: C.names[i], tris: Math.round(tris), meshes, size: [s.x, s.y, s.z].map((v) => +v.toFixed(3)) });
+  stats.push({ name: C.names[i], tris: Math.round(tris), meshes, size: [s.x, s.y, s.z].map((v) => +v.toFixed(3)), box: [b.min.x, b.min.y, b.min.z, b.max.x, b.max.y, b.max.z].map((v) => +v.toFixed(3)) });
 });
 renderer.setScissorTest(true);
 let t = 0;
@@ -58,7 +58,7 @@ for (let i = 0; i < C.n; i++) {
     cam.position.set(ctr.x + Math.cos(a) * Math.cos(e) * dist, ctr.y + Math.sin(e) * dist, ctr.z + Math.sin(a) * Math.cos(e) * dist); cam.lookAt(ctr);
     const cx = (t % C.cols) * C.tw, cy = (C.rows - 1 - Math.floor(t / C.cols)) * C.th;
     renderer.setViewport(cx, cy, C.tw, C.th); renderer.setScissor(cx, cy, C.tw, C.th); renderer.render(scene, cam);
-    if (v === C.views[0] || C.n === 1) { const l = document.createElement('div'); l.className = 'l'; l.textContent = (C.n > 1 || v === C.views[0] ? C.names[i] + ' · ' : '') + v; l.style.left = (t % C.cols) * C.tw + 8 + 'px'; l.style.top = Math.floor(t / C.cols) * C.th + 8 + 'px'; document.body.appendChild(l); }
+    if (!C.nolabel && (v === C.views[0] || C.n === 1)) { const l = document.createElement('div'); l.className = 'l'; l.textContent = (C.n > 1 || v === C.views[0] ? C.names[i] + ' · ' : '') + v; l.style.left = (t % C.cols) * C.tw + 8 + 'px'; l.style.top = Math.floor(t / C.cols) * C.th + 8 + 'px'; document.body.appendChild(l); }
     t++;
   }
   g.visible = false;
@@ -84,7 +84,8 @@ server.listen(0, '127.0.0.1', async () => {
     await page.goto('http://127.0.0.1:' + port + '/');
     await page.waitForFunction('window.__done === true', null, { timeout: 180000 });
     await page.screenshot({ path: out });
-    for (const s of await page.evaluate('window.__stats')) console.log(`${s.name}: ${s.size[0]} × ${s.size[2]} × ${s.size[1]} m (d × š × v), ${s.tris} trojuholníkov, ${s.meshes} sietí`);
+    const stats = await page.evaluate('window.__stats'); if (flag('json', '')) fs.writeFileSync(path.resolve(flag('json', '')), JSON.stringify(stats));
+    for (const s of stats) if (stats.length < 20) console.log(`${s.name}: ${s.size[0]} × ${s.size[2]} × ${s.size[1]} m (d × š × v), ${s.tris} trojuholníkov, ${s.meshes} sietí`);
     console.log('náhľad: ' + out);
   } catch (e) { console.error(e.message); code = 1; } finally { if (browser) await browser.close(); server.close(); process.exit(code); }
 });

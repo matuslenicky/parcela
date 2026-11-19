@@ -194,6 +194,76 @@ p { margin: 0; }
 @media (max-width: 620px) { .c3-top { top: 74px; } .c3-go select { max-width: calc(100vw - 96px); } }  /* roleta pod prepínačom, vedľa tlačidiel priblíženia */
 @media (max-height: 480px) { .c3-card { bottom: 58px; gap: 6px; padding: 12px 16px; } }  /* telefón na šírku: karta nesmie siahať na roletu */
 .c3 button:focus-visible, .c3 select:focus-visible, .tour-x:focus-visible { outline: 3px solid var(--sign); outline-offset: 2px; }
+/* izba parcely (kempy/viewer/room.js): katalóg vľavo alebo dole, parcela vo zvyšku */
+.c3.rooming .c3-top, .c3.rooming .c3-ctl, .c3.rooming .c3-hint, .c3.rooming .c3-card { display: none; }
+.c3r { position: absolute; inset: 0; pointer-events: none; display: grid; grid-template: "bar bar" auto "panel tool" minmax(0, 1fr) / minmax(300px, 380px) minmax(0, 1fr); }
+.c3r[hidden] { display: none; }
+.c3r > * { pointer-events: auto; }
+.c3r svg { width: 22px; height: 22px; flex: none; }
+.c3r button { font: inherit; cursor: pointer; }
+.c3r-bar { grid-area: bar; display: flex; align-items: center; gap: 12px; padding: 8px 12px; background: var(--paper); border-bottom: 1px solid var(--line); }
+.c3r-back { display: inline-flex; align-items: center; gap: 6px; min-height: 44px; padding: 0 14px 0 8px; border-radius: 10px; border: 1px solid var(--line); background: var(--paper); color: var(--ink); font-weight: 700; }
+.c3r-title { flex: 1; min-width: 0; display: grid; line-height: 1.25; }
+.c3r-title strong { font-size: 1.08rem; }
+.c3r-title span { color: var(--muted); font-size: .88rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.c3r-done { min-height: 44px; padding: .5em 1.1em; white-space: nowrap; }
+.c3r-done.bad { background: var(--paper); color: var(--no); border-color: var(--no); }
+.c3r-panel { grid-area: panel; display: flex; flex-direction: column; min-height: 0; background: var(--paper); border-right: 1px solid var(--line); }
+.c3r-tabs { display: flex; flex-wrap: wrap; gap: 6px; padding: 12px 12px 8px; }
+.c3r-subs { display: flex; flex-wrap: wrap; gap: 6px; padding: 0 12px 10px; }
+.c3r-subs[hidden] { display: none; }
+.c3r-tabs button, .c3r-subs button { min-height: 44px; padding: 0 14px; border-radius: 999px; border: 1px solid var(--line); background: var(--paper); color: var(--ink); font-size: .93rem; font-weight: 700; white-space: nowrap; }
+.c3r-subs button { background: var(--soft); font-weight: 600; }
+.c3r-tabs button[aria-pressed="true"] { background: var(--ink); color: var(--paper); border-color: var(--ink); }
+.c3r-subs button[aria-pressed="true"] { background: var(--sign); color: #fff; border-color: var(--sign); }
+.c3r-cards { flex: 1; min-height: 0; overflow-y: auto; overscroll-behavior: contain; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; padding: 4px 12px 16px; align-content: start; }
+.c3r-card { position: relative; display: grid; align-content: start; gap: 1px; padding: 0 0 10px; border: 1px solid var(--line); border-radius: 12px; background: var(--paper); color: var(--ink); text-align: left; overflow: hidden; }
+.c3r-card:hover { border-color: var(--sign); }
+.c3r-card img { display: block; width: 100%; height: auto; aspect-ratio: 320 / 220; background: #e9eeea; }
+.c3r-card b { padding: 7px 10px 0; font-size: .92rem; line-height: 1.25; }
+.c3r-card i { padding: 0 10px; font-style: normal; color: var(--muted); font-size: .85rem; }
+.c3r-add { position: absolute; top: 8px; right: 8px; width: 32px; height: 32px; display: grid; place-items: center; border-radius: 50%; background: var(--sign); color: #fff; }
+.c3r-cards.kit { display: block; }
+.c3r-cards.kit ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
+.c3r-cards.kit li { display: flex; align-items: center; gap: 6px; border: 1px solid var(--line); border-radius: 12px; overflow: hidden; }
+.c3r-cards.kit li.on { border-color: var(--sign); box-shadow: inset 0 0 0 1px var(--sign); }
+.c3r-pick { flex: 1; min-width: 0; display: flex; align-items: center; gap: 10px; min-height: 56px; padding: 6px 4px 6px 6px; border: 0; background: transparent; color: var(--ink); text-align: left; }
+.c3r-pick img { width: 64px; height: 44px; border-radius: 8px; background: #e9eeea; flex: none; }
+.c3r-pick span { display: grid; min-width: 0; line-height: 1.25; }
+.c3r-pick b { font-size: .93rem; }
+.c3r-pick i { font-style: normal; color: var(--muted); font-size: .85rem; }
+.c3r-cards.kit li.bad i { color: var(--no); font-weight: 700; }
+.c3r-rm { width: 44px; height: 44px; margin-right: 4px; display: grid; place-items: center; border: 0; border-radius: 10px; background: transparent; color: var(--muted); }
+.c3r-rm:hover { color: var(--no); }
+.c3r-empty { margin: 8px 4px; color: var(--muted); font-size: .95rem; }
+.c3r-tool { grid-area: tool; align-self: end; justify-self: center; margin: 0 12px 16px; display: grid; gap: 6px; width: min(380px, calc(100% - 24px)); padding: 12px 14px; border-radius: 14px; background: var(--paper); border: 1px solid var(--line); box-shadow: var(--shadow); }
+.c3r-tool[hidden] { display: none; }
+.c3r-th { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+.c3r-th strong { font-size: 1.02rem; line-height: 1.25; }
+.c3r-why { margin: 0; color: var(--muted); font-size: .9rem; }
+.c3r-acts { display: flex; gap: 8px; }
+.c3r-acts button { width: 48px; height: 48px; display: grid; place-items: center; border-radius: 10px; border: 1px solid var(--line); background: var(--paper); color: var(--ink); }
+.c3r-acts button[hidden] { display: none; }
+.c3r-acts [data-a="bin"] { margin-left: auto; color: var(--no); }
+.c3r-hint { grid-area: tool; align-self: start; justify-self: center; margin: 12px; padding: 8px 12px; border-radius: 10px; background: var(--paper); border: 1px solid var(--line); color: var(--muted); font-size: .88rem; line-height: 1.35; max-width: 52ch; }
+.c3r-hint.warn { color: var(--ink); border-color: var(--no); }
+@media (max-width: 760px) {
+  .c3r { grid-template: "bar" auto "tool" minmax(0, 1fr) "panel" auto / minmax(0, 1fr); }
+  .c3r-back span { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
+  .c3r-back { padding: 0 10px; }
+  .c3r-bar { gap: 8px; padding: 6px 8px; }
+  .c3r-panel { border-right: 0; border-top: 1px solid var(--line); max-height: 44dvh; }
+  .c3r-tabs, .c3r-subs { flex-wrap: nowrap; overflow-x: auto; overscroll-behavior-x: contain; scrollbar-width: none; }
+  .c3r-tabs { padding: 8px 12px 6px; }
+  .c3r-subs { padding: 0 12px 8px; }
+  .c3r-cards { display: flex; overflow-x: auto; overflow-y: hidden; overscroll-behavior-x: contain; padding: 2px 12px 12px; }
+  .c3r-card { flex: 0 0 150px; }
+  .c3r-cards.kit { overflow-y: auto; max-height: 28dvh; }
+  .c3r-tool { margin: 0 8px 8px; padding: 8px 10px; gap: 4px; }
+  .c3r-hint { margin: 8px; font-size: .82rem; }
+  .c3r-tool:not([hidden]) ~ .c3r-hint:not(.warn) { display: none; }   /* pri vybranej veci má miesto parcela, nie nápoveď */
+  .tour:has(.c3.rooming) .tour-bar { display: none; }                 /* v izbe parcely stačí jej vlastná lišta */
+}
 .next { display: grid; grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr); gap: clamp(24px, 4vw, 56px); align-items: start; }
 .next ol { margin: 18px 0 0; padding-left: 1.3em; display: grid; gap: 10px; }
 .next li::marker { font-weight: 800; color: var(--sign); }
@@ -331,7 +401,7 @@ var CAMP = /*CAMP_DATA*/null;
       taken: CAMP.taken ? CAMP.taken.indexOf(p.id) > -1 : (hash(p.id) % 10) < 3 };
   });
   var HAS_CABINS = parcels.some(function (p) { return p.unit === 'cabin'; });
-  var state = { v: CAMP.startV || 'autostan', guests: 2, sel: null, booked: null };
+  var state = { v: CAMP.startV || 'autostan', guests: 2, sel: null, booked: null, kit: null, kitFor: null };
   var seg = document.querySelector('.seg');
   if (HAS_CABINS) {
     seg.insertAdjacentHTML('afterbegin', '<button type="button" data-v="chatka">Chatka</button>');
@@ -537,7 +607,9 @@ var CAMP = /*CAMP_DATA*/null;
     head.appendChild(h('span', 'chip ' + (!p.taken && ok ? 'ok' : 'no'), chipText(p, ok)));
     panel.appendChild(head);
     panel.appendChild(h('p', 'facts', factsOf(p).map(function (f) { return '<span>' + f + '</span>'; }).join('')));
-    if (p.unit === 'parcel') { var mini = h('div', 'mini'); mini.appendChild(miniPlan(p)); panel.appendChild(mini); }
+    var hasKit = state.kit && state.kit.length && state.kitFor === p.id;   // zostava poskladaná v 3D izbe parcely nahrádza približný plán
+    if (hasKit) panel.appendChild(h('div', 'done', '<strong>Vaša zostava na tejto parcele</strong>' + state.kit.map(function (n) { return n.replace(/&/g, '&amp;').replace(/</g, '&lt;'); }).join(', ') + '. V 3D ste si overili, že sa zmestí.'));
+    else if (p.unit === 'parcel') { var mini = h('div', 'mini'); mini.appendChild(miniPlan(p)); panel.appendChild(mini); }
     if (state.booked === p.id) {
       panel.appendChild(h('div', 'done', '<strong>Rezervácia odoslaná</strong>V ostrej verzii by hosť teraz zaplatil zálohu kartou a vám by prišiel e-mail s rezerváciou. ' +
         (p.unit === 'zone' ? 'Miesto sa hneď odpočíta z kapacity plochy.' : unitName(p) + ' sa hneď ukáže ako obsadená.')));
@@ -584,6 +656,7 @@ var CAMP = /*CAMP_DATA*/null;
       return { title: unitName(p) + ' ' + p.id, chip: chipText(p, fits(p, state.v)), ok: ok, facts: factsOf(p), total: ok ? 'Spolu za pobyt ' + money(quote(p).sum) : '' };
     },
     select: function (id) { select(id); },
+    kit: function (names) { state.kit = names; state.kitFor = state.sel; },
     book: function (id) { select(id); toPanel = true; tour.close(); }
   };
   if (open3d && tour) {

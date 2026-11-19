@@ -198,7 +198,7 @@ def rooftent(D, c, col, drop=1.75):
         for s in (-1, 1):
             poly(D, [(s * xe, yh - .03, .13), (s * xe, E.y, E.z), (s * xe, O.y, O.z)], main)
             poly(D, [(s * (xe + .004), lerp(yh - .03, O.y, .42), .3), (s * (xe + .004), lerp(E.y, O.y, .25), lerp(E.z, .3, .45)), (s * (xe + .004), lerp(E.y, O.y, .7), .3)], mesh)
-        ladder(D, (L * .18, yo + .01, .07), (0, -1, 0), drop)
+        ladder(D.lad, (L * .18, yo + .01, .07), (0, -1, 0), drop); D.lad_top = Vector((L * .18, yo + .01, .07))
         cs, cdir = yh - cw / 2, 'y'
     else:
         fx = folds_long(c); a, b = (L / 2, W / 2) if fx else (W / 2, L / 2)     # a = pol rozmeru v smere rozkladania, b = pozdĺž pántu
@@ -216,7 +216,7 @@ def rooftent(D, c, col, drop=1.75):
         for t in (-tb, tb):                                    # štíty so sieťovým oknom
             poly(D, [P3(s, t, z) for s, z in prof], main)
             poly(D, [P3(s * .55, t + math.copysign(.004, t), .08 + (z - .08) * .55 + H * .14) for s, z in prof], mesh)
-        ladder(D, P3(a - .01, 0, .07), P3(1, 0, 0), drop)
+        ladder(D.lad, P3(a - .01, 0, .07), P3(1, 0, 0), drop); D.lad_top = Vector(P3(a - .01, 0, .07))
         cs, cdir = -a / 2, 'x' if fx else 'y'
         if not fx: cs = a / 2                                  # P3 otáča smer: pevná polovica je na strane +Y
     for k in (-1, 1):                                          # priečniky strešného nosiča pod pevnou polovicou
@@ -400,9 +400,13 @@ BUILD = {'tent23': dome, 'tentfam': tunnel, 'gazebo': gazebo, 'tableset': tables
 def build(c, color=None, name=None, **kw):
     D = Detail(None); col = color or c.get('color') or FABRICS[sum(map(ord, c['id'])) % len(FABRICS)]
     fn = dome if c.get('shape') in ('dome', 'popup') else BUILD[c['cat']]
+    if c['cat'] == 'rooftent': D.lad = Detail(None)          # rebrík je samostatný objekt s počiatkom hore: prehliadka ho predĺži podľa výšky auta
     fn(D, c, col, **kw)
     bmesh.ops.recalc_face_normals(D.bm, faces=D.bm.faces)
     ob = D.finish(name or c['id']); shade(ob.data, 50)
+    if c['cat'] == 'rooftent':
+        lad = D.lad.finish('rebrik'); lad.data.transform(Matrix.Translation(-D.lad_top)); lad.location = D.lad_top; lad.parent = ob; shade(lad.data, 50)
+        ob['drop'] = kw.get('drop', 1.75)
     return ob
 
 if __name__ == '__main__':
@@ -410,17 +414,18 @@ if __name__ == '__main__':
     SPEC = json.load(open(argv[0], encoding='utf-8')); OUT = os.path.abspath(argv[1]); os.makedirs(OUT, exist_ok=True)
     ONLY = argv[argv.index('--only') + 1].split(',') if '--only' in argv else None
     ON = argv[argv.index('--on') + 1] if '--on' in argv else 'kodiaq'          # auto, na ktorom sa ukáže strešný stan
+    BARE = '--bare' in argv                                                      # strešný stan bez auta (katalóg pre prehliadku)
     SPEC = SPEC if isinstance(SPEC, list) else list(SPEC.values())
     bpy.ops.wm.read_factory_settings(use_empty=True)
     for c in SPEC:
         if (ONLY and c['id'] not in ONLY) or (c['cat'] not in BUILD): continue
         sel = []
-        if c['cat'] == 'rooftent':                             # strešný stan sa ukazuje na aute
+        if c['cat'] == 'rooftent' and not BARE:                # strešný stan sa ukazuje na aute
             import car as carmod
             car = next(x for x in json.load(open(os.path.join(os.path.dirname(os.path.abspath(__file__)), 'cars.json'), encoding='utf-8')) if x['id'] == ON)
             root, parts = carmod.build_car(car); x, y, z, rz = mount_rooftent(c, car)
-            ob = build(c, drop=z); ob.location = (x, y, z); ob.rotation_euler = (0, 0, rz); sel = [root] + parts
-        else: ob = build(c)
+            ob = build(c, drop=z); ob.location = (x, y, z); ob.rotation_euler = (0, 0, rz); sel = [root] + parts + list(ob.children)
+        else: ob = build(c); sel = list(ob.children)
         bpy.ops.object.select_all(action='DESELECT'); ob.select_set(True)
         for o in sel: o.select_set(True)
         bpy.ops.export_scene.gltf(filepath=os.path.join(OUT, c['id'] + '.glb'), export_format='GLB', use_selection=True, export_apply=True)
