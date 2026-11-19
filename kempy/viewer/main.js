@@ -14,6 +14,7 @@ import { mergeGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils.js
 import { makeEnv } from './env.js';
 import { createRoom, registerModel } from './room.js';
 import { texturize, buildTrees, buildBuildings, waterize, waterTick, fadeTrees } from './look.js';
+import { makeSky, makeGrass, makeGovernor } from './detail.js';
 import CAMP from 'camp-json';
 import GLB from 'camp-glb';
 
@@ -50,11 +51,6 @@ function ringGeo(pts, w, y) {          // uzavretý pás okolo mnohouholníka
   }
   const g = new THREE.BufferGeometry(); g.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3)); g.setIndex(idx); return g;
 }
-function skyTexture(top, horizon) {
-  const c = document.createElement('canvas'); c.width = 2; c.height = 256; const g = c.getContext('2d'), gr = g.createLinearGradient(0, 0, 0, 256);
-  gr.addColorStop(0, top); gr.addColorStop(.55, horizon); gr.addColorStop(1, horizon); g.fillStyle = gr; g.fillRect(0, 0, 2, 256);
-  const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; return t;
-}
 
 function mount(host, api) {
   const touch = matchMedia('(pointer: coarse)').matches, still = matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -69,7 +65,7 @@ function mount(host, api) {
     + '<button type="button" class="c3-fwd" aria-label="Ísť dopredu" hidden>' + ico('up') + '</button>'
     + '</div>'
     + '<div class="c3-card" hidden role="group" aria-label="Vybrané miesto"><button type="button" class="c3-x" aria-label="Zavrieť kartu">' + ico('close') + '</button><div class="c3-tip"></div><button type="button" class="btn btn-sign c3-fit">Zariadiť parcelu</button><button type="button" class="btn btn-line c3-book">Pokračovať k rezervácii</button></div>'
-    + '<div class="c3-sun" role="group" aria-label="Denná doba a slnko"><button type="button" data-h="8">Ráno</button><button type="button" data-h="13" aria-pressed="true">Poludnie</button><button type="button" data-h="19">Večer</button><input type="range" min="5" max="21" step="0.25" value="13" aria-label="Hodina dňa"><output>13:00</output></div>'
+    + '<div class="c3-sun" role="group" aria-label="Denná doba a slnko"><button type="button" data-h="8" aria-pressed="false">Ráno</button><button type="button" data-h="13" aria-pressed="true">Poludnie</button><button type="button" data-h="19" aria-pressed="false">Večer</button><input type="range" min="5" max="21" step="0.25" value="13" aria-label="Hodina dňa" aria-valuetext="13:00"><output>13:00</output></div>'
     + '<p class="c3-hint"></p><p class="sr c3-say" role="status"></p><div class="c3-load" role="status">Načítavam 3D model kempu…</div>';
   const $ = (s) => host.querySelector(s);
   const stage = $('.c3-stage'), card = $('.c3-card'), hint = $('.c3-hint'), pick = $('.c3-go select'), fwd = $('.c3-fwd');
@@ -82,7 +78,7 @@ function mount(host, api) {
   }
   renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, touch ? 1.5 : 2));
   renderer.outputColorSpace = THREE.SRGBColorSpace; renderer.toneMapping = THREE.NeutralToneMapping;
-  renderer.shadowMap.enabled = true; renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+  renderer.shadowMap.enabled = true; renderer.shadowMap.type = THREE.PCFShadowMap;
   renderer.shadowMap.autoUpdate = false;       // scéna stojí: tiene sa prepočítajú len po načítaní modelu a pri otvorení prehliadky
   renderer.domElement.setAttribute('aria-hidden', 'true'); renderer.domElement.style.touchAction = 'none';
   stage.appendChild(renderer.domElement);
@@ -95,7 +91,8 @@ function mount(host, api) {
   const LIM = { x0: x0 - 10, x1: x1 + 10, z0: z0 - 10, z1: z1 + 10 };
 
   const scene = new THREE.Scene(), SKY = new THREE.Color(0xcfe6f2);
-  scene.fog = new THREE.Fog(SKY, SPAN * 1.2, SPAN * 4.5);
+  scene.fog = new THREE.Fog(SKY, SPAN * 1.2, SPAN * 4.5); scene.background = SKY;
+  const sky = makeSky(SPAN * 5); scene.add(sky.mesh);
   const camera = new THREE.PerspectiveCamera(45, 1, 0.3, SPAN * 8);
   const hemi = new THREE.HemisphereLight(0xe6f2fa, 0x4f6f5c, 1.3); scene.add(hemi);
   const sun = new THREE.DirectionalLight(0xfff4e0, 2.4); sun.position.set(CENTER.x + SPAN * .35, SPAN * .8, CENTER.z + SPAN * .45); sun.target.position.copy(CENTER); sun.castShadow = true;
@@ -117,12 +114,12 @@ function mount(host, api) {
     const t = document.documentElement.getAttribute('data-theme'), dark = t === 'dark' || (t !== 'light' && matchMedia('(prefers-color-scheme: dark)').matches);
     const s = sunAt(hour), up = Math.max(0, Math.sin(s.el)), k = clamp(up / 0.5, 0, 1), day = clamp(up / 0.12, 0, 1);
     sunDir.set(Math.sin(s.az) * Math.cos(s.el), Math.max(0.04, Math.sin(s.el)), -Math.cos(s.az) * Math.cos(s.el)).normalize();
-    sun.position.copy(CENTER).addScaledVector(sunDir, SPAN); sun.intensity = 2.6 * day * (1 + 2.4 * (1 - k)) * (dark ? 0.6 : 1);   // nízke slnko dopadá na zem šikmo: silnejšie svetlo, aby tiene ostali čitateľné sun.color.set(0xffa860).lerp(new THREE.Color(0xfff4e0), k);
+    sun.position.copy(CENTER).addScaledVector(sunDir, SPAN); sun.intensity = 2.6 * day * (1 + 2.4 * (1 - k)) * (dark ? 0.6 : 1);   // nízke slnko dopadá na zem šikmo: silnejšie svetlo, aby tiene ostali čitateľné
+    sun.color.set(0xffa860).lerp(new THREE.Color(0xfff4e0), k);
     const top = new THREE.Color(dark ? 0x1f2b31 : 0x7096c8).lerp(new THREE.Color(dark ? 0x1f2b31 : 0x8fc3e6), k), hor = new THREE.Color(dark ? 0x4a4038 : 0xf5c596).lerp(new THREE.Color(dark ? 0x2f3e44 : 0xcfe6f2), k);
     const dusk = new THREE.Color(0x27303a); top.lerp(dusk, (1 - day) * 0.75); hor.lerp(dusk, (1 - day) * 0.6);
     SKY.copy(hor); scene.fog.color.copy(SKY);
-    if (scene.background) scene.background.dispose();
-    scene.background = skyTexture('#' + top.getHexString(), '#' + hor.getHexString());
+    sky.set(top, hor, sunDir, sun.color, day, dark);
     renderer.toneMappingExposure = (dark ? 0.72 : 1.18) * (0.5 + 0.5 * day); hemi.intensity = (dark ? 0.62 : 1.0) * (0.4 + 0.6 * day) * (0.6 + 0.4 * k);
     const key = dark + ':' + Math.round(hour * 2);
     if (envKey !== key) {                // obloha ako zdroj odrazov pre lak, sklo a chróm vozidiel (pri ťahaní posuvníka až po zastavení)
@@ -167,7 +164,7 @@ function mount(host, api) {
   }
 
   /* ---------------- model z Blendera */
-  let ready = false, ground = [], niceTrees = null;
+  let ready = false, ground = [], niceTrees = null, grass = null, grassQ = 2;
   const bin = GLB.buffer.slice(GLB.byteOffset, GLB.byteOffset + GLB.byteLength);
   new GLTFLoader().setMeshoptDecoder(MeshoptDecoder).parse(bin, '', (gltf) => {
     const root = gltf.scene;
@@ -176,7 +173,7 @@ function mount(host, api) {
       const n = ((o.parent && o.parent !== root && o.parent.name) || o.name || '').toLowerCase();
       (Array.isArray(o.material) ? o.material : [o.material]).forEach((m) => { m.side = THREE.DoubleSide; });
       const flat = /^(teren|voda|jazero|plocha|cesta|kruhovy|parcela)/.test(n), label = /^stitok/.test(n);
-      o.userData.tree = /^stromy/.test(n);
+      o.userData.tree = /^stromy/.test(n); o.userData.noGrass = /^parcela/.test(n);
       o.receiveShadow = !label; o.castShadow = !flat && !label;
       if (label) { o.renderOrder = 5; (Array.isArray(o.material) ? o.material : [o.material]).forEach((m) => { m.polygonOffset = true; m.polygonOffsetFactor = -4; m.polygonOffsetUnits = -4; }); }
       if (flat) ground.push(o);
@@ -202,8 +199,9 @@ function mount(host, api) {
     waterize(root);
     const nice = niceTrees = buildTrees(CAMP); if (nice) { root.children.filter((c) => /^stromy/i.test(c.name) || (nice.userData.shrubs && /^kriky/i.test(c.name))).forEach((c) => { c.visible = false; c.castShadow = false; }); scene.add(nice); }
     const houses = buildBuildings(CAMP); if (houses) { root.traverse((o) => { if (houses.names.includes(o.name) || (o.parent && houses.names.includes(o.parent.name))) { o.visible = false; o.castShadow = false; } }); scene.add(houses.group); }
-    scene.add(root);
-    ready = true; renderer.shadowMap.needsUpdate = true; $('.c3-load').remove(); update(); startView();
+    scene.add(root); scene.updateMatrixWorld(true);
+    grass = makeGrass(renderer, scene, [overlays, sky.mesh].concat(nice ? [nice] : []), { x0: Math.min(...bx) - 30, x1: Math.max(...bx) + 30, z0: Math.min(...bz) - 30, z1: Math.max(...bz) + 30 }); grass.quality(grassQ);
+    ready = true; renderer.shadowMap.needsUpdate = true; $('.c3-load').remove(); update(); startView(); gov.reset();   // prvé snímky s modelom (preklad shaderov) sa do plynulosti nepočítajú
   }, (err) => { $('.c3-load').textContent = '3D model sa nepodarilo načítať.'; console.error(err); });
 
   /* ---------------- ovládanie: prehľad */
@@ -391,7 +389,7 @@ function mount(host, api) {
   $('.c3-zin').addEventListener('click', () => zoom(0.7)); $('.c3-zout').addEventListener('click', () => zoom(1.4));
   $('.c3-x').addEventListener('click', () => { card.hidden = true; cardId = null; });
   const sunUi = $('.c3-sun'), sunRange = sunUi.querySelector('input');
-  function setHour(h) { hour = clamp(+h, 5, 21); sunRange.value = hour; sunUi.querySelector('output').textContent = Math.floor(hour) + ':' + String(Math.round(hour % 1 * 60)).padStart(2, '0'); sunUi.querySelectorAll('button').forEach((b) => b.setAttribute('aria-pressed', +b.dataset.h === hour ? 'true' : 'false')); applyTheme(); }
+  function setHour(h) { hour = clamp(+h, 5, 21); sunRange.value = hour; const hm = Math.floor(hour) + ':' + String(Math.round(hour % 1 * 60)).padStart(2, '0'); sunUi.querySelector('output').textContent = hm; sunRange.setAttribute('aria-valuetext', hm); sunUi.querySelectorAll('button').forEach((b) => b.setAttribute('aria-pressed', +b.dataset.h === hour ? 'true' : 'false')); applyTheme(); }
   sunUi.addEventListener('click', (e) => { const b = e.target.closest('[data-h]'); if (b) setHour(b.dataset.h); });
   sunRange.addEventListener('input', () => setHour(sunRange.value));
   $('.c3-book').addEventListener('click', () => { if (cardId) api.book(cardId); });
@@ -402,11 +400,13 @@ function mount(host, api) {
   let last = 0, raf = 0;
   function size() { const w = stage.clientWidth, h = stage.clientHeight; if (!w || !h) return; renderer.setSize(w, h, false); camera.aspect = w / h; camera.updateProjectionMatrix(); room.layout(); }
   const ro = new ResizeObserver(size); ro.observe(stage);
+  const basePR = Math.min(window.devicePixelRatio || 1, touch ? 1.5 : 2);
+  const gov = makeGovernor(touch ? 1 : 0, (q) => { renderer.setPixelRatio(Math.max(0.6, basePR * q.pr)); grassQ = q.grass; if (grass) grass.quality(grassQ); size(); });
   function tryMove(nx, nz) { if (!blocked(nx, nz)) { walk.x = nx; walk.z = nz; return true; } if (!blocked(nx, walk.z)) { walk.x = nx; return true; } if (!blocked(walk.x, nz)) { walk.z = nz; return true; } return false; }
   function frame(now) {
     if (!running) return;
     raf = requestAnimationFrame(frame);
-    const dt = Math.min(0.05, (now - last) / 1000 || 0.016); last = now; waterTick(dt);
+    const dt = Math.min(0.05, (now - last) / 1000 || 0.016), mdt = still ? 0 : dt; gov.tick(now - last); last = now; waterTick(mdt);   // mdt: pri obmedzenom pohybe voda, oblaky a tráva stoja
     if (mode === 'walk') {
       if (fly) flyStep(dt);
       const k = walk.keys, fx = Math.sin(walk.yaw), fz = -Math.cos(walk.yaw);
@@ -423,13 +423,15 @@ function mount(host, api) {
       if (anim) { const t = clamp((now - anim.t0) / anim.dur, 0, 1); anim.step(ease(t)); if (t >= 1) anim = null; }
       controls.update();
     }
+    sky.tick(mdt, camera);
+    if (grass) { const w = mode === 'walk'; if (w) grass.update(walk.x, walk.z, 0, mdt); else grass.update(controls.target.x, controls.target.z, camera.position.distanceTo(controls.target), mdt); }
     renderer.render(scene, camera);
   }
-  function resume() { if (running) return; running = true; renderer.shadowMap.needsUpdate = true; applyTheme(); size(); update(); last = performance.now(); raf = requestAnimationFrame(frame); }
+  function resume() { if (running) return; running = true; gov.reset(); renderer.shadowMap.needsUpdate = true; applyTheme(); size(); update(); last = performance.now(); raf = requestAnimationFrame(frame); }
   function pause() { running = false; cancelAnimationFrame(raf); walk.keys = {}; }
   setHint();
   return window.Camp3D.view = { ok: true, setHour, startFly, flying: () => !!fly, flyAt(t) { startFly(); if (fly) { fly.t = t; const p = fly.curve.getPointAt(t), a = fly.curve.getPointAt(Math.min(1, t + 6 / fly.len)); walk.yaw = Math.atan2(a.x - p.x, -(a.z - p.z)); } }, sun: () => { const q = sunAt(hour); return { hour, el: +(q.el * 180 / Math.PI).toFixed(1), az: +(q.az * 180 / Math.PI).toFixed(1) }; }, update, pause, resume, setMode, enterRoom, leaveRoom, room, focusUnit(id) { if (byId[id]) { showCard(id); flyTo(byId[id]); } },
-    state: () => ({ mode, ready, room: room.state(), cam: camera.position.toArray().map((v) => Math.round(v * 10) / 10), walk: { x: Math.round(walk.x * 10) / 10, z: Math.round(walk.z * 10) / 10 }, card: cardId, calls: renderer.info.render.calls, tris: renderer.info.render.triangles }),
-    destroy() { pause(); room.destroy(); ro.disconnect(); window.removeEventListener('keydown', kd); window.removeEventListener('keyup', ku); window.removeEventListener('blur', kb); renderer.dispose(); host.innerHTML = ''; } };
+    state: () => ({ mode, ready, room: room.state(), cam: camera.position.toArray().map((v) => Math.round(v * 10) / 10), walk: { x: Math.round(walk.x * 10) / 10, z: Math.round(walk.z * 10) / 10 }, card: cardId, calls: renderer.info.render.calls, tris: renderer.info.render.triangles, level: gov.level(), pr: +renderer.getPixelRatio().toFixed(2), grass: grass ? grass.count() : 0 }),
+    destroy() { pause(); clearTimeout(envT); if (scene.environment) { scene.environment.dispose(); scene.environment = null; } room.destroy(); sky.dispose(); if (grass) grass.dispose(); ro.disconnect(); window.removeEventListener('keydown', kd); window.removeEventListener('keyup', ku); window.removeEventListener('blur', kb); renderer.dispose(); host.innerHTML = ''; } };
 }
 window.Camp3D = { mount, model: registerModel };

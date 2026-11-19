@@ -54,11 +54,12 @@ server.listen(0, '127.0.0.1', async () => {
     const st = () => page.evaluate(() => window.Camp3D.view.state().room), fail = (m) => { console.log('ZLYHALO: ' + m); code = 1; };
     const n0 = (await st()).items.length; const all0 = (await st()).items, top = all0.findIndex((i) => !i.host && !all0.some((c) => c.host === i.id));   // vec bez pripojenej markízy: tá by ju z niektorých uhlov prekryla
     if (!phone) {
-      const a = (await st()).items[top], [sx, sy] = await page.evaluate((i) => window.Camp3D.view.room.screenOf(i), top);
+      const [sx, sy] = await page.evaluate((i) => window.Camp3D.view.room.screenOf(i), top);
       await page.mouse.move(sx, sy); await page.mouse.down(); await page.mouse.move(sx + 30, sy + 10, { steps: 4 }); await page.mouse.move(sx + 70, sy + 24, { steps: 6 }); await page.mouse.up();
-      const b = (await st()).items[top];
+      // pod kurzorom môže byť iná, bližšia vec (karavan zakryje auto): posudzuje sa tá, ktorú prehliadka naozaj chytila
+      const s1 = await st(), got = s1.items.findIndex((i) => i.id === s1.sel), hit = got < 0 ? top : got, a = all0[hit], b = s1.items[hit];
       if (Math.hypot(b.x - a.x, b.z - a.z) < 0.3) fail('ťahanie myšou vec neposunulo (' + a.x + ',' + a.z + ' -> ' + b.x + ',' + b.z + ')'); else console.log('ťahanie: ' + a.id + ' posunuté o ' + Math.hypot(b.x - a.x, b.z - a.z).toFixed(2) + ' m' + (b.bad ? ' (' + b.bad + ')' : ''));
-      await page.click('.c3r-acts [data-a="rotr"]'); const c = (await st()).items[top];
+      await page.click('.c3r-acts [data-a="rotr"]'); const c = (await st()).items[hit];
       if (Math.abs(c.rot - b.rot) < 0.2) fail('otočenie nezmenilo uhol'); else console.log('otočenie: ' + ((c.rot - b.rot) * 180 / Math.PI).toFixed(0) + '°');
       await shot('izba-4-po-posune');
       await page.keyboard.press('Control+z').catch(() => {});

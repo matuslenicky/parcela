@@ -196,13 +196,30 @@ p { margin: 0; }
 .c3-sun { position: absolute; top: 12px; left: 50%; transform: translateX(-50%); display: flex; align-items: center; gap: 4px; padding: 4px 10px 4px 4px; border-radius: 12px; background: var(--paper); border: 1px solid var(--line); box-shadow: var(--shadow); }
 .c3-sun button { min-height: 44px; padding: 0 12px; border: 0; border-radius: 8px; background: transparent; color: var(--muted); font: inherit; font-size: .93rem; font-weight: 700; cursor: pointer; }
 .c3-sun button[aria-pressed="true"] { background: var(--ink); color: var(--paper); }
-.c3-sun input { width: 130px; accent-color: var(--sign); }
+.c3-sun input { width: 130px; height: 44px; margin: 0 4px; accent-color: var(--sign); cursor: pointer; }
 .c3-sun output { min-width: 3.2em; text-align: right; font-weight: 700; font-size: .93rem; }
 .c3.rooming .c3-sun { top: 204px; left: calc(190px + 50%); z-index: 2; }
-@media (max-width: 760px) { .c3-sun { top: auto; bottom: 64px; left: 12px; transform: none; } .c3-sun input { display: none; } .c3.rooming .c3-sun { top: 62px; bottom: auto; left: auto; right: 8px; } .c3.rooming .c3-sun output { display: none; } }
 .c3-load { position: absolute; inset: 0; display: grid; place-items: center; padding: 24px; text-align: center; color: var(--muted); background: var(--soft); }
 @media (max-width: 620px) { .c3-top { top: 74px; } .c3-go select { max-width: calc(100vw - 96px); } }  /* roleta pod prepínačom, vedľa tlačidiel priblíženia */
-@media (max-height: 480px) { .c3-card { bottom: 58px; gap: 6px; padding: 12px 16px; } }  /* telefón na šírku: karta nesmie siahať na roletu */
+@media (max-height: 480px) { .c3-card { gap: 6px; padding: 12px 16px; } }  /* telefón na šírku: karta nesmie siahať na roletu (polohu určujú pravidlá nižšie) */
+/* slnko: na stredných šírkach by sa hore nezmestilo medzi roletu a prepínač, ide o riadok nižšie; na telefóne je dole, nápoveď a karta nad ním */
+@media (min-width: 761px) and (max-width: 1240px) { .c3:not(.rooming) .c3-sun { top: 76px; } }
+@media (max-width: 760px) {
+  .c3-sun { top: auto; bottom: 12px; left: 12px; transform: none; padding-right: 4px; }
+  .c3-sun input, .c3-sun output { display: none; }
+  .c3-sun button { padding: 0 10px; }
+  .c3-hint, .c3-card { bottom: 82px; }   /* nad slnkom aj nad tlačidlom chôdze (64 px + 12 px) */
+  .c3:has(.c3-card:not([hidden])) .c3-hint { display: none; }
+  .c3.rooming .c3-sun { top: 62px; bottom: auto; left: auto; right: 8px; }
+}
+@media (min-width: 761px) and (max-width: 860px) { .c3.rooming .c3-sun input { display: none; } }   /* izba na úzkom tablete: vedľa katalógu ostane len 380 px */
+/* nízke okno (telefón na šírku): karta ide až dole a nahradí nápoveď; slnko jej uhne */
+@media (max-height: 480px) { .c3-card { bottom: 12px; } .c3:has(.c3-card:not([hidden])) .c3-hint { display: none; } }
+@media (max-height: 480px) and (max-width: 760px) { .c3:not(.rooming):has(.c3-card:not([hidden])) .c3-sun { display: none; } }
+@media (max-height: 480px) and (min-width: 761px) { .c3:not(.rooming) .c3-sun { top: auto; bottom: 12px; left: auto; right: 88px; transform: none; } .c3-sun input { display: none; } .c3-hint { max-width: calc(100% - 400px); } .c3.rooming .c3-sun { display: none; } }
+@media (max-height: 600px) and (max-width: 760px) { .c3:has(.c3-card:not([hidden])) .c3-zoom { display: none; } }   /* malý telefón: karta siaha až k tlačidlám priblíženia, na dotyku stačia dva prsty */
+@media (max-width: 400px) { .c3-seg button { padding: 6px 8px; gap: 4px; font-size: .88rem; } }   /* tri režimy sa musia zmestiť aj na 360 px */
+@media (max-width: 350px) { .c3-seg svg { display: none; } .c3-seg button { padding: 6px 10px; } }
 .c3 button:focus-visible, .c3 select:focus-visible, .tour-x:focus-visible { outline: 3px solid var(--sign); outline-offset: 2px; }
 /* izba parcely (kempy/viewer/room.js): katalóg vľavo alebo dole, parcela vo zvyšku */
 .c3.rooming .c3-top, .c3.rooming .c3-ctl, .c3.rooming .c3-hint, .c3.rooming .c3-card { display: none; }
@@ -270,7 +287,7 @@ p { margin: 0; }
   .c3r-card { flex: 0 0 150px; }
   .c3r-cards.kit { overflow-y: auto; max-height: 28dvh; }
   .c3r-tool { margin: 0 8px 8px; padding: 8px 10px; gap: 4px; }
-  .c3r-hint { margin: 8px; font-size: .82rem; }
+  .c3r-hint { margin: 66px 8px 8px; font-size: .82rem; }   /* pod ovládačom slnka */
   .c3r-tool:not([hidden]) ~ .c3r-hint:not(.warn) { display: none; }   /* pri vybranej veci má miesto parcela, nie nápoveď */
   .tour:has(.c3.rooming) .tour-bar { display: none; }                 /* v izbe parcely stačí jej vlastná lišta */
 }

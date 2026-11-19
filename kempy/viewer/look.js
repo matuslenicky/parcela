@@ -21,6 +21,17 @@ export function surfaceTexture(kind) {
   const t = new THREE.CanvasTexture(c); t.wrapS = t.wrapT = THREE.RepeatWrapping; t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = 8; return t;
 }
 
+/* trávnik nie je jednofarebný: veľké svetlejšie a tmavšie škvrny podľa polohy vo svete (šum v shaderi, bez ďalšej textúry) */
+const NATURAL = new THREE.Color(0x6f9e4c);
+function macro(m) {
+  m.onBeforeCompile = (sh) => {
+    sh.vertexShader = 'varying vec2 vGw;\n' + sh.vertexShader.replace('#include <begin_vertex>', '#include <begin_vertex>\n vGw = (modelMatrix * vec4(transformed, 1.0)).xz;');
+    sh.fragmentShader = ['varying vec2 vGw;', 'float gh(vec2 p){ return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453); }',
+      'float gn(vec2 p){ vec2 i = floor(p), f = fract(p); f = f * f * (3.0 - 2.0 * f); return mix(mix(gh(i), gh(i + vec2(1.0, 0.0)), f.x), mix(gh(i + vec2(0.0, 1.0)), gh(i + vec2(1.0, 1.0)), f.x), f.y); }', ''].join('\n')
+      + sh.fragmentShader.replace('#include <map_fragment>', '#include <map_fragment>\n float gm = gn(vGw * 0.06) * 0.6 + gn(vGw * 0.23 + 7.3) * 0.4; diffuseColor.rgb *= vec3(0.84 + 0.3 * gm, 0.87 + 0.26 * gm, 0.8 + 0.3 * gm);');
+  };
+}
+
 /* rovným plochám z Blendera chýbajú textúrové súradnice: berú sa z polohy vo svete (1 dlaždica = size metrov) */
 export function texturize(meshes) {
   const tex = { grass: surfaceTexture('grass'), gravel: surfaceTexture('gravel'), hard: surfaceTexture('hard') }, SIZE = { grass: 5, gravel: 3, hard: 4 }, done = new Set(), v = new THREE.Vector3();
@@ -28,17 +39,17 @@ export function texturize(meshes) {
     const g = o.geometry, p = g.attributes.position; if (!p) return;
     const mats = Array.isArray(o.material) ? o.material : [o.material], m = mats[0], n = (m.name || '').toLowerCase();
     if (/water|label|line|pool/.test(n)) return;
-    const kind = /gravel|sand|play/.test(n) ? 'gravel' : /asphalt|paved/.test(n) ? 'hard' : 'grass';
+    const kind = /gravel|sand|play/.test(n) ? 'gravel' : /asphalt|paved/.test(n) ? 'hard' : 'grass'; o.userData.surf = kind;
     if (!g.attributes.uv) { const uv = new Float32Array(p.count * 2); for (let i = 0; i < p.count; i++) { v.fromBufferAttribute(p, i).applyMatrix4(o.matrixWorld); uv[i * 2] = v.x / SIZE[kind]; uv[i * 2 + 1] = v.z / SIZE[kind]; } g.setAttribute('uv', new THREE.BufferAttribute(uv, 2)); }
-    mats.forEach((mm) => { if (done.has(mm)) return; done.add(mm); mm.map = tex[kind]; mm.color.multiplyScalar(1.16); mm.roughness = kind === 'hard' ? 0.82 : 0.95; mm.needsUpdate = true; });
+    mats.forEach((mm) => { if (done.has(mm)) return; done.add(mm); mm.map = tex[kind]; mm.color.multiplyScalar(1.16); if (kind === 'grass') { mm.color.lerp(NATURAL, 0.3); macro(mm); } mm.roughness = kind === 'hard' ? 0.82 : 0.95; mm.needsUpdate = true; });
   });
 }
 
 /* koruna = niekoľko zaoblených chumáčov s jemne zvlneným povrchom; farba svetlejšia hore, tmavšia vnútri a dole */
-function crownGeo(seed) {
-  const r = rng(seed), parts = [], n = 6 + Math.floor(r() * 3);
+function crownGeo(seed, det = 2, blobs = 0) {
+  const r = rng(seed), parts = [], n = blobs || 6 + Math.floor(r() * 3);
   for (let i = 0; i < n; i++) {
-    const g = new THREE.IcosahedronGeometry(1, 2), s = i ? 0.42 + r() * 0.26 : 0.72, a = r() * Math.PI * 2, d = i ? 0.34 + r() * 0.28 : 0, y = i ? (r() - 0.35) * 0.62 : 0;
+    const g = new THREE.IcosahedronGeometry(1, det), s = i ? 0.42 + r() * 0.26 : 0.72, a = r() * Math.PI * 2, d = i ? 0.34 + r() * 0.28 : 0, y = i ? (r() - 0.35) * 0.62 : 0;
     g.scale(s, s * (0.82 + r() * 0.2), s); g.translate(Math.cos(a) * d, y, Math.sin(a) * d); g.deleteAttribute('uv'); parts.push(g);
   }
   let geo = mergeVertices(mergeGeometries(parts, false), 1e-4); parts.forEach((x) => x.dispose());
@@ -114,7 +125,7 @@ export function buildTrees(CAMP) {
   trunk.castShadow = true; trunk.userData.tree = true; trunk.frustumCulled = false; grp.add(trunk); grp.name = 'stromy z dat'; grp.userData.mats = [leaf, cardMat];
   const SH = CAMP.shrubs || [];        // kríky medzi parcelami: malá koruna s lístím pri zemi
   if (SH.length) {
-    const cg = crownGeo(9), body = new THREE.InstancedMesh(cg, leaf, SH.length), lv = new THREE.InstancedMesh(cardGeo(9, cg, 60), cardMat, SH.length);
+    const cg = crownGeo(9, 1, 4), body = new THREE.InstancedMesh(cg, leaf, SH.length), lv = new THREE.InstancedMesh(cardGeo(9, cg, 70), cardMat, SH.length);
     SH.forEach((t, i) => { const rad = t[2] / S * 1.15; q.setFromAxisAngle(up, r() * 6.28); m4.compose(new THREE.Vector3((t[0] - OX) / S, rad * 0.8, (t[1] - OY) / S), q, new THREE.Vector3(rad, rad * 1.05, rad)); body.setMatrixAt(i, m4); lv.setMatrixAt(i, m4); c.set(GREENS[Math.floor(r() * GREENS.length)]).multiplyScalar(0.85 + r() * 0.2); lv.setColorAt(i, c); c.multiplyScalar(0.72); body.setColorAt(i, c); });
     body.castShadow = body.receiveShadow = true; lv.receiveShadow = true; body.frustumCulled = lv.frustumCulled = false; grp.add(body, lv); grp.userData.shrubs = true;
   }
@@ -124,10 +135,12 @@ export function buildTrees(CAMP) {
 /* ---------------- budovy s fasádou: steny s oknami, dverami a soklom nakreslené do textúry, strecha s presahom.
    camp.json: buildings[].style = { wall, plinth, roof, type: gable|mono|flat, clad: 'larch', win: { every, w, h, sill, frame }, door } */
 function facade(L, Hh, st, long, seed) {
-  const PX = 56, c = document.createElement('canvas'); c.width = Math.max(64, Math.round(L * PX)); c.height = Math.max(64, Math.round(Hh * PX)); const g = c.getContext('2d'), r = rng(seed), W = c.width, Hc = c.height;
+  const PX = Math.max(40, Math.min(112, 1792 / Math.max(L, Hh))), c = document.createElement('canvas'); c.width = Math.max(64, Math.round(L * PX)); c.height = Math.max(64, Math.round(Hh * PX)); const g = c.getContext('2d'), r = rng(seed), W = c.width, Hc = c.height;
   g.fillStyle = st.wall; g.fillRect(0, 0, W, Hc);
   if (st.clad === 'larch') { for (let y = 0; y < Hc; y += PX * 0.14) { g.fillStyle = 'rgba(' + (r() > 0.5 ? '255,235,200' : '70,40,10') + ',' + (0.05 + r() * 0.12) + ')'; g.fillRect(0, y, W, PX * 0.14 - 1); g.fillStyle = 'rgba(40,22,8,0.45)'; g.fillRect(0, y + PX * 0.14 - 1.5, W, 1.5); } }
   else for (let i = 0; i < W * Hc / 900; i++) { g.fillStyle = 'rgba(' + (r() > 0.5 ? '255,255,255' : '120,110,90') + ',0.02)'; g.fillRect(r() * W, r() * Hc, 20 + r() * 60, 14 + r() * 40); }
+  { const im = g.getImageData(0, 0, W, Hc), d = im.data; for (let i = 0; i < d.length; i += 4) { const v = (r() - 0.5) * (st.clad === 'larch' ? 9 : 13); d[i] += v; d[i + 1] += v; d[i + 2] += v; } g.putImageData(im, 0, 0); }   // zrno omietky / dreva
+  for (let i = 0; i < W / 26; i++) { const x = r() * W, l = Hc * (0.08 + r() * 0.3); const gr = g.createLinearGradient(0, 0, 0, l); gr.addColorStop(0, 'rgba(60,62,58,0.07)'); gr.addColorStop(1, 'rgba(60,62,58,0)'); g.fillStyle = gr; g.fillRect(x, 0, 2 + r() * 5, l); }   // stopy po daždi pod odkvapom
   const y = (m) => Hc - m * PX;                                        // výška nad zemou -> riadok obrázka
   if (st.plinth) { g.fillStyle = st.plinth; g.fillRect(0, y(0.38), W, 0.38 * PX); }
   if (st.win) {
@@ -138,11 +151,19 @@ function facade(L, Hh, st, long, seed) {
       const ww = st.win.w * PX, wh = st.win.h * PX, x0 = cx - ww / 2, y0 = y(st.win.sill + st.win.h), f = 0.07 * PX;
       g.fillStyle = st.win.frame; g.fillRect(x0 - f, y0 - f, ww + 2 * f, wh + 2 * f);
       const gr = g.createLinearGradient(0, y0, 0, y0 + wh); gr.addColorStop(0, '#6f8796'); gr.addColorStop(0.55, '#34444f'); gr.addColorStop(1, '#22303a'); g.fillStyle = gr; g.fillRect(x0, y0, ww, wh);
+      g.save(); g.beginPath(); g.rect(x0, y0, ww, wh); g.clip(); g.fillStyle = 'rgba(255,255,255,0.13)'; g.beginPath(); g.moveTo(x0 + ww * 0.1, y0 + wh); g.lineTo(x0 + ww * 0.42, y0); g.lineTo(x0 + ww * 0.62, y0); g.lineTo(x0 + ww * 0.3, y0 + wh); g.fill(); g.restore();   // odlesk skla
+      g.fillStyle = 'rgba(0,0,0,0.34)'; g.fillRect(x0, y0, ww, wh * 0.07); g.fillRect(x0, y0, ww * 0.05, wh);                    // tieň ostenia: okno je zapustené
       g.fillStyle = st.win.frame; g.fillRect(cx - f / 2, y0, f, wh);
-      g.fillStyle = 'rgba(0,0,0,0.18)'; g.fillRect(x0 - f, y0 + wh + f, ww + 2 * f, 3);
+      g.fillStyle = 'rgba(255,255,255,0.5)'; g.fillRect(x0 - f * 1.6, y0 + wh + f, ww + 3.2 * f, f * 0.8);                        // parapet
+      g.fillStyle = 'rgba(0,0,0,0.2)'; g.fillRect(x0 - f * 1.6, y0 + wh + f * 1.8, ww + 3.2 * f, f * 0.7);
     }
   } else if (long && st.door) { const cx = W * 0.3, dw = 1.0 * PX, dh = 2.08 * PX; g.fillStyle = st.door; g.fillRect(cx - dw / 2, y(0) - dh, dw, dh); g.fillRect(W - cx - dw / 2, y(0) - dh, dw, dh); }
   const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = 8; return t;
+}
+let plaster = null;
+function plasterBump(L, Hh) {            // jemný reliéf omietky: jedna malá textúra, každá stena má len vlastné opakovanie
+  if (!plaster) { const N = 128, c = document.createElement('canvas'); c.width = c.height = N; const g = c.getContext('2d'), r = rng(41), im = g.createImageData(N, N); for (let i = 0; i < N * N; i++) { const v = 96 + r() * 64; im.data[i * 4] = im.data[i * 4 + 1] = im.data[i * 4 + 2] = v; im.data[i * 4 + 3] = 255; } g.putImageData(im, 0, 0); g.filter = 'blur(0.7px)'; g.drawImage(c, 0, 0); plaster = new THREE.CanvasTexture(c); plaster.wrapS = plaster.wrapT = THREE.RepeatWrapping; }
+  const t = plaster.clone(); t.repeat.set(L / 0.55, Hh / 0.55); t.needsUpdate = true; return t;
 }
 function roofTex(hex) {
   const c = document.createElement('canvas'); c.width = 64; c.height = 64; const g = c.getContext('2d'); g.fillStyle = hex; g.fillRect(0, 0, 64, 64);
@@ -164,7 +185,7 @@ export function buildBuildings(CAMP) {
     const hi = type === 'mono' ? [hgt, hgt, e, e] : [e, e, e, e];       // pultová strecha: stena pri hrane 0 – 1 je vyššia
     for (let i = 0; i < 4; i++) {
       const p = C[i], q = C[(i + 1) % 4], h0 = hi[i], h1 = hi[(i + 1) % 4], Hw = Math.max(h0, h1);
-      const mat = new THREE.MeshStandardMaterial({ map: facade(LEN[i], Hw, st, LEN[i] >= longMin, bi * 7 + i + 1), roughness: 0.88, side: THREE.DoubleSide });
+      const mat = new THREE.MeshStandardMaterial({ map: facade(LEN[i], Hw, st, LEN[i] >= longMin, bi * 7 + i + 1), roughness: 0.88, side: THREE.DoubleSide }); if (st.clad !== 'larch') { mat.bumpMap = plasterBump(LEN[i], Hw); mat.bumpScale = 0.7; }
       add(quadGeo([[q[0], 0, q[1]], [p[0], 0, p[1]], [p[0], h0, p[1]], [q[0], h1, q[1]]], [0, 0, 1, 0, 1, h0 / Hw, 0, h1 / Hw]), mat);
     }
     const ov = st.over === undefined ? 0.45 : st.over, rt = roofTex(st.roof), rmat = new THREE.MeshStandardMaterial({ map: rt, roughness: 0.6, metalness: 0.15, side: THREE.DoubleSide });

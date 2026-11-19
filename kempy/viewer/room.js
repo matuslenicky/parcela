@@ -285,7 +285,8 @@ export function createRoom(o) {
     if (ev.code === 'Escape' && sel) { select(null); ev.preventDefault(); ev.stopPropagation(); return; }
     if (!sel) return;
     const step = { ArrowLeft: [-0.1, 0], ArrowRight: [0.1, 0], ArrowUp: [0, -0.1], ArrowDown: [0, 0.1] }[ev.code];
-    if (step && !/^BUTTON$/.test(ev.target.tagName || '')) { if (sel.host) sel.slide += step[0] || -step[1]; else { sel.x += step[0]; sel.z += step[1]; } seat(sel); changed(); ev.preventDefault(); }
+    // šípky posúvajú vec aj z tlačidiel vybranej veci (ovládanie len klávesnicou), z ostatných tlačidiel nie
+    if (step && (!/^BUTTON$/.test(ev.target.tagName || '') || (ev.target.closest && ev.target.closest('.c3r-tool')))) { if (sel.host) sel.slide += step[0] || -step[1]; else { sel.x += step[0]; sel.z += step[1]; } seat(sel); changed(); ev.preventDefault(); }
     else if (ev.code === 'KeyR') { act(ev.shiftKey ? 'rotl' : 'rotr'); ev.preventDefault(); }
     else if (ev.code === 'Delete' || ev.code === 'Backspace') { act('bin'); ev.preventDefault(); }
   };
