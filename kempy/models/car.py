@@ -65,7 +65,7 @@ def build_car(c):
     R, rim_r, tw = tyre_dims(c['tyre'])
     Hb = H - (0.05 if T.get('rails') else 0.0)           # výška karosérie bez strešných líšt
     gc = T['gc']; fo = c['fo'] / 1000; xfa = fo; xra = fo + c['wb'] / 1000
-    trF = c.get('trackF', c['W'] - 280) / 1000; trR = c.get('trackR', c['W'] - 290) / 1000
+    trF = (c.get('trackF') or c['W'] - 280) / 1000; trR = (c.get('trackR') or c['W'] - 290) / 1000   # rozchod, ktorý zdroje neuvádzajú, sa berie zo šírky
     Ra = R + T['arch']; trunk = T.get('trunk')
     xc = fo + T['cowl']; xw = xc + T['ws']; x3 = L - T['deck']; x2 = x3 - T['rw']; xpk = lerp(xw, x2, .3)
     zn = Hb * T['zn']; zc = Hb * T['zc']; z2 = Hb - T['rdrop']; z3 = Hb * T['z3']
