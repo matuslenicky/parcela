@@ -21,7 +21,11 @@ server.listen(0, '127.0.0.1', async () => {
     await page.click('#open3d');
     await page.waitForFunction(() => document.querySelector('.c3-stage canvas') && !document.querySelector('.c3-load'));
     const flyT = (argv.find((a) => a.startsWith('--fly=')) || '').slice(6);
-    if (flyT) { await page.evaluate((t) => window.Camp3D.view.flyAt(t), +flyT); await page.waitForTimeout(1200); }
+    if (flyT) {                          // prelet sa musí sám hýbať: poloha po troch sekundách je inde
+      await page.evaluate((t) => window.Camp3D.view.flyAt(t), +flyT); await page.waitForTimeout(600);
+      const a = await page.evaluate(() => window.Camp3D.view.state().walk); await page.waitForTimeout(3000); const b = await page.evaluate(() => window.Camp3D.view.state().walk), moved = Math.hypot(b.x - a.x, b.z - a.z);
+      console.log('prelet: za 3 s posun o ' + moved.toFixed(1) + ' m, beží: ' + await page.evaluate(() => window.Camp3D.view.flying())); if (moved < 0.3) code = 1;
+    }
     else if (argv.includes('--walk')) { await page.click('.c3-seg [data-mode="walk"]'); await page.waitForTimeout(1500); }
     else for (let i = 0; i < 2; i++) { await page.click('.c3-zin'); await page.waitForTimeout(300); }
     for (const h of hours) {

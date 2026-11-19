@@ -71,3 +71,69 @@ export function buildTrees(CAMP) {
   trunk.castShadow = true; trunk.userData.tree = true; trunk.frustumCulled = false; grp.add(trunk); grp.name = 'stromy z dat';
   return grp;
 }
+
+/* ---------------- budovy s fasádou: steny s oknami, dverami a soklom nakreslené do textúry, strecha s presahom.
+   camp.json: buildings[].style = { wall, plinth, roof, type: gable|mono|flat, clad: 'larch', win: { every, w, h, sill, frame }, door } */
+function facade(L, Hh, st, long, seed) {
+  const PX = 56, c = document.createElement('canvas'); c.width = Math.max(64, Math.round(L * PX)); c.height = Math.max(64, Math.round(Hh * PX)); const g = c.getContext('2d'), r = rng(seed), W = c.width, Hc = c.height;
+  g.fillStyle = st.wall; g.fillRect(0, 0, W, Hc);
+  if (st.clad === 'larch') { for (let y = 0; y < Hc; y += PX * 0.14) { g.fillStyle = 'rgba(' + (r() > 0.5 ? '255,235,200' : '70,40,10') + ',' + (0.05 + r() * 0.12) + ')'; g.fillRect(0, y, W, PX * 0.14 - 1); g.fillStyle = 'rgba(40,22,8,0.45)'; g.fillRect(0, y + PX * 0.14 - 1.5, W, 1.5); } }
+  else for (let i = 0; i < W * Hc / 900; i++) { g.fillStyle = 'rgba(' + (r() > 0.5 ? '255,255,255' : '120,110,90') + ',0.02)'; g.fillRect(r() * W, r() * Hc, 20 + r() * 60, 14 + r() * 40); }
+  const y = (m) => Hc - m * PX;                                        // výška nad zemou -> riadok obrázka
+  if (st.plinth) { g.fillStyle = st.plinth; g.fillRect(0, y(0.38), W, 0.38 * PX); }
+  if (st.win) {
+    const n = Math.max(long ? 2 : 1, Math.round(L / st.win.every * (long ? 1 : 0.7))), mid = long && st.door ? Math.floor(n / 2) : -1;
+    for (let i = 0; i < n; i++) {
+      const cx = W * (i + 0.5) / n;
+      if (i === mid) { const dw = 1.0 * PX, dh = 2.08 * PX; g.fillStyle = 'rgba(0,0,0,0.25)'; g.fillRect(cx - dw / 2 - 3, y(0) - dh - 3, dw + 6, dh + 3); g.fillStyle = st.door; g.fillRect(cx - dw / 2, y(0) - dh, dw, dh); g.fillStyle = 'rgba(255,255,255,0.14)'; g.fillRect(cx - dw / 2 + 5, y(0) - dh + 6, dw - 10, dh * 0.42); continue; }
+      const ww = st.win.w * PX, wh = st.win.h * PX, x0 = cx - ww / 2, y0 = y(st.win.sill + st.win.h), f = 0.07 * PX;
+      g.fillStyle = st.win.frame; g.fillRect(x0 - f, y0 - f, ww + 2 * f, wh + 2 * f);
+      const gr = g.createLinearGradient(0, y0, 0, y0 + wh); gr.addColorStop(0, '#6f8796'); gr.addColorStop(0.55, '#34444f'); gr.addColorStop(1, '#22303a'); g.fillStyle = gr; g.fillRect(x0, y0, ww, wh);
+      g.fillStyle = st.win.frame; g.fillRect(cx - f / 2, y0, f, wh);
+      g.fillStyle = 'rgba(0,0,0,0.18)'; g.fillRect(x0 - f, y0 + wh + f, ww + 2 * f, 3);
+    }
+  } else if (long && st.door) { const cx = W * 0.3, dw = 1.0 * PX, dh = 2.08 * PX; g.fillStyle = st.door; g.fillRect(cx - dw / 2, y(0) - dh, dw, dh); g.fillRect(W - cx - dw / 2, y(0) - dh, dw, dh); }
+  const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = 8; return t;
+}
+function roofTex(hex) {
+  const c = document.createElement('canvas'); c.width = 64; c.height = 64; const g = c.getContext('2d'); g.fillStyle = hex; g.fillRect(0, 0, 64, 64);
+  for (let x = 0; x < 64; x += 8) { g.fillStyle = 'rgba(255,255,255,0.16)'; g.fillRect(x, 0, 3, 64); g.fillStyle = 'rgba(0,0,0,0.13)'; g.fillRect(x + 5, 0, 2, 64); }
+  const t = new THREE.CanvasTexture(c); t.wrapS = t.wrapT = THREE.RepeatWrapping; t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = 8; return t;
+}
+function quadGeo(p, uv) {                // štyri body [x, y, z] proti smeru hodinových ručičiek
+  const g = new THREE.BufferGeometry(); g.setAttribute('position', new THREE.Float32BufferAttribute(p.flat(), 3));
+  g.setAttribute('uv', new THREE.Float32BufferAttribute(uv || [0, 0, 1, 0, 1, 1, 0, 1], 2)); g.setIndex(p.length === 3 ? [0, 1, 2] : [0, 1, 2, 0, 2, 3]); g.computeVertexNormals(); return g;
+}
+export function buildBuildings(CAMP) {
+  const S = CAMP.pxPerM, OX = CAMP.origin[0], OY = CAMP.origin[1], grp = new THREE.Group(), names = []; grp.name = 'budovy s fasadou';
+  (CAMP.buildings || []).forEach((b, bi) => {
+    const st = b.style; if (!st) return;
+    const a = (b.ang || 0) * Math.PI / 180, ca = Math.cos(a), sa = Math.sin(a), w = b.w / S, d = b.d / S, cx = (b.c[0] - OX) / S, cz = (b.c[1] - OY) / S;
+    const P = (dx, dz) => [cx + dx * ca - dz * sa, cz + dx * sa + dz * ca], hgt = b.height, type = st.type || 'gable', e = type === 'flat' ? hgt : (b.eave || hgt * 0.72);
+    const C = [P(-w / 2, -d / 2), P(w / 2, -d / 2), P(w / 2, d / 2), P(-w / 2, d / 2)], LEN = [w, d, w, d], longMin = Math.max(w, d) * 0.8;
+    const add = (geo, mat) => { const m = new THREE.Mesh(geo, mat); m.castShadow = m.receiveShadow = true; grp.add(m); };
+    const hi = type === 'mono' ? [hgt, hgt, e, e] : [e, e, e, e];       // pultová strecha: stena pri hrane 0 – 1 je vyššia
+    for (let i = 0; i < 4; i++) {
+      const p = C[i], q = C[(i + 1) % 4], h0 = hi[i], h1 = hi[(i + 1) % 4], Hw = Math.max(h0, h1);
+      const mat = new THREE.MeshStandardMaterial({ map: facade(LEN[i], Hw, st, LEN[i] >= longMin, bi * 7 + i + 1), roughness: 0.88, side: THREE.DoubleSide });
+      add(quadGeo([[q[0], 0, q[1]], [p[0], 0, p[1]], [p[0], h0, p[1]], [q[0], h1, q[1]]], [0, 0, 1, 0, 1, h0 / Hw, 0, h1 / Hw]), mat);
+    }
+    const ov = st.over === undefined ? 0.45 : st.over, rt = roofTex(st.roof), rmat = new THREE.MeshStandardMaterial({ map: rt, roughness: 0.6, metalness: 0.15, side: THREE.DoubleSide });
+    const wallm = new THREE.MeshStandardMaterial({ color: st.wall, roughness: 0.9, side: THREE.DoubleSide });
+    const R = (dx, dz, yy) => { const q = P(dx, dz); return [q[0], yy, q[1]]; }, W2 = w / 2 + ov, D2 = d / 2 + ov;
+    if (type === 'flat') { add(quadGeo([R(-W2 + 0.2, D2 - 0.2, hgt + 0.1), R(W2 - 0.2, D2 - 0.2, hgt + 0.1), R(W2 - 0.2, -D2 + 0.2, hgt + 0.1), R(-W2 + 0.2, -D2 + 0.2, hgt + 0.1)], [0, 0, w / 1.2, 0, w / 1.2, d / 1.2, 0, d / 1.2]), rmat); const f = new THREE.Mesh(new THREE.BoxGeometry(w + 2 * ov - 0.4, 0.2, d + 2 * ov - 0.4), new THREE.MeshStandardMaterial({ color: st.fascia || st.roof, roughness: 0.8 })); f.position.set(cx, hgt, cz); f.rotation.y = -a; f.castShadow = true; grp.add(f); }
+    else if (type === 'mono') { const k = (hgt - e) / d, y0 = hgt + ov * k + 0.06, y1 = e - ov * k + 0.06; add(quadGeo([R(-W2, D2, y1), R(W2, D2, y1), R(W2, -D2, y0), R(-W2, -D2, y0)], [0, 0, w / 1.2, 0, w / 1.2, d / 1.2, 0, d / 1.2]), rmat); }
+    else {
+      const k = (hgt - e) / (Math.min(w, d) / 2), ye = e - ov * k + 0.05;
+      if (d >= w) {                      // hrebeň pozdĺž dlhšej strany
+        add(quadGeo([R(-W2, D2, ye), R(-W2, -D2, ye), R(0, -D2, hgt + 0.05), R(0, D2, hgt + 0.05)], [0, 0, d / 1.2, 0, d / 1.2, 1, 0, 1]), rmat); add(quadGeo([R(W2, -D2, ye), R(W2, D2, ye), R(0, D2, hgt + 0.05), R(0, -D2, hgt + 0.05)], [0, 0, d / 1.2, 0, d / 1.2, 1, 0, 1]), rmat);
+        for (const s of [-1, 1]) add(quadGeo([R(-w / 2, s * d / 2, e), R(w / 2, s * d / 2, e), R(0, s * d / 2, hgt)]), wallm);
+      } else {
+        add(quadGeo([R(-W2, -D2, ye), R(W2, -D2, ye), R(W2, 0, hgt + 0.05), R(-W2, 0, hgt + 0.05)], [0, 0, w / 1.2, 0, w / 1.2, 1, 0, 1]), rmat); add(quadGeo([R(W2, D2, ye), R(-W2, D2, ye), R(-W2, 0, hgt + 0.05), R(W2, 0, hgt + 0.05)], [0, 0, w / 1.2, 0, w / 1.2, 1, 0, 1]), rmat);
+        for (const s of [-1, 1]) add(quadGeo([R(s * w / 2, -d / 2, e), R(s * w / 2, d / 2, e), R(s * w / 2, 0, hgt)]), wallm);
+      }
+    }
+    names.push(THREE.PropertyBinding.sanitizeNodeName('budova ' + b.name));
+  });
+  return names.length ? { group: grp, names } : null;
+}
