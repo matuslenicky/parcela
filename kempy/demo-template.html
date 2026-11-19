@@ -128,6 +128,9 @@ p { margin: 0; }
 .m-area-asphalt { fill: var(--road); stroke: var(--road-edge); stroke-width: 2; }
 .m-area-play { fill: var(--play); stroke: var(--build-line); stroke-width: 2; stroke-dasharray: 8 6; }
 .m-area-pitch { fill: var(--meadow); stroke: var(--paper); stroke-width: 2.5; }
+.m-area-paved, .m-area-gravel { fill: var(--gravel); }
+.m-area-sand { fill: var(--play); stroke: var(--build-line); stroke-width: 1.5; }
+.m-lake { fill: var(--water); }
 .m-tree { fill: var(--tree); }
 .m-build { fill: var(--build); stroke: var(--build-line); stroke-width: 2.5; }
 .m-t { fill: var(--muted); font-size: calc(21px * var(--mk, 1)); font-weight: 700; }
@@ -373,7 +376,7 @@ p { margin: 0; }
     </div>
   </section>
 </main>
-<footer class="foot"><div class="wrap">Ukážku pripravil Parcela pre {{NAME}}. Zdroj rozloženia: plán areálu zverejnený na webe kempu. Nie je to oficiálna stránka kempu.</div></footer>
+<footer class="foot"><div class="wrap">Ukážku pripravil Parcela pre {{NAME}}. {{CREDIT}} Nie je to oficiálna stránka kempu.</div></footer>
 
 <script>
 var CAMP = /*CAMP_DATA*/null;
@@ -386,7 +389,7 @@ var CAMP = /*CAMP_DATA*/null;
     stan: { w: 4, l: 5, name: 'Stan', items: [['stan', 0.5, 1, 3, 3]] },
     autostan: { w: 6, l: 6, name: 'Auto a stan', items: [['auto', 0.3, 0.5, 1.9, 4.6], ['stan', 2.7, 1, 3, 3]] },
     obytne: { w: 5.5, l: 8.5, name: 'Obytné auto', items: [['obytné auto', 0.3, 1, 2.3, 7.5], ['markíza', 2.9, 2.5, 2.5, 4]] },
-    karavan: { w: 8.5, l: 8.5, name: 'Karavan s autom', items: [['auto', 0.3, 0.5, 1.9, 4.6], ['karavan', 2.7, 0.5, 2.5, 7.5], ['predstan', 5.2, 2, 3, 4]] }
+    karavan: { w: 7.5, l: 8.5, name: 'Karavan s autom', items: [['auto', 0.2, 0.5, 1.9, 4.6], ['karavan', 2.4, 0.5, 2.5, 7.5], ['predstan', 4.9, 2, 2.5, 4]] }
   };
   var S = CAMP.pxPerM, T = CAMP.types;
   document.getElementById('dates').textContent = CAMP.dates || '12. – 15. júla, 3 noci';
@@ -448,6 +451,7 @@ var CAMP = /*CAMP_DATA*/null;
   el('line', { x1: 0, y1: 0, x2: 0, y2: 12, 'class': 'hatch-b' }, pat);
   el('rect', { x: ex[0], y: ex[1], width: ex[2] - ex[0], height: ex[3] - ex[1], 'class': 'm-ground' }, svg);
   el('polygon', { points: pts(CAMP.boundary), 'class': 'm-inside' }, svg);
+  (CAMP.lakes || []).forEach(function (l) { el('polygon', { points: pts(l.pts), 'class': 'm-lake' }, svg); });
   (CAMP.water || []).forEach(function (w) { el('polyline', { points: pts(w.pts), 'class': 'm-water', 'stroke-width': w.w }, svg); });
   (CAMP.areas || []).forEach(function (a) {
     el('polygon', { points: pts(a.pts), 'class': 'm-area-' + a.kind }, svg);
@@ -462,6 +466,7 @@ var CAMP = /*CAMP_DATA*/null;
     var g = r.context ? el('g', { 'class': 'm-ctx' }, svg) : svg;
     el(r.closed ? 'polygon' : 'polyline', { points: pts(r.pts), 'class': 'm-road', 'stroke-width': r.w }, g);
   });
+  (CAMP.pools || []).forEach(function (p) { if (p.pts) el('polygon', { points: pts(p.pts), 'class': 'm-lake' }, svg); else el('circle', { cx: p.c[0], cy: p.c[1], r: p.r, 'class': 'm-lake' }, svg); });
   (CAMP.roundabouts || []).forEach(function (rb) {
     el('circle', { cx: rb.c[0], cy: rb.c[1], r: rb.r, 'class': 'm-road-edge', 'stroke-width': rb.w + 5 }, svg);
     el('circle', { cx: rb.c[0], cy: rb.c[1], r: rb.r, 'class': 'm-ring', 'stroke-width': rb.w }, svg);
@@ -470,7 +475,7 @@ var CAMP = /*CAMP_DATA*/null;
   (CAMP.conifers || []).forEach(function (t) { el('circle', { cx: t[0], cy: t[1], r: 13, 'class': 'm-tree' }, svg); });
   (CAMP.buildings || []).forEach(function (b) {
     var g = el('g', { 'class': b.context ? 'm-ctx' : '' }, svg);
-    el('polygon', { points: pts(rot(b.c, b.w, b.d, b.ang || 0)), 'class': 'm-build' }, g);
+    el('polygon', { points: pts(b.poly ? b.pts : rot(b.c, b.w, b.d, b.ang || 0)), 'class': 'm-build' }, g);
     var t = el('text', { x: b.c[0], y: b.c[1] + 7 * mk, 'class': 'm-t', 'text-anchor': 'middle' }, g);
     t.textContent = b.short || b.name.split(' ')[0];
   });
@@ -653,7 +658,8 @@ var CAMP = /*CAMP_DATA*/null;
     info: function (id) {
       var p = parcels.find(function (q) { return q.id === id; }); if (!p) return null;
       var ok = !p.taken && fits(p, state.v);
-      return { title: unitName(p) + ' ' + p.id, chip: chipText(p, fits(p, state.v)), ok: ok, facts: factsOf(p), total: ok ? 'Spolu za pobyt ' + money(quote(p).sum) : '' };
+      // room: voľnú parcelu alebo plochu si hosť môže v 3D zariadiť aj vtedy, keď hrubý odhad hovorí, že sa nezmestí (rozhodne až skutočná zostava)
+      return { title: unitName(p) + ' ' + p.id, chip: chipText(p, fits(p, state.v)), ok: ok, room: !p.taken && p.unit !== 'cabin', facts: factsOf(p), total: ok ? 'Spolu za pobyt ' + money(quote(p).sum) : '' };
     },
     select: function (id) { select(id); },
     kit: function (names) { state.kit = names; state.kitFor = state.sel; },

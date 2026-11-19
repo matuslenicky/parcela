@@ -20,13 +20,13 @@ server.listen(0, '127.0.0.1', async () => {
   try {
     browser = await chromium.launch({ headless: true, args: ['--enable-unsafe-swiftshader', '--use-angle=swiftshader', '--ignore-gpu-blocklist', '--disable-renderer-backgrounding', '--disable-background-timer-throttling', '--disable-backgrounding-occluded-windows'] });
     const ctx = await browser.newContext(phone ? { viewport: { width: 390, height: 844 }, deviceScaleFactor: 2, hasTouch: true, isMobile: true } : { viewport: { width: 1400, height: 860 } });
-    const page = await ctx.newPage(), errs = [];
+    const page = await ctx.newPage(), errs = []; page.setDefaultTimeout(120000);   // softvérové WebGL je pri veľkom kempe pomalé
     page.on('console', (m) => { if (m.type() === 'error') errs.push(m.text()); });
     page.on('pageerror', (e) => errs.push('exception: ' + e.message));
     await page.goto('http://127.0.0.1:' + server.address().port + '/' + slug + '/index.html' + (dark ? '?theme=dark' : ''));
     await page.click('#open3d');
     await page.waitForFunction(() => document.querySelector('.c3-stage canvas') && !document.querySelector('.c3-load'), null, { timeout: 120000 });
-    const shot = async (n) => { await page.waitForTimeout(1600); await page.screenshot({ path: path.join(out, n + '.png') }); console.log(path.join(out, n + '.png')); };
+    const shot = async (n) => { await page.waitForTimeout(1600); await page.screenshot({ path: path.join(out, n + '.png'), timeout: 180000 }); console.log(path.join(out, n + '.png')); };
     // voľná parcela: zadaná, alebo prvá, pri ktorej karta ponúkne „Zariadiť parcelu“
     const ids = flag('parcel', '') ? [flag('parcel', '')] : await page.$$eval('.c3-go option', (o) => o.map((x) => x.value).filter(Boolean));
     let picked = null;
@@ -50,6 +50,24 @@ server.listen(0, '127.0.0.1', async () => {
     await shot('izba-3-zoznam');
     console.log('stav: ' + await page.$eval('.c3r-done', (b) => b.textContent) + ' | ' + await page.$eval('.c3r-title span', (b) => b.textContent));
     console.log(await page.$$eval('.c3r-cards.kit li', (l) => l.map((x) => x.innerText.replace(/\s+/g, ' ').trim()).join('\n')));
+    // ovládanie: vec sa chytí myšou a posunie, tlačidlom otočí, košom odstráni; Hotovo zavrie prehliadku a stránka ukáže zostavu
+    const st = () => page.evaluate(() => window.Camp3D.view.state().room), fail = (m) => { console.log('ZLYHALO: ' + m); code = 1; };
+    const n0 = (await st()).items.length, top = (await st()).items.findIndex((i) => !i.host);
+    if (!phone) {
+      const a = (await st()).items[top], [sx, sy] = await page.evaluate((i) => window.Camp3D.view.room.screenOf(i), top);
+      await page.mouse.move(sx, sy); await page.mouse.down(); await page.mouse.move(sx + 30, sy + 10, { steps: 4 }); await page.mouse.move(sx + 70, sy + 24, { steps: 6 }); await page.mouse.up();
+      const b = (await st()).items[top];
+      if (Math.hypot(b.x - a.x, b.z - a.z) < 0.3) fail('ťahanie myšou vec neposunulo (' + a.x + ',' + a.z + ' -> ' + b.x + ',' + b.z + ')'); else console.log('ťahanie: ' + a.id + ' posunuté o ' + Math.hypot(b.x - a.x, b.z - a.z).toFixed(2) + ' m' + (b.bad ? ' (' + b.bad + ')' : ''));
+      await page.click('.c3r-acts [data-a="rotr"]'); const c = (await st()).items[top];
+      if (Math.abs(c.rot - b.rot) < 0.2) fail('otočenie nezmenilo uhol'); else console.log('otočenie: ' + ((c.rot - b.rot) * 180 / Math.PI).toFixed(0) + '°');
+      await shot('izba-4-po-posune');
+      await page.keyboard.press('Control+z').catch(() => {});
+    }
+    await page.click('.c3r-tabs [data-t="kit"]'); await page.click('.c3r-cards.kit li:last-child .c3r-rm');
+    if ((await st()).items.length !== n0 - 1) fail('odstránenie zo zoznamu nezmenilo počet vecí');
+    if ((await page.getAttribute('.c3r-done', 'aria-disabled')) === 'true') { console.log('zostava sa po posune nezmestí, vraciam sa do kempu'); await page.click('.c3r-back'); await page.waitForSelector('.c3r', { state: 'hidden' }); if (!(await page.isVisible('.c3-card'))) fail('po návrate do kempu chýba karta parcely'); }
+    else { await page.click('.c3r-done'); await page.waitForFunction(() => !document.getElementById('tour').open, null, { timeout: 5000 }).catch(() => fail('Hotovo nezavrelo prehliadku'));
+      const t = await page.$eval('#panel', (p) => p.innerText.replace(/\s+/g, ' ')); if (!/Vaša zostava/.test(t)) fail('panel stránky neukazuje zostavu: ' + t.slice(0, 160)); else console.log('panel: ' + t.slice(0, 230)); await shot('izba-5-panel'); }
     if (errs.length) { console.log('chyby v konzole:\n' + errs.join('\n')); code = 1; }
   } catch (e) { console.error(e.message); code = 1; } finally { if (browser) await browser.close(); server.close(); process.exit(code); }
 });

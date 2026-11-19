@@ -133,8 +133,10 @@ export function createRoom(o) {
     const b = e.box, h = Math.max(0.3, Math.min(e.H || 1, 3.2));                // kým sa model načíta, stojí na mieste priesvitný hranol
     it.ghost = new THREE.Mesh(new THREE.BoxGeometry(b[2] - b[0], h, b[3] - b[1]), new THREE.MeshBasicMaterial({ color: 0x0a5bab, transparent: true, opacity: 0.22, depthWrite: false }));
     it.ghost.position.set((b[0] + b[2]) / 2, h / 2 + (e.att === 'roof' ? 0 : 0), (b[1] + b[3]) / 2); it.obj.add(it.ghost);
-    it.line = new THREE.Mesh(stripGeo(corners(e), 0.045), new THREE.MeshBasicMaterial({ color: C_IDLE.clone(), transparent: true, opacity: 0.9, depthWrite: false, polygonOffset: true, polygonOffsetFactor: -8, polygonOffsetUnits: -8 }));
+    it.line = new THREE.Mesh(stripGeo(corners(e), 0.06), new THREE.MeshBasicMaterial({ color: C_IDLE.clone(), transparent: true, opacity: 0.9, depthWrite: false, polygonOffset: true, polygonOffsetFactor: -8, polygonOffsetUnits: -8 }));
     it.line.position.y = 0.03; it.line.renderOrder = 7; it.obj.add(it.line);
+    it.fill = new THREE.Mesh(new THREE.PlaneGeometry(b[2] - b[0], b[3] - b[1]), new THREE.MeshBasicMaterial({ color: 0xd23b25, transparent: true, opacity: 0.34, depthWrite: false, polygonOffset: true, polygonOffsetFactor: -6, polygonOffsetUnits: -6 }));
+    it.fill.rotation.x = -Math.PI / 2; it.fill.position.set((b[0] + b[2]) / 2, 0.025, (b[1] + b[3]) / 2); it.fill.renderOrder = 6; it.fill.visible = false; it.obj.add(it.fill);   // červená plocha pod vecou, ktorá sa nezmestí
     (it.host ? it.host.obj : G).add(it.obj); seat(it);
     fetchModel(e.id, BASE).then((tpl) => {
       if (!items.includes(it)) return;
@@ -142,15 +144,15 @@ export function createRoom(o) {
       if (e.paint) m.traverse((q) => { if (q.isMesh && /^lak /.test(q.material.name)) { q.material = q.material.clone(); it.paintMat = q.material; } });
       it.obj.remove(it.ghost); it.ghost.geometry.dispose(); it.ghost = null; it.obj.add(m);
       if (it.color && it.paintMat) it.paintMat.color.set(it.color);
-      if (it.host) it.line.position.y = -it.obj.position.y + 0.03;
+      if (it.host) { it.line.position.y = -it.obj.position.y + 0.03; it.fill.position.y = -it.obj.position.y + 0.025; }
       seat(it); items.filter((c) => c.host === it).forEach(seat); o.shadows(); refresh();
     }).catch(() => { say('Model sa nepodarilo načítať. Skontrolujte pripojenie.'); });
-    if (it.host) it.line.position.y = -(it.host.e.H + 0.04) * (e.att === 'roof' ? 1 : 0) + 0.03;
+    if (it.host) { it.line.position.y = -(it.host.e.H + 0.04) * (e.att === 'roof' ? 1 : 0) + 0.03; it.fill.position.y = it.line.position.y - 0.005; }
     items.push(it); return it;
   }
   function removeItem(it) {
     items.filter((c) => c.host === it).forEach(removeItem);
-    it.obj.removeFromParent(); it.line.geometry.dispose(); if (it.paintMat) it.paintMat.dispose();
+    it.obj.removeFromParent(); it.line.geometry.dispose(); it.fill.geometry.dispose(); if (it.paintMat) it.paintMat.dispose();
     items = items.filter((x) => x !== it); if (sel === it) sel = null;
   }
   const cls = (it) => it.e.cls || 'solid';
@@ -222,7 +224,7 @@ export function createRoom(o) {
   function refresh() {
     if (!P) return;
     const ok = validate(), bad = items.filter((it) => it.bad).length, used = items.filter((it) => !it.host && cls(it) !== 'cover').reduce((s, it) => s + (it.e.box[2] - it.e.box[0]) * (it.e.box[3] - it.e.box[1]), 0);
-    items.forEach((it) => { it.line.material.color.copy(it.bad ? C_BAD : it === sel ? C_OK : C_IDLE); it.line.material.opacity = it.bad || it === sel ? 1 : 0.55; it.line.scale.setScalar(1); });
+    items.forEach((it) => { it.line.material.color.copy(it.bad ? C_BAD : it === sel ? C_OK : C_IDLE); it.line.material.opacity = it.bad || it === sel ? 1 : 0.55; it.fill.visible = !!it.bad; });
     $('.c3r-title strong').textContent = P.word + ' ' + P.id;
     $('.c3r-title span').textContent = num(P.w) + ' × ' + num(P.h) + ' m' + (items.length ? ' · zabraté ' + Math.round(used) + ' z ' + Math.round(P.w * P.h) + ' m²' : '');
     const done = $('.c3r-done'); done.textContent = !items.length ? 'Pokračovať bez zostavy' : ok ? 'Hotovo, zmestím sa' : bad === 1 ? '1 vec sa nezmestí' : bad + ' veci sa nezmestia';
@@ -359,9 +361,11 @@ export function createRoom(o) {
     tab = items.length ? 'kit' : 'auto'; renderTabs(); hint(); layout(); o.shadows();
     return P;
   }
-  function exit() { active = false; ui.hidden = true; deco.visible = false; sel = null; drag = null; camera.clearViewOffset(); items.forEach((it) => { it.line.material.opacity = 0; }); if (P) save(); }
+  function exit() { active = false; ui.hidden = true; deco.visible = false; sel = null; drag = null; camera.clearViewOffset(); items.forEach((it) => { it.line.material.opacity = 0; it.fill.visible = false; }); if (P) save(); }
   return { enter, exit, layout, free, add, act, select: (i) => select(items[i]), get active() { return active; },
     summary: () => items.map((it) => it.e.n),
+    screenOf(i) { const it = items[i]; if (!it) return null; it.obj.updateWorldMatrix(true, false); const b = it.e.box, r = renderer.domElement.getBoundingClientRect();   // stred veci na obrazovke (skúšky)
+      v3.set((b[0] + b[2]) / 2, 0.3, (b[1] + b[3]) / 2); it.obj.localToWorld(v3); v3.project(camera); return [r.left + (v3.x + 1) / 2 * r.width, r.top + (1 - v3.y) / 2 * r.height]; },
     state: () => ({ active, parcel: P && P.id, tab, sel: sel ? sel.e.id : null, items: items.map((it) => ({ id: it.e.id, x: it.x, z: it.z, rot: +it.rot.toFixed(3), bad: it.bad, host: it.host ? it.host.e.id : null, loaded: !!it.model })) }),
     destroy() { window.removeEventListener('keydown', onKey, true); ui.remove(); } };
 }

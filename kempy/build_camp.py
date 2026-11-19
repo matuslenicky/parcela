@@ -53,10 +53,20 @@ PAL = {
     'tent2': ('#4f8fbf', .8), 'car': ('#c94f4f', .45), 'car2': ('#5d7fa3', .45), 'glass': ('#2c3a44', .1), 'tyre': ('#2a2a2a', .9),
     'parcel_line': ('#ffffff', .6), 'label': ('#ffffff', .5), 'sand': ('#e9dcb8', .95), 'wood': ('#a07a55', .8),
     'logwall': ('#9a6b47', .85), 'roof2': ('#5a4a3f', .75), 'pitch': ('#78b860', .95), 'labeldark': ('#2b2118', .6),
+    'paved': ('#cfcbc0', .85), 'shrub': ('#3f7f45', .95), 'stone': ('#9a9a94', .9), 'poolrim': ('#e6e8e7', .6), 'poolwater': ('#4fb4dc', .08),
+    'pingpong': ('#2f5fb5', .5), 'tramp': ('#22262a', .7),
 }
-def M(n): c, r = PAL[n]; return mat('m_' + n, c, r)
+for k_, v_ in D.get('pal', {}).items(): PAL[k_] = (v_, PAL.get(k_, ('', .9))[1])     # kemp si môže farby povrchov upraviť
+def M(n):
+    if n.startswith('#'): return mat('c_' + n, n, .8)                               # farba zadaná priamo v camp.json
+    c, r = PAL[n]; return mat('m_' + n, c, r)
+def mix(h1, h2, t):
+    a = [int(h1.lstrip('#')[k:k + 2], 16) for k in (0, 2, 4)]; b = [int(h2.lstrip('#')[k:k + 2], 16) for k in (0, 2, 4)]
+    return '#%02x%02x%02x' % tuple(int(a[k] + (b[k] - a[k]) * t) for k in range(3))
+LAWN = D.get('parcelStyle') == 'lawn'      # parcely ako trávnik s jemným odtieňom a farebným obrysom namiesto farebných dosiek
 for t, info in D['types'].items():
-    mat('m_type_' + t, info['color'], .9)
+    mat('m_type_' + t, mix(PAL['inside'][0], info['color'], .3) if LAWN else info['color'], .9)
+    mat('m_edge_' + t, info['color'], .8)
 
 def link(obj, coll):
     coll.objects.link(obj); return obj
@@ -90,7 +100,7 @@ class MB:
         for f in s.bm.faces:          # flat pieces must face the sky, otherwise Cycles shades them black
             if f.normal.z < -0.01 and f.calc_center_median().z > 0.001: f.normal_flip()
         s.bm.to_mesh(me); s.bm.free()
-        for m in s.mats: me.materials.append(M(m) if not m.startswith('type_') else MATS['m_' + m])
+        for m in s.mats: me.materials.append(M(m) if not m.startswith(('type_', 'edge_')) else MATS['m_' + m])
         for p in me.polygons: p.use_smooth = smooth
         return link(bpy.data.objects.new(name, me), coll)
 
@@ -165,13 +175,21 @@ for wtr in D.get('water', []):
         mb.face([mb.bm.verts.new((v.x, v.y, 0.05)) for v in q], 'water')
     mb.obj('voda ' + wtr.get('name', ''), C_GROUND)
 
-for lk in D.get('lakes', []):
-    mb = MB(); mb.flat([P(p) for p in lk['pts']], 0.05, 'water'); mb.obj('jazero', C_GROUND)
+for li, lk in enumerate(D.get('lakes', [])):
+    mb = MB(); mb.flat([P(p) for p in lk['pts']], 0.056 + li * 0.002, 'water'); mb.obj('jazero ' + lk.get('name', ''), C_GROUND)
+
+# bazény: obruba a hladina; kruhový bazén má stred a polomer
+for pl in D.get('pools', []):
+    pts = [P(p) for p in pl['pts']] if 'pts' in pl else [(P(pl['c'])[0] + math.cos(2 * math.pi * k / 28) * pl['r'] / S, P(pl['c'])[1] + math.sin(2 * math.pi * k / 28) * pl['r'] / S) for k in range(28)]
+    cx_ = sum(p[0] for p in pts) / len(pts); cy_ = sum(p[1] for p in pts) / len(pts); rim = pl.get('rim', 0.25)
+    mb = MB(); mb.prism(pts, 0.0, rim, 'poolrim')
+    mb.flat([(cx_ + (x - cx_) * (1 - 0.3 / max(1.0, math.hypot(x - cx_, y - cy_))), cy_ + (y - cy_) * (1 - 0.3 / max(1.0, math.hypot(x - cx_, y - cy_)))) for x, y in pts], rim + 0.006, 'poolwater')
+    mb.obj('bazen ' + pl.get('name', ''), C_ROADS)
 
 # ---------------------------------------------------------------- areas, roads
-for a in D.get('areas', []):
+for ai, a in enumerate(D.get('areas', [])):
     mb = MB(); kind = a['kind']
-    z = {'meadow': 0.03, 'asphalt': 0.05, 'play': 0.04, 'gravel': 0.04, 'pitch': 0.04}.get(kind, 0.03)
+    z = {'meadow': 0.03, 'asphalt': 0.05, 'play': 0.04, 'gravel': 0.04, 'pitch': 0.04, 'paved': 0.045, 'sand': 0.04}.get(kind, 0.03) + ai * 0.0007   # prekrývajúce sa plochy v jednej výške kreslí Cycles čierno
     mb.flat([P(p) for p in a['pts']], z, kind if kind in PAL else 'meadow')
     if kind == 'pitch':  # biele čiary: obrys, stredová čiara
         apts = [P(p) for p in a['pts']]
@@ -216,15 +234,41 @@ if D.get('hedge', True):
         mb.prism(pts2, 0.0, 0.9, 'hedge')
     mb.obj('ziva ploty', C_GREEN)
 
+# živé ploty a múriky z camp.json (lomená čiara, šírka v px, výška v m), kríky medzi parcelami, kamenné kruhy ohnísk
+if D.get('hedges'):
+    mb = MB()
+    for hg in D['hedges']:
+        for q in ribbon([P(p) for p in hg['pts']], hg['w'] / S):
+            mb.prism([(v.x, v.y) for v in q], 0.0, hg.get('h', 1.2), hg.get('mat', 'hedge'))
+    mb.obj('ziva ploty kempu', C_GREEN)
+if D.get('shrubs'):
+    mb = MB(); mi_s = mb.mi('shrub')
+    for sx, sy, sr in D['shrubs']:
+        mx, my = P((sx, sy)); r_ = sr / S; before = set(mb.bm.faces)
+        bmesh.ops.create_icosphere(mb.bm, subdivisions=1, radius=r_, matrix=Matrix.Translation((mx, my, r_ * 0.95)) @ Matrix.Diagonal((1, 1, 1.25, 1)))
+        for f in set(mb.bm.faces) - before: f.material_index = mi_s
+    mb.obj('kriky', C_GREEN)
+for k, rg in enumerate(D.get('rings', [])):
+    mb = MB(); c_ = P(rg[:2]); r_ = rg[2] / S
+    mb.prism([(c_[0] + math.cos(2 * math.pi * q / 14) * r_, c_[1] + math.sin(2 * math.pi * q / 14) * r_) for q in range(14)], 0.0, 0.32, 'stone', 'trunk')
+    mb.obj('ohnisko %d' % k, C_PROPS)
+
 for k, bx in enumerate(D.get('boxes', [])):
     mb = MB(); mb.prism(rect(P(bx['c']), bx['w'] / S, bx['d'] / S, bx.get('ang', 0)), bx.get('z', 0.0), bx['height'], bx.get('mat', 'wood'))
     mb.obj('plosina %d' % k, C_PROPS)
 
 # ---------------------------------------------------------------- buildings
-def house(c, w, d, hgt, ang, wall='wall', roof='roof', windows=True):
-    """Dom so sedlovou strechou nad dlhšou stranou; c, w, d v metroch. Vráti MB."""
-    wall_h = hgt * 0.62
+def house(c, w, d, hgt, ang, wall='wall', roof='roof', windows=True, eave=None, flat=False):
+    """Dom so sedlovou strechou nad dlhšou stranou; c, w, d v metroch. eave = výška odkvapu, flat = plochá strecha. Vráti MB."""
+    wall_h = eave if eave else hgt * 0.62
     mb = MB()
+    if flat:
+        mb.prism(rect(c, w, d, ang), 0.0, hgt, wall, roof)
+        if windows:
+            a_ = -math.radians(ang); ca_, sa_ = math.cos(a_), math.sin(a_)
+            p1 = (c[0] + (-0.5) * ca_ - (-d / 2 - 0.03) * sa_, c[1] + (-0.5) * sa_ + (-d / 2 - 0.03) * ca_); p2 = (c[0] + 0.5 * ca_ - (-d / 2 - 0.03) * sa_, c[1] + 0.5 * sa_ + (-d / 2 - 0.03) * ca_)
+            mb.face([mb.bm.verts.new((p1[0], p1[1], 0.02)), mb.bm.verts.new((p2[0], p2[1], 0.02)), mb.bm.verts.new((p2[0], p2[1], min(2.05, hgt - 0.2))), mb.bm.verts.new((p1[0], p1[1], min(2.05, hgt - 0.2)))], 'door')
+        return mb
     mb.prism(rect(c, w, d, ang), 0.0, wall_h, wall)
     # gable roof along the longer side
     a = -math.radians(ang); ca, sa = math.cos(a), math.sin(a)
@@ -260,7 +304,11 @@ def house(c, w, d, hgt, ang, wall='wall', roof='roof', windows=True):
     return mb
 
 for b in D.get('buildings', []):
-    house(P(b['c']), b['w'] / S, b['d'] / S, b['height'], b.get('ang', 0), b.get('wall', 'wall'), b.get('roof', 'roof'), b.get('windows', True)).obj('budova ' + b['name'], C_BUILD)
+    rtype = b.get('roof') if b.get('roof') in ('flat', 'gable') else None        # staršie kempy majú v "roof" názov materiálu
+    if b.get('poly'):                                                            # presný obrys (okolité budovy z OSM): hranol s plochou strechou
+        mb = MB(); mb.prism([P(p) for p in b['pts']], 0.0, b['height'], b.get('wallc') or 'wall', b.get('roofc') or 'roof'); mb.obj('budova ' + b['name'], C_BUILD); continue
+    house(P(b['c']), b['w'] / S, b['d'] / S, b['height'], b.get('ang', 0), b.get('wallc') or b.get('wall', 'wall'), b.get('roofc') or (b.get('roof', 'roof') if not rtype else 'roof'),
+          b.get('windows', True), b.get('eave'), rtype == 'flat').obj('budova ' + b['name'], C_BUILD)
 
 # ---------------------------------------------------------------- parcels + labels
 font_mat = M('label')
@@ -273,6 +321,8 @@ for pi, p in enumerate(D['parcels']):
     top = (0.075 if p.get('flat') else 0.09) + pi * 0.001
     if p.get('flat'):
         mb.flat(corners, top, 'type_' + t)
+        if LAWN:
+            for q in ribbon(corners, 0.16, True): mb.face([mb.bm.verts.new((v.x, v.y, top + 0.004)) for v in q], 'edge_' + t)
     else:
         mb.prism(corners, 0.0, top, 'type_' + t)
     ob = mb.obj('parcela ' + p['id'], C_PARC)
@@ -291,7 +341,7 @@ for pi, p in enumerate(D['parcels']):
     cu.align_x = 'CENTER'; cu.align_y = 'CENTER'; cu.extrude = 0.02
     if unit == 'cabin': cu.size = min(w / (0.62 * len(p['id']) + 0.5), h * 0.34)
     elif unit == 'zone': cu.size = h * 0.38
-    else: cu.size = min(w / (0.62 * len(p['id']) + 0.6), h * 0.32) if not p.get('flat') else h * 0.55
+    else: cu.size = min(w / (0.62 * len(p['id']) + 0.6), h * 0.32) if (LAWN or not p.get('flat')) else h * 0.55
     cu.font = bpy.data.fonts.load('C:/Windows/Fonts/arialbd.ttf', check_existing=True) if os.path.exists('C:/Windows/Fonts/arialbd.ttf') else cu.font
     to = bpy.data.objects.new('stitok ' + p['id'], cu); to.data.materials.append(lmat)
     to.location = (lc[0], lc[1], top + (0.03 if not p.get('flat') else 0.025))
@@ -304,10 +354,10 @@ buckets = {}
 def bucket(kind):
     if kind not in buckets: buckets[kind] = MB()
     return buckets[kind]
-def put_tree(x, y, r, kind):
+def put_tree(x, y, r, kind, hh=None):
     mb = bucket(kind)
     if kind == 'pine':
-        h = r * 3.4
+        h = hh or r * 3.4
         mi_t, mi_l = mb.mi('trunk'), mb.mi('pine')
         before = set(mb.bm.faces)
         bmesh.ops.create_cone(mb.bm, cap_ends=True, segments=7, radius1=0.25, radius2=0.18, depth=h * 0.3, matrix=Matrix.Translation((x, y, h * 0.15)))
@@ -320,14 +370,17 @@ def put_tree(x, y, r, kind):
         leaf = kind
         mi_t, mi_l = mb.mi('trunk'), mb.mi(leaf)
         before = set(mb.bm.faces)
-        bmesh.ops.create_cone(mb.bm, cap_ends=True, segments=7, radius1=0.3, radius2=0.22, depth=r * 1.3, matrix=Matrix.Translation((x, y, r * 0.65)))
+        zc = max(r * 0.95, hh - r * 0.85) if hh else r * 2.0     # stred koruny; pri známej výške stromu siaha koruna presne po ňu
+        bmesh.ops.create_cone(mb.bm, cap_ends=True, segments=7, radius1=min(0.3, r * 0.2), radius2=min(0.22, r * 0.15), depth=zc, matrix=Matrix.Translation((x, y, zc / 2)))
         for f in set(mb.bm.faces) - before: f.material_index = mi_t
         before = set(mb.bm.faces)
-        bmesh.ops.create_icosphere(mb.bm, subdivisions=2, radius=r, matrix=Matrix.Translation((x, y, r * 2.0)) @ Matrix.Diagonal((1, 1, 0.85, 1)))
+        bmesh.ops.create_icosphere(mb.bm, subdivisions=2, radius=r, matrix=Matrix.Translation((x, y, zc)) @ Matrix.Diagonal((1, 1, 0.85 if not hh else min(1.25, max(0.7, (hh - zc) / (r * 0.85) * 0.85)), 1)))
         for f in set(mb.bm.faces) - before: f.material_index = mi_l
 
-for x, y, r in D.get('trees', []):
-    mx, my = P((x, y)); put_tree(mx, my, max(1.6, r / S * 0.9), random.choice(['leaf1', 'leaf2', 'leaf3']))
+for tr_ in D.get('trees', []):         # [x, y, polomer koruny px, výška m (nepovinná), druh (nepovinný: pine)]
+    x, y, r = tr_[:3]; mx, my = P((x, y)); hh_ = tr_[3] if len(tr_) > 3 else None; kd = tr_[4] if len(tr_) > 4 else None
+    if hh_: put_tree(mx, my, max(0.6, r / S), kd or random.choice(['leaf1', 'leaf2', 'leaf3']), hh_)
+    else: put_tree(mx, my, max(1.6, r / S * 0.9), random.choice(['leaf1', 'leaf2', 'leaf3']))
 for cf in D.get('conifers', []):
     mx, my = P((cf[0], cf[1])); put_tree(mx, my, cf[2] if len(cf) > 2 else random.uniform(1.5, 2.3), 'pine')
 tr = D.get('treeRow')

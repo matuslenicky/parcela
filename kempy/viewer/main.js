@@ -225,7 +225,7 @@ function mount(host, api) {
     cardId = id;
     card.querySelector('.c3-tip').innerHTML = '<div class="c3-h"><strong>' + esc(i.title) + '</strong><span class="chip ' + (i.ok ? 'ok' : 'no') + '">' + esc(i.chip) + '</span></div>'
       + '<p class="c3-f">' + i.facts.map((f) => '<span>' + esc(f) + '</span>').join('') + '</p>' + (i.total ? '<p class="c3-sum">' + esc(i.total) + '</p>' : '');
-    card.querySelector('.c3-book').hidden = !i.ok; card.querySelector('.c3-fit').hidden = !i.ok || byId[id].unit === 'cabin';
+    card.querySelector('.c3-book').hidden = !i.ok; card.querySelector('.c3-fit').hidden = !(i.room !== undefined ? i.room : i.ok) || byId[id].unit === 'cabin';
     card.hidden = false;
   }
   function choose(id, fly) {
@@ -274,7 +274,7 @@ function mount(host, api) {
     controls.enabled = true; controls.mouseButtons.LEFT = THREE.MOUSE.ROTATE; controls.mouseButtons.RIGHT = THREE.MOUSE.PAN; controls.touches.ONE = THREE.TOUCH.ROTATE; controls.touches.TWO = THREE.TOUCH.DOLLY_PAN;
     controls.zoomToCursor = false; controls.minDistance = 4; controls.maxPolarAngle = 1.45;
     const P = room.enter(u, raw), f = room.free();        // vzdialenosť, z ktorej sa celá parcela zmestí do voľnej časti obrazu
-    const d = clamp(Math.hypot(P.w, P.h) / 2 * 1.02 * f.full / (Math.tan(camera.fov * Math.PI / 360) * Math.max(120, Math.min(f.w, f.h))), 10, 140); controls.maxDistance = d * 2.2;
+    const d = clamp(Math.hypot(P.w, P.h) / 2 * 1.2 * f.full / (Math.tan(camera.fov * Math.PI / 360) * Math.max(120, Math.min(f.w, f.h))), 10, 140); controls.maxDistance = d * 2.2;
     const from = { t: controls.target.clone(), p: camera.position.clone() }, t = new THREE.Vector3(u.c[0], 0, u.c[1]), p = new THREE.Vector3(t.x + d * 0.3, d * 0.74, t.z + d * 0.6);
     if (still) { controls.target.copy(t); camera.position.copy(p); } else anim = { t0: performance.now(), dur: 900, step(k) { controls.target.lerpVectors(from.t, t, k); camera.position.lerpVectors(from.p, p, k); } };
     size(); update();
@@ -383,7 +383,7 @@ function mount(host, api) {
   function resume() { if (running) return; running = true; renderer.shadowMap.needsUpdate = true; applyTheme(); size(); update(); last = performance.now(); raf = requestAnimationFrame(frame); }
   function pause() { running = false; cancelAnimationFrame(raf); walk.keys = {}; }
   setHint();
-  return { ok: true, update, pause, resume, setMode, enterRoom, leaveRoom, room, focusUnit(id) { if (byId[id]) { showCard(id); flyTo(byId[id]); } },
+  return window.Camp3D.view = { ok: true, update, pause, resume, setMode, enterRoom, leaveRoom, room, focusUnit(id) { if (byId[id]) { showCard(id); flyTo(byId[id]); } },
     state: () => ({ mode, ready, room: room.state(), cam: camera.position.toArray().map((v) => Math.round(v * 10) / 10), walk: { x: Math.round(walk.x * 10) / 10, z: Math.round(walk.z * 10) / 10 }, card: cardId, calls: renderer.info.render.calls, tris: renderer.info.render.triangles }),
     destroy() { pause(); room.destroy(); ro.disconnect(); window.removeEventListener('keydown', kd); window.removeEventListener('keyup', ku); window.removeEventListener('blur', kb); renderer.dispose(); host.innerHTML = ''; } };
 }

@@ -11,7 +11,7 @@ const tpl = fs.readFileSync(path.join(__dirname, 'demo-template.html'), 'utf8');
 const SITE = 'https://matuslenicky.github.io/parcela/';
 
 // only what the page needs goes into the page
-const keep = ['name', 'place', 'pxPerM', 'extent', 'types', 'boundary', 'water', 'roads', 'roundabouts', 'areas', 'buildings', 'parcels', 'trees', 'conifers', 'dates', 'taken', 'focusX', 'startV', 'person', 'elec', 'tax'];
+const keep = ['name', 'place', 'pxPerM', 'extent', 'types', 'boundary', 'water', 'lakes', 'pools', 'roads', 'roundabouts', 'areas', 'buildings', 'parcels', 'trees', 'conifers', 'dates', 'taken', 'focusX', 'startV', 'person', 'elec', 'tax'];
 // texty stránky: kemp s chatkami alebo bez parciel si ich nastaví v camp.json, inak platia tieto
 const TEXT = {
   H1: camp.headline || 'Takto by si hosť vybral parcelu vo vašom kempe',
@@ -27,6 +27,7 @@ Object.assign(TEXT, {
   MAPOF: CABINS ? 'chatiek a miest' : 'parciel',
   STEP1: CABINS ? 'Mapu doladím podľa skutočného rozloženia chatiek a plôch a vášho cenníka.' : 'Mapu doladím podľa skutočných rozmerov parciel a vášho cenníka.',
   PICK: CABINS ? 'chatku alebo miesto' : 'parcelu',
+  CREDIT: camp.credit || 'Zdroj rozloženia: plán areálu zverejnený na webe kempu.',
 });
 // 3D prehliadka: ak je pri kempe camp3d.js (node kempy/build-viewer.js <slug>), stránka dostane tlačidlo a dialóg
 const HAS3D = fs.existsSync(path.join(dir, 'camp3d.js'));
@@ -49,7 +50,7 @@ let html = tpl
   .replace(/\{\{PLACE\}\}/g, esc(camp.place || ''))
   .replace(/\{\{SITE\}\}/g, SITE)
   .replace('{{RENDER}}', render)
-  .replace(/\{\{(H1|LEAD3D|LEAD|NOTICE|NOTE|ALT3D|CAP3D|MAPOF|STEP1|PICK)\}\}/g, (m, k) => esc(TEXT[k]))
+  .replace(/\{\{(H1|LEAD3D|LEAD|NOTICE|NOTE|ALT3D|CAP3D|MAPOF|STEP1|PICK|CREDIT)\}\}/g, (m, k) => esc(TEXT[k]))
   .replace(/\{\{(TOUR_BTN|TOUR_DLG)\}\}/g, (m, k) => RAW[k]);
 if (!render) html = html.replace(/<section class="sec" aria-labelledby="h3d">[\s\S]*?<\/section>/, '');
 fs.writeFileSync(path.join(dir, 'index.html'), html);
