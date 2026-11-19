@@ -20,7 +20,8 @@
    "https://www.largus.fr/fiche-technique/Fiat/500/I/2012/Berline+3+Portes/09+8v+TwinAir+85ch+S&S+Dualogic-1060716.html",
    "https://autotijd.be/en/dimensions/fiat/500-2016-2024",
    "https://media.stellantisnorthamerica.com/view-spec.do?id=10287"
-  ]
+  ],
+  "conf": "two-sources"
  },
  {
   "id": "yaris",
@@ -41,7 +42,8 @@
    "https://media.toyota.co.uk/wp-content/uploads/sites/5/pdf/250331-Yaris-Tech-Specs.pdf",
    "https://media.toyota.co.uk/wp-content/uploads/sites/5/pdf/210713M-Yaris-Tech-Spec.pdf",
    "https://autotijd.be/en/dimensions/toyota/yaris-2020-2023"
-  ]
+  ],
+  "conf": "official"
  },
  {
   "id": "fabia",
@@ -63,7 +65,8 @@
    "https://autotijd.be/en/dimensions/skoda/fabia",
    "https://www.auto-data.net/en/skoda-fabia-iv-1.0-tsi-110hp-43755",
    "https://www.largus.fr/fiche-technique/Skoda/Fabia/IV/2022/Berline+5+Portes/10+MPI+65ch+Active-2530309.html"
-  ]
+  ],
+  "conf": "official"
  },
  {
   "id": "golf",
@@ -86,7 +89,8 @@
    "https://autotijd.be/en/dimensions/volkswagen/golf/15-tsi-130-hp-manual-2478",
    "https://autotijd.be/en/dimensions/volkswagen/golf",
    "https://www.auto-data.net/en/volkswagen-golf-viii-1.0-tsi-110hp-40804"
-  ]
+  ],
+  "conf": "official"
  },
  {
   "id": "ceed",
@@ -107,7 +111,8 @@
    "https://press.kia.com/content/dam/kiapress/IE/pressreleases/Ceed-Launch-September-2018/Ceed-press-release.pdf",
    "https://www.auto-data.net/en/kia-ceed-iii-1.0-t-gdi-100hp-54511",
    "https://autotijd.be/en/dimensions/kia/ceed-2018-2021"
-  ]
+  ],
+  "conf": "official"
  },
  {
   "id": "scala",
@@ -129,7 +134,8 @@
    "https://autotijd.be/en/dimensions/skoda/scala",
    "https://www.auto-data.net/en/skoda-scala-1.0-tsi-110hp-49128",
    "https://www.largus.fr/fiche-technique/Skoda/Scala/I/2021/Berline+5+Portes/10+TGI+G-Tec+90ch+Active-2573398.html"
-  ]
+  ],
+  "conf": "official"
  },
  {
   "id": "octavia",
@@ -153,7 +159,8 @@
    "https://www.largus.fr/fiche-technique/Skoda/Octavia/IV/2025/Berline+5+Portes/15+TSI+ACT+116ch+Clever-2948854.html",
    "https://www.largus.fr/fiche-technique/Skoda/Octavia/IV/2021/Berline+5+Portes/10+TSI+110ch+Active+Euro6d-AP-2357425.html",
    "https://www.auto-data.net/en/skoda-octavia-iv-1.0-tsi-evo-110hp-38005"
-  ]
+  ],
+  "conf": "official"
  },
  {
   "id": "model3",
@@ -174,7 +181,8 @@
    "https://web.archive.org/web/20241114042131/https://www.tesla.com/ownersmanual/model3/en_eu/GUID-56562137-FC31-4110-A13C-9A9FC6657BF0.html",
    "https://www.largus.fr/fiche-technique/Tesla/Model+3/I/2024/Berline+5+Portes/Long-Range+Dual+Motor+AWD-2787165.html",
    "https://autotijd.be/en/dimensions/tesla/model-3"
-  ]
+  ],
+  "conf": "official"
  },
  {
   "id": "superb",
@@ -195,7 +203,8 @@
    "https://cdn.skoda-storyboard.com/2024/03/TD-Superb-en_87b42ad4.pdf",
    "https://autotijd.be/en/dimensions/skoda/superb",
    "https://www.largus.fr/fiche-technique/Skoda/Superb/IV/2024/Berline+4+Portes/15+TSI+ACT+150+mHEV+Laurin+&+Klement+DSG7-2849928.html"
-  ]
+  ],
+  "conf": "official"
  },
  {
   "id": "ceedsw",
@@ -216,7 +225,8 @@
    "https://press.kia.com/content/dam/kiapress/IE/pressreleases/Ceed-Launch-September-2018/Ceed-press-release.pdf",
    "https://www.auto-data.net/en/kia-ceed-iii-sportswagon-1.0-t-gdi-100hp-54513",
    "https://autotijd.be/en/dimensions/kia/ceed-sw-2018-2021"
-  ]
+  ],
+  "conf": "official"
  },
  {
   "id": "octaviacombi",
@@ -240,7 +250,8 @@
    "https://www.largus.fr/fiche-technique/Skoda/Octavia+Combi/IV/2025/Break+5+Portes/15+TSI+ACT+116ch+Clever-2948859.html",
    "https://www.largus.fr/fiche-technique/Skoda/Octavia+Combi/IV/2021/Break+5+Portes/10+TSI+110ch+Active+Euro6d-AP-2357450.html",
    "https://www.auto-data.net/en/skoda-octavia-iv-combi-1.0-tsi-evo-110hp-38003"
-  ]
+  ],
+  "conf": "official"
  },
  {
   "id": "passat",
@@ -262,7 +273,8 @@
    "https://www.auto-data.net/en/volkswagen-passat-variant-b9-1.5-etsi-150hp-mild-hybrid-dsg-50500",
    "https://autotijd.be/en/dimensions/volkswagen/passat-variant",
    "https://www.largus.fr/fiche-technique/Volkswagen/Passat+Sw/IX/2024/Break+5+Portes/15+eHybrid+204ch+DSG6-2848132.html"
-  ]
+  ],
+  "conf": "official"
  },
  {
   "id": "duster",
@@ -284,7 +296,8 @@
    "https://www.dacia.co.uk/hybrid-and-electric-range/duster-cargo-p1310/dimensions.html",
    "https://autotijd.be/en/dimensions/dacia/duster",
    "https://www.largus.fr/fiche-technique/Dacia/Duster/III/2024/SUV+5+Portes/10+ECO-G+100ch+Essential-2829491.html"
-  ]
+  ],
+  "conf": "official"
  },
  {
   "id": "kodiaq",
@@ -306,7 +319,8 @@
    "https://autotijd.be/en/dimensions/skoda/kodiaq",
    "https://www.auto-data.net/en/skoda-kodiaq-ii-1.5-tsi-150hp-mild-hybrid-dsg-49888",
    "https://www.largus.fr/fiche-technique/Skoda/Kodiaq/II/2024/SUV+5+Portes/15+TSI+150ch+ACT+Hybrid+Selection+DSG7+5+places-2843723.html"
-  ]
+  ],
+  "conf": "official"
  },
  {
   "id": "x5",
@@ -329,7 +343,8 @@
    "https://www.auto-data.net/en/bmw-x5-g05-30d-265hp-xdrive-steptronic-7-seat-38944",
    "https://autotijd.be/en/dimensions/bmw/x5/xdrive40i-340-hp-awd-2538",
    "https://www.largus.fr/fiche-technique/Bmw/X5/IV+G05/2019/SUV+5+Portes/M50d+xDrive+400ch-1988228.html"
-  ]
+  ],
+  "conf": "official"
  },
  {
   "id": "touran",
@@ -353,7 +368,8 @@
    "https://cars-data.com/en/volkswagen/touran/5t/1-4-tsi-highline-83496--83496/specs",
    "https://www.largus.fr/fiche-technique/Volkswagen/Touran/III/2020/Monospace+5+Portes/15+TSI+EV+150ch+Carat+5+places-2159698.html"
   ],
-  "foEst": true
+  "foEst": true,
+  "conf": "official"
  },
  {
   "id": "jogger",
@@ -376,7 +392,8 @@
    "https://cdn.group.renault.com/dac/gb/transversal-assets/brochures/model-brochures/Jogger-eBrochure.pdf.asset.pdf/4e81a4215a.pdf",
    "https://www.auto-data.net/en/dacia-jogger-1.0-tce-110hp-44452",
    "https://www.largus.fr/fiche-technique/Dacia/Jogger/I+RJI/2023/Break+5+Portes/10+ECO-G+100ch+Essential+5+places-2655524.html"
-  ]
+  ],
+  "conf": "official"
  },
  {
   "id": "sharan",
@@ -400,7 +417,8 @@
    "https://cars-data.com/en/volkswagen/sharan/2015/2-0-tdi-150hp-comfortline-83227--83227/specs",
    "https://www.largus.fr/fiche-technique/Volkswagen/Sharan/II/2019/Monospace+5+Portes/14+TSI+150ch+BlueMotion+Technology+Carat+DSG6+Euro6d-T-2115899.html"
   ],
-  "foEst": true
+  "foEst": true,
+  "conf": "official"
  },
  {
   "id": "hilux",
@@ -423,6 +441,7 @@
    "https://www.auto-data.net/en/toyota-hilux-double-cab-viii-2.4-d-4d-150hp-24028",
    "https://www.largus.fr/fiche-technique/Toyota/Hilux/VIII/2021/Pick-Up+4+Portes/24+D-4D+150ch+Double+Cabine+LeCap+4WD+MY20-2206809.html"
   ],
+  "conf": "official",
   "bed": 1525
  },
  {
@@ -446,6 +465,7 @@
    "https://www.largus.fr/fiche-technique/Ford/Ranger/IV+P703/2023/Pick-Up+4+Portes/20+EcoBlue+170ch+Stop&Start+Double+Cabine+Limited+4x4+BVA6-2698891.html",
    "https://www.auto-data.net/en/ford-ranger-iv-double-cab-2.0-ecoblue-170hp-4x4-55716"
   ],
+  "conf": "two-sources",
   "bed": 1564
  },
  {
@@ -468,6 +488,1181 @@
    "https://www.auto-data.net/en/ram-1500-crew-cab-dt-3.6-pentastar-v6-etorque-305hp-4wd-automatic-33119"
   ],
   "foEst": true,
+  "conf": "official",
   "bed": 1711
+ },
+ {
+  "id": "clio",
+  "name": "Renault Clio V",
+  "cat": "small",
+  "body": "small",
+  "face": "renault",
+  "L": 4050,
+  "W": 1798,
+  "H": 1440,
+  "wb": 2583,
+  "fo": 830,
+  "trackF": 1518,
+  "trackR": 1506,
+  "tyre": "195/55 R16",
+  "color": "#56606a",
+  "src": [
+   "https://www.auto-data.net/en/renault-clio-v-phase-i-e-tech-1.6-140hp-hybrid-multi-mode-39728",
+   "https://autotijd.be/en/dimensions/renault/clio/tce-100-100-hp-manual-1434",
+   "https://autotijd.be/en/dimensions/renault/clio/sce-65-65-hp-manual-3978",
+   "https://www.angurten.de/is/abmessungen/1898-Clio+2019"
+  ],
+  "conf": "two-sources"
+ },
+ {
+  "id": "p208",
+  "name": "Peugeot 208 II",
+  "cat": "small",
+  "body": "small",
+  "face": "peugeot",
+  "L": 4055,
+  "W": 1745,
+  "H": 1430,
+  "wb": 2540,
+  "fo": 825,
+  "trackF": 1500,
+  "trackR": 1500,
+  "tyre": "195/55 R16",
+  "color": "#a8402a",
+  "src": [
+   "https://www.auto-data.net/en/peugeot-208-ii-phase-ii-2023-1.2-puretech-100hp-50473",
+   "https://autotijd.be/en/dimensions/peugeot/208/12-puretech-100-hp-manual-1742",
+   "https://www.angurten.de/is/abmessungen/1903-Peugeot+208+(2019)"
+  ],
+  "conf": "two-sources"
+ },
+ {
+  "id": "sandero",
+  "name": "Dacia Sandero III",
+  "cat": "small",
+  "body": "small",
+  "face": "dacia",
+  "L": 4088,
+  "W": 1848,
+  "H": 1499,
+  "wb": 2604,
+  "fo": 819,
+  "trackF": 1533,
+  "trackR": 1519,
+  "tyre": "185/65 R15",
+  "color": "#ddd6c6",
+  "src": [
+   "https://www.auto-data.net/en/dacia-sandero-iii-1.0-tce-91hp-41829",
+   "https://autotijd.be/en/dimensions/dacia/sandero/sce-65-67-hp-manual-3134",
+   "https://www.angurten.de/is/abmessungen/2014-Sandero+2021"
+  ],
+  "conf": "two-sources"
+ },
+ {
+  "id": "i20",
+  "name": "Hyundai i20 III (BC3)",
+  "cat": "small",
+  "body": "small",
+  "face": "kia",
+  "L": 4065,
+  "W": 1775,
+  "H": 1450,
+  "wb": 2580,
+  "fo": 825,
+  "trackF": 1545,
+  "trackR": 1549,
+  "tyre": "185/65 R15",
+  "color": "#2f4a3c",
+  "src": [
+   "https://www.auto-data.net/en/hyundai-i20-iii-facelift-2023-1.2-79hp-52788",
+   "https://autotijd.be/en/dimensions/hyundai/i20/12-mpi-84-hp-manual-4069",
+   "https://www.angurten.de/is/abmessungen/1987-i20+2021"
+  ],
+  "conf": "two-sources"
+ },
+ {
+  "id": "corsa",
+  "name": "Opel Corsa F",
+  "cat": "small",
+  "body": "small",
+  "face": "vw",
+  "L": 4060,
+  "W": 1765,
+  "H": 1435,
+  "wb": 2538,
+  "fo": 831,
+  "trackF": 1501,
+  "trackR": 1500,
+  "tyre": "195/55 R16",
+  "color": "#c4601f",
+  "src": [
+   "https://www.auto-data.net/en/opel-corsa-f-corsa-e-50-kwh-136hp-45147",
+   "https://www.auto-data.net/en/opel-corsa-f-1.5-diesel-102hp-37426",
+   "https://autotijd.be/en/dimensions/opel/corsa/12-75-hp-manual-2874",
+   "https://www.angurten.de/is/abmessungen/1900-Corsa+F"
+  ],
+  "conf": "two-sources"
+ },
+ {
+  "id": "focus",
+  "name": "Ford Focus IV hatchback",
+  "cat": "hatch",
+  "body": "hatch",
+  "face": "ford",
+  "L": 4382,
+  "W": 1825,
+  "H": 1471,
+  "wb": 2700,
+  "fo": 913,
+  "trackF": 1572,
+  "trackR": 1553,
+  "tyre": "205/60 R16",
+  "color": "#27384f",
+  "src": [
+   "https://www.auto-data.net/en/ford-focus-iv-hatchback-facelift-2022-1.5-ecoblue-95hp-44864",
+   "https://autotijd.be/en/dimensions/ford/focus/10l-ecoboost-100-hp-manual-3215",
+   "https://www.auto-data.net/en/ford-focus-iv-hatchback-1.0-ecoboost-85hp-32953",
+   "https://www.largus.fr/fiche-technique/Ford/Focus/IV/2020/Berline/10+EcoBoost+125ch+Trend+Business+BVA-2198755.html"
+  ],
+  "conf": "two-sources"
+ },
+ {
+  "id": "i30",
+  "name": "Hyundai i30 III hatchback (PD)",
+  "cat": "hatch",
+  "body": "hatch",
+  "face": "kia",
+  "L": 4340,
+  "W": 1795,
+  "H": 1455,
+  "wb": 2650,
+  "fo": 905,
+  "trackF": 1559,
+  "trackR": 1567,
+  "tyre": "225/45 R17",
+  "color": "#8d9399",
+  "src": [
+   "https://www.auto-data.net/en/hyundai-i30-iii-facelift-2024-1.0-t-gdi-100hp-dct-53165",
+   "https://www.angurten.de/is/abmessungen/1664-i30",
+   "https://autotijd.be/en/dimensions/hyundai/i30/10-t-gdi-120-hp-manual-2741"
+  ],
+  "conf": "two-sources"
+ },
+ {
+  "id": "corollahb",
+  "name": "Toyota Corolla hatchback (E210)",
+  "cat": "hatch",
+  "body": "hatch",
+  "face": "toyota",
+  "L": 4370,
+  "W": 1790,
+  "H": 1435,
+  "wb": 2640,
+  "fo": 935,
+  "trackF": 1530,
+  "trackR": 1544,
+  "tyre": "205/55 R16",
+  "color": "#7b1f24",
+  "src": [
+   "https://media.toyota.co.uk/wp-content/uploads/sites/5/2021/03/1614591100210127MCorollaTechSpec.pdf",
+   "https://media.toyota.co.uk/wp-content/uploads/sites/5/pdf/250305-Corolla-Tech-Specs.pdf",
+   "https://www.auto-data.net/en/toyota-corolla-hatchback-xii-e210-2.0-184hp-hybrid-e-cvt-46710",
+   "https://autotijd.be/en/dimensions/toyota/corolla/18l-hybrid-122-hp-2171",
+   "https://www.angurten.de/is/abmessungen/1767-Corolla+2019"
+  ],
+  "conf": "official"
+ },
+ {
+  "id": "megane",
+  "name": "Renault Megane IV hatchback",
+  "cat": "hatch",
+  "body": "hatch",
+  "face": "renault",
+  "L": 4359,
+  "W": 1814,
+  "H": 1447,
+  "wb": 2669,
+  "fo": 919,
+  "trackF": 1591,
+  "trackR": 1586,
+  "tyre": "205/55 R16",
+  "color": "#e9e9e6",
+  "src": [
+   "https://www.auto-data.net/en/renault-megane-iv-1.6-sce-115hp-22552",
+   "https://autotijd.be/en/dimensions/renault/megane/tce-120-gpf-120-hp-manual-2892",
+   "https://www.angurten.de/is/abmessungen/1628-Megane+2016"
+  ],
+  "conf": "two-sources"
+ },
+ {
+  "id": "p308",
+  "name": "Peugeot 308 III hatchback",
+  "cat": "hatch",
+  "body": "hatch",
+  "face": "peugeot",
+  "L": 4367,
+  "W": 1852,
+  "H": 1444,
+  "wb": 2675,
+  "fo": 904,
+  "trackF": 1559,
+  "trackR": 1554,
+  "tyre": "205/55 R16",
+  "color": "#1d1f22",
+  "src": [
+   "https://www.auto-data.net/en/peugeot-308-iii-phase-i-2021-e-308-54-kwh-156hp-49111",
+   "https://autotijd.be/en/dimensions/peugeot/308/12-puretech-110-hp-manual-2935",
+   "https://www.angurten.de/is/abmessungen/2009-Peugeot+308+(2021)"
+  ],
+  "conf": "two-sources"
+ },
+ {
+  "id": "leon",
+  "name": "Seat Leon IV hatchback (KL)",
+  "cat": "hatch",
+  "body": "hatch",
+  "face": "kia",
+  "L": 4368,
+  "W": 1800,
+  "H": 1456,
+  "wb": 2686,
+  "fo": 888,
+  "trackF": 1545,
+  "trackR": 1516,
+  "tyre": "205/55 R16",
+  "color": "#3f5f7a",
+  "src": [
+   "https://www.auto-data.net/en/seat-leon-iv-2.0-tdi-115hp-40787",
+   "https://autotijd.be/en/dimensions/seat/leon/10-tsi-90-hp-manual-3025",
+   "https://www.angurten.de/is/abmessungen/1975-Leon+2020"
+  ],
+  "conf": "two-sources"
+ },
+ {
+  "id": "bmw3",
+  "name": "BMW 3 Series sedan (G20)",
+  "cat": "sedan",
+  "body": "sedan",
+  "face": "bmw",
+  "L": 4709,
+  "W": 1827,
+  "H": 1435,
+  "wb": 2851,
+  "fo": 799,
+  "trackF": 1589,
+  "trackR": 1604,
+  "tyre": "225/50 R17",
+  "color": "#b9b29f",
+  "src": [
+   "https://www.auto-data.net/en/bmw-3-series-sedan-g20-330i-258hp-steptronic-34421",
+   "https://autotijd.be/en/dimensions/bmw/3-series-saloon/320i-184-hp-1385",
+   "https://www.angurten.de/is/abmessungen/1850-3er+Limousine"
+  ],
+  "conf": "two-sources"
+ },
+ {
+  "id": "cclass",
+  "name": "Mercedes C-Class sedan (W206)",
+  "cat": "sedan",
+  "body": "sedan",
+  "face": "mercedes",
+  "L": 4751,
+  "W": 1820,
+  "H": 1438,
+  "wb": 2865,
+  "fo": 800,
+  "trackF": 1590,
+  "trackR": 1579,
+  "tyre": "225/50 R17",
+  "color": "#56606a",
+  "src": [
+   "https://www.auto-data.net/en/mercedes-benz-c-class-w206-c-300d-265hp-eq-boost-4matic-9g-tronic-51771",
+   "https://autotijd.be/en/dimensions/mercedes/c-class-saloon/c-180-170-hp-2942",
+   "https://www.angurten.de/is/abmessungen/2035-C-Klasse+Limousine"
+  ],
+  "conf": "two-sources"
+ },
+ {
+  "id": "a4",
+  "name": "Audi A4 sedan (B9)",
+  "cat": "sedan",
+  "body": "sedan",
+  "face": "audi",
+  "L": 4762,
+  "W": 1847,
+  "H": 1431,
+  "wb": 2820,
+  "fo": 899,
+  "trackF": 1572,
+  "trackR": 1555,
+  "tyre": "225/50 R17",
+  "color": "#a8402a",
+  "src": [
+   "https://www.auto-data.net/en/audi-a4-b9-8w-facelift-2019-50-tdi-v6-286hp-quattro-tiptronic-38312",
+   "https://autotijd.be/en/dimensions/audi/a4-saloon/35-tfsi-150-hp-1952",
+   "https://www.auto-data.net/en/audi-a4-b9-8w-3.0-tdi-v6-272hp-quattro-tiptronic-22295",
+   "https://www.angurten.de/is/abmessungen/1589-A4+Limousine"
+  ],
+  "conf": "two-sources"
+ },
+ {
+  "id": "corollasedan",
+  "name": "Toyota Corolla sedan (E210)",
+  "cat": "sedan",
+  "body": "sedan",
+  "face": "toyota",
+  "L": 4630,
+  "W": 1780,
+  "H": 1435,
+  "wb": 2700,
+  "fo": 935,
+  "trackF": 1530,
+  "trackR": 1539,
+  "tyre": "205/55 R16",
+  "color": "#ddd6c6",
+  "src": [
+   "https://media.toyota.co.uk/wp-content/uploads/sites/5/2021/03/1614591100210127MCorollaTechSpec.pdf",
+   "https://www.auto-data.net/en/toyota-corolla-xii-e210-1.8i-122hp-hybrid-e-cvt-37775",
+   "https://autotijd.be/en/dimensions/toyota/corolla-sedan/18l-5099"
+  ],
+  "conf": "official"
+ },
+ {
+  "id": "camry",
+  "name": "Toyota Camry (XV70)",
+  "cat": "sedan",
+  "body": "sedan",
+  "face": "toyota",
+  "L": 4885,
+  "W": 1840,
+  "H": 1445,
+  "wb": 2825,
+  "fo": 975,
+  "trackF": 1590,
+  "trackR": 1615,
+  "tyre": "215/55 R17",
+  "color": "#2f4a3c",
+  "src": [
+   "https://media.toyota.co.uk/wp-content/uploads/sites/5/2021/03/1614162882210222MCamryTechSpec.pdf",
+   "https://autotijd.be/en/dimensions/toyota/camry/25-hybrid-218-hp-1121",
+   "https://www.auto-data.net/en/toyota-camry-viii-xv70-2.5-218hp-hybrid-e-cvt-34629"
+  ],
+  "conf": "official"
+ },
+ {
+  "id": "superbcombi",
+  "name": "Škoda Superb Combi IV",
+  "cat": "kombi",
+  "body": "kombi",
+  "face": "skoda",
+  "L": 4902,
+  "W": 1849,
+  "H": 1482,
+  "wb": 2841,
+  "fo": 950,
+  "trackF": 1580,
+  "trackR": 1566,
+  "tyre": "215/55 R17",
+  "color": "#c4601f",
+  "src": [
+   "https://www.skoda-storyboard.com/direct-download//2024/03/Superb_Combi_Diesel_EN_a04e232f.pdf",
+   "https://www.skoda-storyboard.com/direct-download/2024/03/02_Press_Kit_Skoda_Superb_Combi_ML_Exterior_34b2d8ac.pdf",
+   "https://www.auto-data.net/en/skoda-superb-iv-combi-2.0-tsi-265hp-4x4-dsg-51751",
+   "https://autotijd.be/en/dimensions/skoda/superb-combi/15l-tsi-150-hp-4117"
+  ],
+  "conf": "two-sources"
+ },
+ {
+  "id": "focusestate",
+  "name": "Ford Focus IV Turnier (estate)",
+  "cat": "kombi",
+  "body": "kombi",
+  "face": "ford",
+  "L": 4668,
+  "W": 1825,
+  "H": 1494,
+  "wb": 2700,
+  "fo": 909,
+  "trackF": 1572,
+  "trackR": 1566,
+  "tyre": "205/60 R16",
+  "color": "#27384f",
+  "src": [
+   "https://www.auto-data.net/en/ford-focus-iv-wagon-1.0-ecoboost-125hp-mild-hybrid-41408",
+   "https://www.angurten.de/is/abmessungen/1797-ford-focus-turnier-2018",
+   "https://www.ford.de/content/dam/guxeu/de/documents/brochures/cars/focus/Technische_Daten_des_Ford_Focus.pdf",
+   "https://autotijd.be/en/dimensions/ford/focus-clipper/10l-ecoboost-100-hp-manual-3224"
+  ],
+  "conf": "two-sources"
+ },
+ {
+  "id": "corollats",
+  "name": "Toyota Corolla Touring Sports (E210)",
+  "cat": "kombi",
+  "body": "kombi",
+  "face": "toyota",
+  "L": 4650,
+  "W": 1790,
+  "H": 1435,
+  "wb": 2700,
+  "fo": 935,
+  "trackF": 1530,
+  "trackR": 1544,
+  "tyre": "205/55 R16",
+  "color": "#8d9399",
+  "src": [
+   "https://media.toyota.co.uk/wp-content/uploads/sites/5/pdf/250305-Corolla-Tech-Specs.pdf",
+   "https://media.toyota.co.uk/wp-content/uploads/sites/5/pdf/220123M-Corolla-Tech-Spec.pdf",
+   "https://www.auto-data.net/en/toyota-corolla-touring-sports-xii-e210-1.8-122hp-hybrid-e-cvt-34626",
+   "https://autotijd.be/en/dimensions/toyota/corolla-touring-sports/18l-hybrid-122-hp-1006",
+   "https://www.adac.de/rund-ums-fahrzeug/autokatalog/marken-modelle/toyota/corolla/e21/297550/"
+  ],
+  "conf": "official"
+ },
+ {
+  "id": "p308sw",
+  "name": "Peugeot 308 SW III",
+  "cat": "kombi",
+  "body": "kombi",
+  "face": "peugeot",
+  "L": 4636,
+  "W": 1852,
+  "H": 1444,
+  "wb": 2732,
+  "fo": 904,
+  "trackF": 1559,
+  "trackR": 1553,
+  "tyre": "205/55 R16",
+  "color": "#7b1f24",
+  "src": [
+   "https://www.auto-data.net/en/peugeot-308-sw-iii-phase-i-2021-1.2-puretech-130hp-43715",
+   "https://autotijd.be/en/dimensions/peugeot/308-sw/12-puretech-130-hp-3128",
+   "https://www.angurten.de/is/abmessungen/2010-Peugeot+308+sw+%282022%29"
+  ],
+  "conf": "two-sources"
+ },
+ {
+  "id": "bmw3touring",
+  "name": "BMW 3 Series Touring (G21)",
+  "cat": "kombi",
+  "body": "kombi",
+  "face": "bmw",
+  "L": 4709,
+  "W": 1827,
+  "H": 1440,
+  "wb": 2851,
+  "fo": 799,
+  "trackF": 1573,
+  "trackR": 1588,
+  "tyre": "225/50 R17",
+  "color": "#e9e9e6",
+  "src": [
+   "https://newsroom.bmwgroup.com/global/download/9be83237-ad18-4a4f-a7e5-00524a505b6b/20260722124041222-125.pdf",
+   "https://www.auto-data.net/en/bmw-3-series-touring-g21-320i-184hp-steptronic-37970",
+   "https://www.angurten.de/is/abmessungen/1931-3er+Touring",
+   "https://autotijd.be/en/dimensions/bmw/3-series-touring/320i-184-hp-1731"
+  ],
+  "conf": "two-sources"
+ },
+ {
+  "id": "v60",
+  "name": "Volvo V60 II",
+  "cat": "kombi",
+  "body": "kombi",
+  "face": "volvo",
+  "L": 4761,
+  "W": 1850,
+  "H": 1427,
+  "wb": 2872,
+  "fo": 848,
+  "trackF": 1600,
+  "trackR": 1600,
+  "tyre": "235/45 R18",
+  "color": "#1d1f22",
+  "src": [
+   "https://www.volvoclub.org.uk/pdf/v60/v60-2_2019_techspecs.pdf",
+   "https://www.auto-data.net/en/volvo-v60-ii-2.0-t8-twen-303hp-plug-in-hybrid-awd-geartronic-45630",
+   "https://autotijd.be/en/dimensions/volvo/v60/d4-190-hp-manual-1841",
+   "https://www.angurten.de/is/abmessungen/1761-V60+II"
+  ],
+  "conf": "two-sources"
+ },
+ {
+  "id": "kamiq",
+  "name": "Škoda Kamiq",
+  "cat": "suv",
+  "body": "suv",
+  "face": "skoda",
+  "L": 4241,
+  "W": 1793,
+  "H": 1531,
+  "wb": 2651,
+  "fo": 837,
+  "trackF": 1531,
+  "trackR": 1516,
+  "tyre": "205/60 R16",
+  "color": "#3f5f7a",
+  "src": [
+   "https://www.skoda-storyboard.com/direct-download/2024/02/TD-Kamiq-en_2ef3e24e.pdf",
+   "https://www.auto-data.net/en/skoda-kamiq-1.0-tsi-115hp-dsg-36957",
+   "https://autotijd.be/en/dimensions/skoda/kamiq/10-tsi-115-hp-manual-4097"
+  ],
+  "conf": "official"
+ },
+ {
+  "id": "troc",
+  "name": "VW T-Roc I (A11)",
+  "cat": "suv",
+  "body": "suv",
+  "face": "vw",
+  "L": 4234,
+  "W": 1819,
+  "H": 1573,
+  "wb": 2603,
+  "fo": 831,
+  "trackF": 1546,
+  "trackR": 1541,
+  "tyre": "215/55 R17",
+  "color": "#b9b29f",
+  "src": [
+   "https://cdn.uc.assets.prezly.com/42cf855e-1f6b-4f5e-b4de-fcd0ed785ab8/-/inline/no/",
+   "https://www.auto-data.net/en/volkswagen-t-roc-i-1.5-tsi-150hp-act-36112",
+   "https://autotijd.be/en/dimensions/volkswagen/t-roc/20-tdi-elegance-150-hp-2475"
+  ],
+  "conf": "official"
+ },
+ {
+  "id": "captur",
+  "name": "Renault Captur II",
+  "cat": "suv",
+  "body": "suv",
+  "face": "renault",
+  "L": 4227,
+  "W": 1797,
+  "H": 1576,
+  "wb": 2639,
+  "fo": 876,
+  "trackF": 1560,
+  "trackR": 1547,
+  "tyre": "215/60 R17",
+  "color": "#56606a",
+  "src": [
+   "https://www.auto-data.net/en/renault-captur-ii-1.3-tce-140hp-edc-41888",
+   "https://autotijd.be/en/dimensions/renault/captur/tce-130-gpf-130-hp-2116",
+   "https://www.angurten.de/is/abmessungen/1939-Captur+II",
+   "https://autotijd.be/en/dimensions/renault/captur/tce-90-91-hp-manual-4236"
+  ],
+  "conf": "two-sources"
+ },
+ {
+  "id": "sportage",
+  "name": "Kia Sportage V (NQ5, Europe)",
+  "cat": "suv",
+  "body": "suv",
+  "face": "kia",
+  "L": 4515,
+  "W": 1865,
+  "H": 1645,
+  "wb": 2680,
+  "fo": 905,
+  "trackF": 1615,
+  "trackR": 1622,
+  "tyre": "215/65 R17",
+  "color": "#a8402a",
+  "src": [
+   "https://www.kia.ro/user/file/stiri-2021/noul-sportage/noul-kia-sportage-specificatii-tehnice.pdf",
+   "https://www.auto-data.net/en/kia-sportage-v-1.6-t-gdi-160hp-mild-hybrid-dct-52562",
+   "https://autotijd.be/en/dimensions/kia/sportage/16-t-gdi-150-hp-manual-3281",
+   "https://www.adac.de/rund-ums-fahrzeug/autokatalog/marken-modelle/kia/sportage/nq5/322637/"
+  ],
+  "conf": "official"
+ },
+ {
+  "id": "tucson",
+  "name": "Hyundai Tucson IV (NX4, Europe)",
+  "cat": "suv",
+  "body": "suv",
+  "face": "kia",
+  "L": 4500,
+  "W": 1865,
+  "H": 1650,
+  "wb": 2680,
+  "fo": 895,
+  "trackF": 1630,
+  "trackR": 1637,
+  "tyre": "215/65 R17",
+  "color": "#ddd6c6",
+  "src": [
+   "https://www.hyundai.news/eu/models/suv/tucson/press-kit/the-all-new-hyundai-tucson-a-smart-tech-hero-with-a-standout-design.html",
+   "https://www.hyundai.news/newsroom/dam/de/Pressemappen/Hyundai-TUCSON-2025-12-Technische-Daten-Benziner.pdf",
+   "https://www.auto-data.net/en/hyundai-tucson-iv-1.6-t-gdi-180hp-mild-hybrid-42121"
+  ],
+  "conf": "official"
+ },
+ {
+  "id": "rav4",
+  "name": "Toyota RAV4 V (XA50)",
+  "cat": "suv",
+  "body": "suv",
+  "face": "toyota",
+  "L": 4600,
+  "W": 1855,
+  "H": 1685,
+  "wb": 2690,
+  "fo": 910,
+  "trackF": 1610,
+  "trackR": 1640,
+  "tyre": "225/65 R17",
+  "color": "#2f4a3c",
+  "src": [
+   "https://media.toyota.co.uk/wp-content/uploads/sites/5/pdf/230504M-RAV4-Tech-Spec.pdf",
+   "https://media.toyota.co.uk/wp-content/uploads/sites/5/pdf/220203M-RAV4-Tech-Spec.pdf",
+   "https://media.toyota.co.uk/wp-content/uploads/sites/5/pdf/241127-RAV4-Tech-Specs.pdf",
+   "https://autotijd.be/en/dimensions/toyota/rav4/25-hybrid-3641",
+   "https://www.auto-data.net/en/toyota-rav4-v-2.5-222hp-hybrid-e-four-e-cvt-34623",
+   "https://www.adac.de/rund-ums-fahrzeug/autokatalog/marken-modelle/toyota/rav4/xa5/296845"
+  ],
+  "conf": "official"
+ },
+ {
+  "id": "sorento",
+  "name": "Kia Sorento IV (MQ4)",
+  "cat": "suv",
+  "body": "suv",
+  "face": "kia",
+  "L": 4810,
+  "W": 1900,
+  "H": 1695,
+  "wb": 2815,
+  "fo": 930,
+  "trackF": 1646,
+  "trackR": 1656,
+  "tyre": "235/55 R19",
+  "color": "#c4601f",
+  "src": [
+   "https://www.kia.com/aljabr/en/showroom/sorento-hybrid/specification.html",
+   "https://autotijd.be/en/dimensions/kia/sorento/22-crdi-193-hp-2759",
+   "https://www.auto-data.net/en/kia-sorento-iv-1.6-t-gdi-265hp-plug-in-hybrid-awd-automatic-44828",
+   "https://imotors.ie/images/new-brands/kia/sorento.brochure.pdf"
+  ],
+  "conf": "official"
+ },
+ {
+  "id": "berlingo",
+  "name": "Citroën Berlingo III M",
+  "cat": "mpv",
+  "body": "mpv",
+  "face": "peugeot",
+  "L": 4403,
+  "W": 1848,
+  "H": 1844,
+  "wb": 2785,
+  "fo": 892,
+  "trackF": 1553,
+  "trackR": 1567,
+  "tyre": "205/60 R16",
+  "color": "#27384f",
+  "src": [
+   "https://www.largus.fr/fiche-technique/Citroen/Berlingo/III/2021/Ludospace/M+BlueHDi+130ch+S&S+Rip+Curl-2328437.html",
+   "https://www.auto-data.net/en/citroen-berlingo-iii-m-phase-i-2018-1.5-bluehdi-130hp-s-s-34400"
+  ],
+  "conf": "two-sources"
+ },
+ {
+  "id": "caddylife",
+  "name": "Volkswagen Caddy 5 Life (short wheelbase)",
+  "cat": "mpv",
+  "body": "mpv",
+  "face": "vw",
+  "L": 4500,
+  "W": 1855,
+  "H": 1833,
+  "wb": 2755,
+  "fo": 890,
+  "trackF": 1568,
+  "trackR": 1603,
+  "tyre": "205/60 R16",
+  "color": "#8d9399",
+  "src": [
+   "https://www.largus.fr/fiche-technique/Volkswagen/Caddy/V/2022/Ludospace+5+Portes/20+TDI+122ch+Life+DSG7-2440102.html",
+   "https://www.auto-data.net/en/volkswagen-caddy-v-2.0-tdi-122hp-dsg-41984",
+   "https://cdn.uc.assets.prezly.com/1f2e3b43-3336-48b6-b471-3b1b49a76d6d/-/inline/no/New%20Caddy%20-%20datasheet%20for%20press%20drive%20Munich%20October%202020%20EN.pdf",
+   "https://www.carwow.de/volkswagen/caddy/technische-daten"
+  ],
+  "conf": "two-sources"
+ },
+ {
+  "id": "grandscenic",
+  "name": "Renault Grand Scénic IV",
+  "cat": "mpv",
+  "body": "mpv",
+  "face": "renault",
+  "L": 4634,
+  "W": 1866,
+  "H": 1655,
+  "wb": 2804,
+  "fo": 931,
+  "trackF": 1594,
+  "trackR": 1583,
+  "tyre": "195/55 R20",
+  "color": "#7b1f24",
+  "src": [
+   "https://www.largus.fr/fiche-technique/Renault/Grand+Scenic/IV+RFA/2019/Monospace+5+Portes/13+TCe+140ch+FAP+Intens-1998390.html",
+   "https://www.auto-data.net/en/renault-grand-scenic-iv-phase-i-1.3-tce-140hp-fap-35394",
+   "https://autotijd.be/en/dimensions/renault/grand-scenic/tce-140-gpf-140-hp-1683"
+  ],
+  "conf": "two-sources"
+ },
+ {
+  "id": "bmw2at",
+  "name": "BMW 2 Series Active Tourer (U06)",
+  "cat": "mpv",
+  "body": "mpv",
+  "face": "bmw",
+  "L": 4386,
+  "W": 1824,
+  "H": 1576,
+  "wb": 2670,
+  "fo": 861,
+  "trackF": 1586,
+  "trackR": 1587,
+  "tyre": "205/60 R17",
+  "color": "#e9e9e6",
+  "src": [
+   "https://www.auto-data.net/en/bmw-2-series-active-tourer-u06-218d-150hp-steptronic-44629",
+   "https://www.auto-data.net/en/bmw-2-series-active-tourer-u06-220d-163hp-mild-hybrid-steptronic-dct-54818",
+   "https://www.largus.fr/fiche-technique/Bmw/Serie+2+Activetourer/II+U06/2022/Monospace+5+Portes/218i+136ch+M+Sport+DKG7-2612998.html",
+   "https://autotijd.be/en/dimensions/bmw/2-series-active-tourer/218i-136-hp-3201"
+  ],
+  "conf": "two-sources"
+ },
+ {
+  "id": "bclass",
+  "name": "Mercedes-Benz B-Class (W247)",
+  "cat": "mpv",
+  "body": "mpv",
+  "face": "mercedes",
+  "L": 4419,
+  "W": 1796,
+  "H": 1562,
+  "wb": 2729,
+  "fo": 914,
+  "trackF": 1567,
+  "trackR": 1547,
+  "tyre": "205/55 R17",
+  "color": "#1d1f22",
+  "src": [
+   "https://www.largus.fr/fiche-technique/Mercedes-Benz/Classe+B/III+W247/2022/Monospace+5+Portes/180+136ch+Business+Line+Edition+7cv-2182077.html",
+   "https://www.auto-data.net/en/mercedes-benz-b-class-w247-b-180d-116hp-8g-dct-46649",
+   "https://www.auto-data.net/en/mercedes-benz-b-class-w247-b-180d-116hp-7g-dct-35415"
+  ],
+  "conf": "two-sources"
+ },
+ {
+  "id": "amarok",
+  "name": "Volkswagen Amarok II Double Cab",
+  "cat": "pickup",
+  "body": "pickup",
+  "face": "vw",
+  "L": 5350,
+  "W": 1910,
+  "H": 1884,
+  "wb": 3270,
+  "fo": 865,
+  "trackF": 1620,
+  "trackR": 1650,
+  "tyre": "255/65 R18",
+  "color": "#3f5f7a",
+  "src": [
+   "https://www.vw.co.za/idhub/content/dam/onehub_pkw/importers/za/brochures/cv/amarok-specifications-brochure.pdf",
+   "https://www.auto-data.net/en/volkswagen-amarok-ii-2.0-tdi-150hp-48655",
+   "https://www.carexpert.com.au/volkswagen/amarok/2023/dimensions",
+   "https://www.carwow.de/volkswagen/amarok/technische-daten",
+   "https://www.largus.fr/fiche-technique/Volkswagen/Amarok/II/2023/Pick-Up+4+Portes/20+TDI+205ch+Life+BVA10-2781330.html"
+  ],
+  "conf": "two-sources",
+  "bed": 1624
+ },
+ {
+  "id": "l200",
+  "name": "Mitsubishi L200 V Double Cab (KJ/KK/KL)",
+  "cat": "pickup",
+  "body": "pickup",
+  "face": "ford",
+  "L": 5285,
+  "W": 1815,
+  "H": 1780,
+  "wb": 3000,
+  "fo": 865,
+  "trackF": 1520,
+  "trackR": 1515,
+  "tyre": "245/65 R17",
+  "color": "#b9b29f",
+  "src": [
+   "https://www.auto-data.net/en/mitsubishi-l200-v-double-cab-2.4d-181hp-4wd-automatic-34751",
+   "https://cararac.com/spec/mitsubishi/l-200/2015-l200-v-double-cab/",
+   "https://www.largus.fr/fiche-technique/Mitsubishi/L200/III/2019/Pick-Up+4+Portes/22+DI-D+150ch+Double+Cab+Intense+BVA-2129385.html",
+   "https://www.auto-data.net/en/mitsubishi-l200-v-double-cab-facelift-2019-2.4-mivec-181hp-4wd-automatic-34773"
+  ],
+  "conf": "two-sources",
+  "bed": 1520
+ },
+ {
+  "id": "navara",
+  "name": "Nissan Navara (D23) Double Cab",
+  "cat": "pickup",
+  "body": "pickup",
+  "face": "kia",
+  "L": 5330,
+  "W": 1850,
+  "H": 1805,
+  "wb": 3150,
+  "fo": 870,
+  "trackF": 1570,
+  "trackR": 1570,
+  "tyre": "255/65 R17",
+  "color": "#56606a",
+  "src": [
+   "https://www.largus.fr/fiche-technique/Nissan/Navara/IV+D23/2019/Pick-Up+4+Portes/23+dCi+160ch+Double-Cab+N-Connecta+E6D-2128966.html",
+   "https://www.largus.fr/fiche-technique/Nissan/Navara/IV+D23/2019/Pick-Up+4+Portes/23+dCi+160ch+Double-Cab+Acenta+E6D-2128965.html",
+   "https://www.auto-data.net/en/nissan-navara-iv-double-cab-2.3-dci-190hp-awd-23585",
+   "https://www.auto-data.net/en/nissan-navara-iv-double-cab-facelift-2019-2.3-dci-190hp-4wd-38202"
+  ],
+  "conf": "two-sources",
+  "bed": 1578
+ },
+ {
+  "id": "dmax",
+  "name": "Isuzu D-Max III Double Cab",
+  "cat": "pickup",
+  "body": "pickup",
+  "face": "ford",
+  "L": 5265,
+  "W": 1870,
+  "H": 1790,
+  "wb": 3125,
+  "fo": 890,
+  "trackF": 1570,
+  "trackR": 1570,
+  "tyre": "265/60 R18",
+  "color": "#a8402a",
+  "src": [
+   "https://www.largus.fr/fiche-technique/Isuzu/D+Max/III+N60/2021/Pick-Up+4+Portes/19+Ddi+164ch+F+Crew-2316715.html",
+   "https://www.auto-data.net/en/isuzu-d-max-iii-double-cab-1.9d-163hp-4wd-42247",
+   "https://www.carexpert.com.au/isuzu/d-max/2021-ls-u-joksogsw20200813"
+  ],
+  "conf": "two-sources",
+  "bed": 1570
+ },
+ {
+  "id": "musso",
+  "name": "SsangYong/KGM Musso (Q200, standard bed)",
+  "cat": "pickup",
+  "body": "pickup",
+  "face": "mercedes",
+  "L": 5095,
+  "W": 1950,
+  "H": 1840,
+  "wb": 3100,
+  "fo": 890,
+  "trackF": 1640,
+  "trackR": 1640,
+  "tyre": "255/60 R18",
+  "color": "#ddd6c6",
+  "src": [
+   "https://www.largus.fr/fiche-technique/Ssangyong/Musso/II/2020/Pick-Up+4+Portes/220+e-XDi+181ch+Sport+4WD-1954493.html",
+   "https://www.auto-data.net/en/ssangyong-musso-ii-2.2-e-xdi-181hp-4wd-32992",
+   "https://www.carsales.com.au/research/ssangyong/musso/2023/ultimate/e33cf141-0f7e-4611-ba64-172826ad9f68/"
+  ],
+  "conf": "two-sources",
+  "bed": 1300
+ },
+ {
+  "id": "gladiator",
+  "name": "Jeep Gladiator (JT)",
+  "cat": "pickup",
+  "body": "pickup",
+  "face": "jeep",
+  "L": 5539,
+  "W": 1875,
+  "H": 1857,
+  "wb": 3487,
+  "fo": 755,
+  "trackF": 1598,
+  "trackR": 1598,
+  "tyre": "255/70 R18",
+  "color": "#2f4a3c",
+  "src": [
+   "https://a3.myautoworld.com/wp-content/uploads/2019/04/2020_JEEP_Gladiator_Specs.pdf",
+   "https://www.auto-data.net/en/jeep-gladiator-jt-facelift-2024-sport-3.6-pentastar-v6-285hp-4x4-51191",
+   "https://www.auto-data.net/en/jeep-gladiator-jt-3.0-multijet-v6-264hp-4wd-automatic-43243",
+   "https://www.largus.fr/fiche-technique/Jeep/Gladiator/I/2022/Pick-Up+4+Portes/30+V6+Multijet+264ch+Overland+4x4+BVA8-2628712.html",
+   "https://www.carexpert.com.au/jeep/gladiator/exterior-and-dimensions"
+  ],
+  "conf": "official",
+  "bed": 1531
+ },
+ {
+  "id": "f150",
+  "name": "Ford F-150 SuperCrew 5.5 ft box (14th gen)",
+  "cat": "pickup",
+  "body": "pickup",
+  "face": "ford",
+  "L": 5885,
+  "W": 2029,
+  "H": 1961,
+  "wb": 3693,
+  "fo": 955,
+  "trackF": 1725,
+  "trackR": 1735,
+  "tyre": "275/65 R18",
+  "color": "#c4601f",
+  "src": [
+   "https://f150lightningforum.com/forum/attachments/2021-f-150-technical-specs-pdf.1771",
+   "https://www.fromtheroad.ford.com/content/dam/fordmediasite/us/en/library/2021/specs/2021-Ford-F-150-Raptor-Technical-Specifications.pdf",
+   "https://www.auto-data.net/en/ford-f-series-f-150-xiv-supercrew-3.0-power-stroke-v6-250hp-4x4-automatic-43114"
+  ],
+  "conf": "official",
+  "bed": 1704
+ },
+ {
+  "id": "polo",
+  "name": "VW Polo VI (AW)",
+  "cat": "small",
+  "body": "small",
+  "face": "vw",
+  "L": 4074,
+  "W": 1751,
+  "H": 1451,
+  "wb": 2552,
+  "fo": 846,
+  "trackF": 1525,
+  "trackR": 1505,
+  "tyre": "185/65 R15",
+  "color": "#27384f",
+  "src": [
+   "https://www.auto-data.net/en/volkswagen-polo-vi-facelift-2021-1.0-tsi-95hp-dsg-43432",
+   "https://autotijd.be/en/dimensions/volkswagen/polo/10-mpi-80-hp-manual-3092",
+   "https://cars-data.com/en/volkswagen/polo/2021/1-0-tsi-110hp-r-line-business--103989/specs",
+   "https://www.adac.de/rund-ums-fahrzeug/autokatalog/marken-modelle/vw/polo/vi/282274/",
+   "https://www.angurten.de/is/abmessungen/1730-Polo+VI"
+  ],
+  "foEst": true,
+  "conf": "two-sources"
+ },
+ {
+  "id": "swift",
+  "name": "Suzuki Swift (2024, A2L)",
+  "cat": "small",
+  "body": "small",
+  "face": "toyota",
+  "L": 3860,
+  "W": 1735,
+  "H": 1495,
+  "wb": 2450,
+  "fo": 783,
+  "trackF": 1530,
+  "trackR": 1530,
+  "tyre": "175/65 R15",
+  "color": "#8d9399",
+  "src": [
+   "https://presse.suzuki.de/cms/api/delivery/file/portal_1/page_348/widget_1486/de/Suzuki_Premiere_Swift_7.Generation.original.pdf",
+   "https://autotijd.be/en/dimensions/suzuki/swift/12l-83-hp-manual-4244",
+   "https://www.adac.de/rund-ums-fahrzeug/autokatalog/marken-modelle/suzuki/swift/7generation/333675/",
+   "https://www.angurten.de/is/abmessungen/2168-Swift+2025"
+  ],
+  "foEst": true,
+  "conf": "two-sources"
+ },
+ {
+  "id": "mazda3",
+  "name": "Mazda 3 hatchback (BP)",
+  "cat": "hatch",
+  "body": "hatch",
+  "face": "mazda",
+  "L": 4460,
+  "W": 1795,
+  "H": 1435,
+  "wb": 2725,
+  "fo": 927,
+  "trackF": 1570,
+  "trackR": 1580,
+  "tyre": "205/60 R16",
+  "color": "#7b1f24",
+  "src": [
+   "https://de.mazda-press.com/api/assets/download/7ab848b2-5335-4eff-a6d6-3808d478ecd4_Default",
+   "https://de.mazda-press.com/cars/mazda3/",
+   "https://autotijd.be/en/dimensions/mazda/mazda3-hatchback/skyactiv-d-18-116-hp-manual-1051",
+   "https://www.angurten.de/is/abmessungen/1869-Mazda3+5-Türer+2019"
+  ],
+  "foEst": true,
+  "conf": "official"
+ },
+ {
+  "id": "arteon",
+  "name": "VW Arteon fastback",
+  "cat": "sedan",
+  "body": "lift",
+  "face": "vw",
+  "L": 4862,
+  "W": 1871,
+  "H": 1450,
+  "wb": 2837,
+  "fo": 937,
+  "trackF": 1587,
+  "trackR": 1577,
+  "tyre": "245/45 R18",
+  "color": "#e9e9e6",
+  "src": [
+   "https://www.auto-data.net/en/volkswagen-arteon-2.0-tsi-280hp-4motion-dsg-28870",
+   "https://autotijd.be/en/dimensions/volkswagen/arteon/15-tsi-150-hp-manual-2701",
+   "https://www.angurten.de/is/abmessungen/1698-Arteon"
+  ],
+  "foEst": true,
+  "conf": "two-sources"
+ },
+ {
+  "id": "mazda6",
+  "name": "Mazda 6 sedan (GJ/GL)",
+  "cat": "sedan",
+  "body": "sedan",
+  "face": "mazda",
+  "L": 4870,
+  "W": 1840,
+  "H": 1450,
+  "wb": 2830,
+  "fo": 944,
+  "trackF": 1585,
+  "trackR": 1575,
+  "tyre": "225/55 R17",
+  "color": "#1d1f22",
+  "src": [
+   "https://www.adac.de/rund-ums-fahrzeug/autokatalog/marken-modelle/mazda/6/gj-facelift-2/290431/",
+   "https://www.auto-data.net/en/mazda-6-iii-sedan-gj-facelift-2018-2.5-skyactiv-g-194hp-skyactiv-drive-33515",
+   "https://cars-data.com/en/mazda/6/2018-sedan/skyactiv-g-2-0-165-business-comfort-94329--94329/specs"
+  ],
+  "foEst": true,
+  "conf": "two-sources"
+ },
+ {
+  "id": "golfvariant",
+  "name": "VW Golf Variant VIII",
+  "cat": "kombi",
+  "body": "kombi",
+  "face": "vw",
+  "L": 4633,
+  "W": 1789,
+  "H": 1498,
+  "wb": 2669,
+  "fo": 905,
+  "trackF": 1533,
+  "trackR": 1503,
+  "tyre": "205/55 R16",
+  "color": "#3f5f7a",
+  "src": [
+   "https://www.volkswagen-newsroom.com/en/the-new-golf-variant-and-golf-alltrack-international-media-drive-6540/design-and-dimensions-6543",
+   "https://www.auto-data.net/en/volkswagen-golf-viii-variant-1.5-tsi-130hp-41837",
+   "https://autotijd.be/en/dimensions/volkswagen/golf-variant/15-tsi-130-hp-manual-3017",
+   "https://www.largus.fr/fiche-technique/Volkswagen/Golf+Sw/VIII/2021/Break/15+eTSI+OPF+130ch+Life+Business+DSG7-2372043.html",
+   "https://www.eu-mayer.de/dateien/GolfVariant.pdf"
+  ],
+  "foEst": true,
+  "conf": "two-sources"
+ },
+ {
+  "id": "qashqai",
+  "name": "Nissan Qashqai III (J12)",
+  "cat": "suv",
+  "body": "suv",
+  "face": "kia",
+  "L": 4425,
+  "W": 1835,
+  "H": 1625,
+  "wb": 2665,
+  "fo": 868,
+  "trackF": 1590,
+  "trackR": 1590,
+  "tyre": "215/65 R17",
+  "color": "#b9b29f",
+  "src": [
+   "https://www.nissan.ie/ownership/car-owner-manual/manuals/iom/qashqai/0j12/e1/2025/dimensions-1.shtml",
+   "https://www.nissan.co.uk/cf/vehicles/new-vehicles/qashqai/dimensions",
+   "https://www.auto-data.net/en/nissan-qashqai-iii-j12-1.3-dig-t-140hp-mild-hybrid-43427",
+   "https://autotijd.be/en/dimensions/nissan/qashqai/13-dig-t-140-manual-4459"
+  ],
+  "foEst": true,
+  "conf": "official"
+ },
+ {
+  "id": "tiguan",
+  "name": "VW Tiguan III",
+  "cat": "suv",
+  "body": "suv",
+  "face": "vw",
+  "L": 4539,
+  "W": 1842,
+  "H": 1660,
+  "wb": 2676,
+  "fo": 919,
+  "trackF": 1586,
+  "trackR": 1578,
+  "tyre": "215/65 R17",
+  "color": "#56606a",
+  "src": [
+   "https://www.vwpress.co.uk/assets/documents/original/37027-NewVWTiguanPressPackApril2024.pdf",
+   "https://www.volkswagen-newsroom.com/en/publications/more/the-all-new-tiguan-2625/download",
+   "https://www.auto-data.net/en/volkswagen-tiguan-iii-1.5-etsi-130hp-mild-hybrid-opf-dsg-50425",
+   "https://autotijd.be/en/dimensions/volkswagen/tiguan/15l-etsi-130-hp-4079"
+  ],
+  "foEst": true,
+  "conf": "official"
+ },
+ {
+  "id": "smax",
+  "name": "Ford S-Max II (facelift 2019)",
+  "cat": "mpv",
+  "body": "mpv",
+  "face": "ford",
+  "L": 4796,
+  "W": 1916,
+  "H": 1655,
+  "wb": 2850,
+  "fo": 993,
+  "trackF": 1606,
+  "trackR": 1606,
+  "tyre": "235/55 R17",
+  "color": "#a8402a",
+  "src": [
+   "https://www.avto.info/f/docs/Obvestila/10022021_S-MAX_GALAXY_Hybrid_2021_TechSpecs.pdf",
+   "https://www.auto-data.net/en/ford-s-max-ii-facelift-2019-2.0-ecoblue-190hp-4x4-automatic-39274",
+   "https://autotijd.be/en/dimensions/ford/s-max/20l-ecoblue-150-hp-3186",
+   "https://www.largus.fr/fiche-technique/Ford/S+Max/II/2021/Monospace+5+Portes/20+EcoBlue+150ch+Titanium+Business-2167472.html"
+  ],
+  "foEst": true,
+  "conf": "two-sources"
+ },
+ {
+  "id": "tourneoconnect",
+  "name": "Ford Tourneo Connect III (short, L1)",
+  "cat": "mpv",
+  "body": "mpv",
+  "face": "ford",
+  "L": 4515,
+  "W": 1855,
+  "H": 1833,
+  "wb": 2755,
+  "fo": 898,
+  "trackF": null,
+  "trackR": null,
+  "tyre": "205/60 R16",
+  "color": "#ddd6c6",
+  "src": [
+   "https://www.auto-data.net/en/ford-tourneo-connect-iii-1.5-ecoboost-114hp-46838",
+   "https://www.largus.fr/fiche-technique/Ford/Tourneo+Connect/III/2023/Ludospace+5+Portes/15+EcoBoost+114ch+Titanium-2634253.html",
+   "https://www.largus.fr/fiche-technique/Ford/Tourneo+Connect/III/2023/Ludospace+5+Portes/15+EcoBoost+114ch+Active-2634416.html",
+   "https://www.adac.de/rund-ums-fahrzeug/autokatalog/marken-modelle/ford/tourneo-connect/3generation/327169/"
+  ],
+  "foEst": true,
+  "conf": "two-sources"
  }
 ]

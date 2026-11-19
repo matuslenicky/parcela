@@ -13,6 +13,8 @@ from mathutils import Vector, Matrix
 from mathutils.geometry import delaunay_2d_cdt
 
 
+SET = {'q': 1.0}      # podrobnosť siete: 1 = samostatný model, okolo 0.5 = vozidlo v scéne kempu
+
 def clamp(v, a=0.0, b=1.0): return a if v < a else b if v > b else v
 def lerp(a, b, t): return a + (b - a) * t
 def smooth(t): t = clamp(t); return t * t * (3 - 2 * t)
@@ -36,6 +38,8 @@ MATDEF = {  # názov: (farba, drsnosť, kov, lak, žiara)
     'odrazka': ('#b0121a', .25, 0.0, 1.0, 0), 'spz': ('#f2f3f1', .5, 0.0, 0, 0), 'spz text': ('#17191b', .5, 0.0, 0, 0), 'spz modra': ('#1d4fa3', .5, 0.0, 0, 0),
     'guma': ('#141414', .9, 0.0, 0, 0), 'disk': ('#c7cace', .26, 1.0, 0, 0), 'disk tmavy': ('#25272a', .45, .7, 0, 0), 'brzda': ('#4d5053', .5, .9, 0, 0),
     'zrkadlo': ('#9fb0ba', .03, 1.0, 0, 0),
+    'sokel': ('#b9bdc0', .55, 0.0, 0, 0), 'grafika': ('#56606a', .5, 0.0, 0, 0), 'grafika 2': ('#9aa3ab', .5, 0.0, 0, 0), 'ram': ('#27292b', .5, .6, 0, 0),
+    'okno ram': ('#1a1c1e', .45, 0.0, 0, 0), 'plast biely': ('#e2e3e1', .55, 0.0, 0, 0),
 }
 
 def M(name, hexc=None, rough=.5, metal=0.0, coat=0.0, emit=0.0):
@@ -277,6 +281,7 @@ class Detail:
     def patch(self, kind, outline, off, mat, holes=(), step=0.07, mirror=False, s=None, skirt=0.0, skirt_mat=None):
         """Vyplnený tvar na povrchu. skirt = výška bočnej steny smerom ku karosérii (zdvihnuté prvky: svetlá, kľučky)."""
         if len(outline) < 3: return
+        step = step / SET['q']
         loops = [resample(outline, step)] + [resample(h, step) for h in holes]
         pts = []; edges = []
         for lp in loops:
@@ -316,7 +321,7 @@ class Detail:
 
     def strip(self, kind, line, width, off, mat, mirror=False, s=None, step=0.035, closed=False):
         """Pás danej šírky pozdĺž čiary (škáry, lišty, stierače)."""
-        pts = resample(line, step, closed); n = len(pts)
+        pts = resample(line, step / SET['q'], closed); n = len(pts)
         if n < 2: return
         L, R = [], []
         for i, p in enumerate(pts):
@@ -390,7 +395,7 @@ def wheel_mesh(name, R, rim_r, tw, spokes=5, twin=True):
     """Koleso s osou y, vonkajšia strana v smere +y, stred v počiatku."""
     old = bpy.data.meshes.get(name)
     if old: return old
-    bm = bmesh.new(); st = 48; h = tw / 2; sw = R - rim_r; k = min(1.0, sw / 0.12)
+    bm = bmesh.new(); st = max(24, int(48 * SET['q'])); h = tw / 2; sw = R - rim_r; k = min(1.0, sw / 0.12)
     mats = ['guma', 'disk', 'disk tmavy', 'brzda']
     def P(r, th, a): return (r * math.cos(th), a, r * math.sin(th))
     def revolve(prof, mi, smooth_=True):

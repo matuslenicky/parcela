@@ -9,6 +9,8 @@ import * as THREE from 'three';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import { MapControls } from 'three/examples/jsm/controls/MapControls.js';
 import { MeshoptDecoder } from 'three/examples/jsm/libs/meshopt_decoder.module.js';
+import { mergeGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils.js';
+import { makeEnv } from './env.js';
 import CAMP from 'camp-json';
 import GLB from 'camp-glb';
 
@@ -30,6 +32,7 @@ function rectPts(c, w, h, ang) {      // rohy obdĺžnika v px plánu (ang v stu
   return [[-w / 2, -h / 2], [w / 2, -h / 2], [w / 2, h / 2], [-w / 2, h / 2]].map((d) => [c[0] + d[0] * ca - d[1] * sa, c[1] + d[0] * sa + d[1] * ca]);
 }
 function inPoly(x, z, poly) { let c = false; for (let i = 0, j = poly.length - 1; i < poly.length; j = i++) { const [xi, zi] = poly[i], [xj, zj] = poly[j]; if ((zi > z) !== (zj > z) && x < (xj - xi) * (z - zi) / (zj - zi) + xi) c = !c; } return c; }
+function segDist(x, z, a, b) { const dx = b[0] - a[0], dz = b[1] - a[1], t = clamp(((x - a[0]) * dx + (z - a[1]) * dz) / (dx * dx + dz * dz || 1), 0, 1); return Math.hypot(x - a[0] - dx * t, z - a[1] - dz * t); }
 function polyGeo(pts, y) {
   const g = new THREE.ShapeGeometry(new THREE.Shape(pts.map((p) => new THREE.Vector2(p[0], -p[1]))));
   g.rotateX(-Math.PI / 2); g.translate(0, y, 0); return g;
@@ -56,23 +59,27 @@ function mount(host, api) {
   host.classList.add('c3');
   host.innerHTML =
     '<div class="c3-stage"></div>'
-    + '<div class="c3-top"><label class="c3-go"><span class="sr">Prejsť na miesto</span><select aria-label="Prejsť na miesto"><option value="">Prejsť na miesto…</option></select></label></div>'
+    + '<div class="c3-top"><div class="c3-go"><select aria-label="Prejsť na miesto"><option value="">Prejsť na miesto…</option></select></div></div>'
     + '<div class="c3-ctl">'
     + '<div class="c3-seg" role="group" aria-label="Režim pohľadu"><button type="button" data-mode="map" aria-pressed="true">' + ico('map') + '<span>Prehľad</span></button><button type="button" data-mode="walk" aria-pressed="false">' + ico('walk') + '<span>Prechádzka</span></button></div>'
     + '<div class="c3-stack c3-zoom"><button type="button" class="c3-zin" aria-label="Priblížiť">' + ico('plus') + '</button><button type="button" class="c3-zout" aria-label="Oddialiť">' + ico('minus') + '</button></div>'
     + '<button type="button" class="c3-fwd" aria-label="Ísť dopredu" hidden>' + ico('up') + '</button>'
     + '</div>'
-    + '<div class="c3-card" hidden role="group" aria-label="Vybrané miesto"><button type="button" class="c3-x" aria-label="Zavrieť kartu">' + ico('close') + '</button><div class="c3-tip" aria-live="polite"></div><button type="button" class="btn btn-sign c3-book">Pokračovať k rezervácii</button></div>'
-    + '<p class="c3-hint"></p><div class="c3-load" role="status">Načítavam 3D model kempu…</div>';
+    + '<div class="c3-card" hidden role="group" aria-label="Vybrané miesto"><button type="button" class="c3-x" aria-label="Zavrieť kartu">' + ico('close') + '</button><div class="c3-tip"></div><button type="button" class="btn btn-sign c3-book">Pokračovať k rezervácii</button></div>'
+    + '<p class="c3-hint"></p><p class="sr c3-say" role="status"></p><div class="c3-load" role="status">Načítavam 3D model kempu…</div>';
   const $ = (s) => host.querySelector(s);
   const stage = $('.c3-stage'), card = $('.c3-card'), hint = $('.c3-hint'), pick = $('.c3-go select'), fwd = $('.c3-fwd');
 
   let renderer;
   try { renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: 'high-performance' }); }
-  catch (e) { $('.c3-load').textContent = 'Tento prehliadač nevie zobraziť 3D grafiku (WebGL). Použite mapu vyššie.'; return { ok: false, update() {}, pause() {}, resume() {} }; }
+  catch (e) {                              // bez WebGL ostane len hláška: ovládanie by bolo pod ňou neviditeľné, ale dosiahnuteľné tabulátorom
+    host.innerHTML = '<div class="c3-load" role="alert">Tento prehliadač nevie zobraziť 3D grafiku (WebGL). Použite mapu vyššie.</div>';
+    return { ok: false, update() {}, pause() {}, resume() {} };
+  }
   renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, touch ? 1.5 : 2));
   renderer.outputColorSpace = THREE.SRGBColorSpace; renderer.toneMapping = THREE.NeutralToneMapping;
   renderer.shadowMap.enabled = true; renderer.shadowMap.type = THREE.PCFShadowMap;
+  renderer.shadowMap.autoUpdate = false;       // scéna stojí: tiene sa prepočítajú len po načítaní modelu a pri otvorení prehliadky
   renderer.domElement.setAttribute('aria-hidden', 'true'); renderer.domElement.style.touchAction = 'none';
   stage.appendChild(renderer.domElement);
 
@@ -91,12 +98,18 @@ function mount(host, api) {
   const sc = sun.shadow.camera, half = SPAN * .75; sc.left = -half; sc.right = half; sc.top = half; sc.bottom = -half; sc.near = 5; sc.far = SPAN * 2.6;
   sun.shadow.mapSize.set(touch ? 2048 : 4096, touch ? 2048 : 4096); sun.shadow.bias = -0.0012; sun.shadow.normalBias = touch ? 2.4 : 1.2; sun.shadow.radius = 2;
   scene.add(sun, sun.target);
+  let envDark = null; const sunDir = new THREE.Vector3(0.35, 0.8, 0.45);
   function applyTheme() {
     const t = document.documentElement.getAttribute('data-theme'), dark = t === 'dark' || (t !== 'light' && matchMedia('(prefers-color-scheme: dark)').matches);
     SKY.set(dark ? 0x2f3e44 : 0xcfe6f2); scene.fog.color.copy(SKY);
     if (scene.background) scene.background.dispose();
     scene.background = dark ? skyTexture('#1f2b31', '#2f3e44') : skyTexture('#8fc3e6', '#cfe6f2');
-    renderer.toneMappingExposure = dark ? 0.72 : 1.18; hemi.intensity = dark ? 0.95 : 1.55;
+    renderer.toneMappingExposure = dark ? 0.72 : 1.18; hemi.intensity = dark ? 0.62 : 1.0;
+    if (envDark !== dark) {                  // obloha ako zdroj odrazov pre lak, sklo a chróm vozidiel
+      if (scene.environment) scene.environment.dispose();
+      scene.environment = makeEnv(renderer, dark ? { top: '#1f2b31', horizon: '#3a4b52', ground: '#1c2622', sunPower: 0.15, sun: sunDir } : { sun: sunDir });
+      scene.environmentIntensity = dark ? 0.5 : 0.6; envDark = dark;
+    }
   }
   applyTheme();
 
@@ -116,8 +129,22 @@ function mount(host, api) {
   /* prekážky pre chôdzu: budovy a chatky */
   const PAD = 2.6 * S;   // chodec sa k stene nedostane bližšie než 1,3 m, inak by mu vyplnila celý výhľad
   const solids = (CAMP.buildings || []).map((b) => rectPts(b.c, b.w + PAD, b.d + PAD, b.ang || 0).map(W));
-  CAMP.parcels.forEach((p) => { const t = CAMP.types[p.t] || {}; if (t.unit === 'cabin') { const cb = t.cabin || [4.4, 3.6]; solids.push(rectPts([p.c[0], p.c[1] - p.h * 0.17], cb[0] * S + PAD, cb[1] * S + PAD, p.ang || 0).map(W)); } });
-  const blocked = (x, z) => x < LIM.x0 || x > LIM.x1 || z < LIM.z0 || z > LIM.z1 || solids.some((s) => inPoly(x, z, s));
+  CAMP.parcels.forEach((p) => {
+    const t = CAMP.types[p.t] || {}; if (t.unit !== 'cabin') return;
+    const cb = t.cabin || [4.4, 3.6], a = (p.ang || 0) * Math.PI / 180;      // chatka stojí v zadnej časti pozemku (build_camp.py: off(0, h * 0.17))
+    solids.push(rectPts([p.c[0] + p.h * 0.17 * Math.sin(a), p.c[1] - p.h * 0.17 * Math.cos(a)], cb[0] * S + PAD, cb[1] * S + PAD, p.ang || 0).map(W));
+  });
+  /* karavany, autá, stany a plošiny: dĺžka, šírka a posun stredu dopredu v metroch ako v build_camp.py; odstup 0,8 m */
+  const PROP = { caravan: [6.8, 2.4, 0], motorhome: [8.4, 2.35, 0.6], car: [4.5, 1.85, 0], tent: [3.2, 2.6, 0] }, PADP = 1.6 * S;
+  (CAMP.props || []).forEach((p) => { const d = p.dims ? [p.dims[0], p.dims[1], 0] : PROP[p.kind]; if (!d) return; const a = (p.ang || 0) * Math.PI / 180; solids.push(rectPts([p.c[0] + Math.cos(a) * d[2] * S, p.c[1] + Math.sin(a) * d[2] * S], d[0] * S + PADP, d[1] * S + PADP, p.ang || 0).map(W)); });
+  (CAMP.boxes || []).forEach((b) => { if ((b.height || 0) > 0.4) solids.push(rectPts(b.c, b.w + PADP, b.d + PADP, b.ang || 0).map(W)); });
+  const OUTSIDE = 8;     // chodec môže vyjsť najviac 8 m za hranicu areálu (k príjazdovej ceste), ďalej je na pláne len prázdna krajina
+  const inArea = (x, z) => inPoly(x, z, bnd) || bnd.some((a, i) => segDist(x, z, a, bnd[(i + 1) % bnd.length]) < OUTSIDE);
+  const blocked = (x, z) => x < LIM.x0 || x > LIM.x1 || z < LIM.z0 || z > LIM.z1 || !inArea(x, z) || solids.some((s) => inPoly(x, z, s));
+  function freeSpot(x, z) {              // najbližšie miesto, kde sa dá stáť
+    for (let r = 0; r < SPAN * 1.5; r += 2) for (let k = 0; k < (r ? 16 : 1); k++) { const a = k / 16 * Math.PI * 2, nx = x + Math.cos(a) * r, nz = z + Math.sin(a) * r; if (!blocked(nx, nz)) return [nx, nz]; }
+    return [x, z];
+  }
 
   /* ---------------- model z Blendera */
   let ready = false, ground = [];
@@ -129,12 +156,29 @@ function mount(host, api) {
       const n = ((o.parent && o.parent !== root && o.parent.name) || o.name || '').toLowerCase();
       (Array.isArray(o.material) ? o.material : [o.material]).forEach((m) => { m.side = THREE.DoubleSide; });
       const flat = /^(teren|voda|jazero|plocha|cesta|kruhovy|parcela)/.test(n), label = /^stitok/.test(n);
+      o.userData.tree = /^stromy/.test(n);
       o.receiveShadow = !label; o.castShadow = !flat && !label;
       if (label) { o.renderOrder = 5; (Array.isArray(o.material) ? o.material : [o.material]).forEach((m) => { m.polygonOffset = true; m.polygonOffsetFactor = -4; m.polygonOffsetUnits = -4; }); }
       if (flat) ground.push(o);
     });
+    /* vozidlá: desiatky malých sietí (karoséria po materiáloch, kolesá) zlúčiť do jednej siete na materiál */
+    root.updateMatrixWorld(true);
+    const flt = (a) => { const f = new Float32Array(a.count * 3); for (let i = 0; i < a.count; i++) { f[i * 3] = a.getX(i); f[i * 3 + 1] = a.getY(i); f[i * 3 + 2] = a.getZ(i); } return new THREE.BufferAttribute(f, 3); };
+    const byMat = new Map(), cars = root.children.filter((c) => /^vozidlo/i.test(c.name));
+    cars.forEach((v) => v.traverse((o) => {
+      if (!o.isMesh || !o.geometry.index || !o.geometry.attributes.normal) return;
+      const g = new THREE.BufferGeometry(); g.setAttribute('position', flt(o.geometry.attributes.position)); g.setAttribute('normal', flt(o.geometry.attributes.normal));
+      g.setIndex(Array.from(o.geometry.index.array)); g.applyMatrix4(o.matrixWorld);
+      if (!byMat.has(o.material)) byMat.set(o.material, []);
+      byMat.get(o.material).push(g);
+    }));
+    byMat.forEach((list, m) => {
+      const g = mergeGeometries(list, false); list.forEach((x) => x.dispose()); if (!g) return;
+      const mesh = new THREE.Mesh(g, m); mesh.name = 'vozidla'; mesh.castShadow = mesh.receiveShadow = true; root.add(mesh);
+    });
+    cars.forEach((v) => { v.traverse((o) => { if (o.isMesh) o.geometry.dispose(); }); root.remove(v); });
     scene.add(root);
-    ready = true; $('.c3-load').remove(); update(); startView();
+    ready = true; renderer.shadowMap.needsUpdate = true; $('.c3-load').remove(); update(); startView();
   }, (err) => { $('.c3-load').textContent = '3D model sa nepodarilo načítať.'; console.error(err); });
 
   /* ---------------- ovládanie: prehľad */
@@ -183,6 +227,8 @@ function mount(host, api) {
   }
   function choose(id, fly) {
     api.select(id); showCard(id);
+    const i = api.info(id);                // karta sa ukáže naraz s obsahom, čítačka by ju sama neohlásila
+    if (i) $('.c3-say').textContent = [i.title, i.chip].concat(i.facts, i.total ? [i.total] : []).join(', ');
     if (fly) flyTo(byId[id]);
   }
   function flyTo(u) {
@@ -204,9 +250,7 @@ function mount(host, api) {
     host.classList.toggle('walking', m === 'walk');
     controls.enabled = m === 'map'; fwd.hidden = !(m === 'walk' && touch); $('.c3-zoom').hidden = m === 'walk';
     if (m === 'walk') {
-      let x = controls.target.x, z = controls.target.z;
-      const sel = cardId && byId[cardId];
-      if (blocked(x, z)) { for (let r = 3; r < 60 && blocked(x, z); r += 3) for (let k = 0; k < 12; k++) { const a = k / 12 * Math.PI * 2, nx = controls.target.x + Math.cos(a) * r, nz = controls.target.z + Math.sin(a) * r; if (!blocked(nx, nz)) { x = nx; z = nz; break; } } }
+      const [x, z] = freeSpot(controls.target.x, controls.target.z), sel = cardId && byId[cardId];
       walk.x = x; walk.z = z; walk.pitch = -0.06;
       walk.yaw = Math.atan2(CENTER.x - x, -(CENTER.z - z));
       if (sel) flyTo(sel);                                    // vybrané miesto: postaviť sa pred neho
@@ -219,16 +263,33 @@ function mount(host, api) {
   }
 
   /* ---------------- ukazovateľ: klik na miesto, v prechádzke rozhliadanie a chôdza */
-  const ray = new THREE.Raycaster(), ndc = new THREE.Vector2(); let down = null;
+  const ray = new THREE.Raycaster(), ndc = new THREE.Vector2(), fingers = new Set(); let down = null;
   function hitGround(e) {
     const r = renderer.domElement.getBoundingClientRect();
     ndc.set((e.clientX - r.left) / r.width * 2 - 1, -((e.clientY - r.top) / r.height) * 2 + 1);
     ray.setFromCamera(ndc, camera);
-    const h = ray.intersectObjects(scene.children, true).find((x) => x.object.parent !== overlays);
+    const h = ray.intersectObjects(scene.children, true).find((x) => x.object.parent !== overlays && !(mode === 'map' && x.object.userData.tree));   // v prehľade sa vyberá aj cez korunu stromu
     return h ? h.point : null;
   }
   const unitAt = (x, z) => UNITS.find((u) => inPoly(x, z, u.pts)) || null;
-  renderer.domElement.addEventListener('pointerdown', (e) => { down = { x: e.clientX, y: e.clientY, yaw: walk.yaw, pitch: walk.pitch, moved: false, id: e.pointerId }; if (mode === 'walk') renderer.domElement.setPointerCapture(e.pointerId); });
+  function unitNear(p, e) {              // prst je hrubší než myš: ťuk na zem tesne vedľa miesta vyberie najbližšie do 14 css px
+    const u = unitAt(p.x, p.z); if (u || e.pointerType !== 'touch' || p.y > 0.5) return u;
+    const r = renderer.domElement.getBoundingClientRect(), v = new THREE.Vector3(); let best = null, bd = 14;
+    UNITS.forEach((q) => q.pts.forEach((a, i) => {          // najbližší bod každej hrany premietnutý na obrazovku
+      const b = q.pts[(i + 1) % q.pts.length], dx = b[0] - a[0], dz = b[1] - a[1], t = clamp(((p.x - a[0]) * dx + (p.z - a[1]) * dz) / (dx * dx + dz * dz || 1), 0, 1);
+      v.set(a[0] + dx * t, q.top, a[1] + dz * t).project(camera); if (v.z > 1) return;
+      const d = Math.hypot(r.left + (v.x + 1) / 2 * r.width - e.clientX, r.top + (1 - v.y) / 2 * r.height - e.clientY);
+      if (d < bd) { bd = d; best = q; }
+    }));
+    return best;
+  }
+  renderer.domElement.addEventListener('pointerdown', (e) => {
+    if (e.isPrimary) fingers.clear();
+    fingers.add(e.pointerId);
+    if (fingers.size > 1) { down = null; return; }               // druhý prst = priblíženie alebo otáčanie, nie výber
+    down = { x: e.clientX, y: e.clientY, yaw: walk.yaw, pitch: walk.pitch, moved: false, id: e.pointerId };
+    if (mode === 'walk') renderer.domElement.setPointerCapture(e.pointerId);
+  });
   renderer.domElement.addEventListener('pointermove', (e) => {
     if (!down || down.id !== e.pointerId) return;
     const dx = e.clientX - down.x, dy = e.clientY - down.y;
@@ -236,18 +297,24 @@ function mount(host, api) {
     if (mode === 'walk' && down.moved) { walk.yaw = down.yaw - dx * 0.0045; walk.pitch = clamp(down.pitch - dy * 0.0035, -0.9, 0.6); }
   });
   renderer.domElement.addEventListener('pointerup', (e) => {
-    const d = down; down = null; if (!d || d.moved || !ready) return;
+    fingers.delete(e.pointerId);
+    const d = down; down = null; if (!d || d.id !== e.pointerId || d.moved || !ready) return;
     const p = hitGround(e); if (!p) return;
-    const u = unitAt(p.x, p.z);
+    const u = mode === 'map' ? unitNear(p, e) : unitAt(p.x, p.z);
     if (mode === 'map') { if (u) choose(u.id, false); else { card.hidden = true; cardId = null; } return; }
     if (p.y > 2.5) return;                                   // strecha alebo koruna stromu: tam sa nejde
     walk.go = { x: p.x, z: p.z }; if (u) choose(u.id, false);
   });
-  renderer.domElement.addEventListener('pointercancel', () => { down = null; });
+  renderer.domElement.addEventListener('pointercancel', (e) => { fingers.delete(e.pointerId); down = null; });
   const KEY = { ArrowUp: 'f', KeyW: 'f', ArrowDown: 'b', KeyS: 'b', KeyA: 'l', KeyD: 'r', ArrowLeft: 'tl', ArrowRight: 'tr' };
-  const onKey = (e, v) => { if (mode !== 'walk' || !running || !KEY[e.code] || /^(SELECT|INPUT|TEXTAREA)$/.test((e.target.tagName || ''))) return; walk.keys[KEY[e.code]] = v; if (v) walk.go = null; e.preventDefault(); };
-  const kd = (e) => onKey(e, true), ku = (e) => onKey(e, false);
-  window.addEventListener('keydown', kd); window.addEventListener('keyup', ku);
+  const onKey = (e, v) => {
+    if (!KEY[e.code]) return;
+    if (!v) { walk.keys[KEY[e.code]] = false; return; }           // pustenie platí vždy, aj keď fokus medzitým prešiel do rolety
+    if (mode !== 'walk' || !running || e.ctrlKey || e.metaKey || e.altKey || /^(SELECT|INPUT|TEXTAREA)$/.test((e.target.tagName || ''))) return;   // Ctrl+S, Ctrl+D… patria prehliadaču
+    walk.keys[KEY[e.code]] = true; walk.go = null; e.preventDefault();
+  };
+  const kd = (e) => onKey(e, true), ku = (e) => onKey(e, false), kb = () => { walk.keys = {}; };   // strata fokusu okna: keyup by už neprišiel
+  window.addEventListener('keydown', kd); window.addEventListener('keyup', ku); window.addEventListener('blur', kb);
   fwd.addEventListener('pointerdown', () => { walk.keys.f = true; walk.go = null; });
   ['pointerup', 'pointerleave', 'pointercancel'].forEach((n) => fwd.addEventListener(n, () => { walk.keys.f = false; }));
 
@@ -284,11 +351,11 @@ function mount(host, api) {
     }
     renderer.render(scene, camera);
   }
-  function resume() { if (running) return; running = true; applyTheme(); size(); update(); last = performance.now(); raf = requestAnimationFrame(frame); }
+  function resume() { if (running) return; running = true; renderer.shadowMap.needsUpdate = true; applyTheme(); size(); update(); last = performance.now(); raf = requestAnimationFrame(frame); }
   function pause() { running = false; cancelAnimationFrame(raf); walk.keys = {}; }
   setHint();
   return { ok: true, update, pause, resume, setMode, focusUnit(id) { if (byId[id]) { showCard(id); flyTo(byId[id]); } },
     state: () => ({ mode, ready, cam: camera.position.toArray().map((v) => Math.round(v * 10) / 10), walk: { x: Math.round(walk.x * 10) / 10, z: Math.round(walk.z * 10) / 10 }, card: cardId, calls: renderer.info.render.calls, tris: renderer.info.render.triangles }),
-    destroy() { pause(); ro.disconnect(); window.removeEventListener('keydown', kd); window.removeEventListener('keyup', ku); renderer.dispose(); host.innerHTML = ''; } };
+    destroy() { pause(); ro.disconnect(); window.removeEventListener('keydown', kd); window.removeEventListener('keyup', ku); window.removeEventListener('blur', kb); renderer.dispose(); host.innerHTML = ''; } };
 }
 window.Camp3D = { mount };

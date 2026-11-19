@@ -108,7 +108,7 @@ def build_car(c):
 
     cap = [0, .0006, .0025, .006, .012, .022, .037, .058, .085, .12, .165, .22, .29, .38, .5, .65, .82, 1]
     xs = set([Dp * t for t in cap] + [L - Dpr * t for t in cap] + [Dt * t for t in cap] + [L - Dtr * t for t in cap])
-    n = int(L / .055); xs |= {L * i / n for i in range(n + 1)} | {xc - .03, xc, xc + .03, xc + .09, xw, x2, x3, x3 + .06}
+    n = int(L / .055 * SET['q']); xs |= {L * i / n for i in range(n + 1)} | {xc - .03, xc, xc + .03, xc + .09, xw, x2, x3, x3 + .06}
     xs = sorted(x for x in xs if 0 <= x <= L); st = [xs[0]]
     for x in xs[1:]:
         if x - st[-1] > min(.012, max(.0004, min(x, L - x) * .3)): st.append(x)

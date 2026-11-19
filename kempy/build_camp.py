@@ -15,6 +15,7 @@ while i < len(argv):
     if a == '--samples': OPT['samples'] = int(argv[i + 1]); i += 1
     elif a == '--res': OPT['res'] = argv[i + 1]; i += 1
     elif a == '--no-render': OPT['render'] = False
+    elif a == '--q': OPT['q'] = float(argv[i + 1]); i += 1
     i += 1
 D = json.load(open(os.path.join(CAMP, 'camp.json'), encoding='utf-8'))
 S = D['pxPerM']; OX, OY = D['origin']
@@ -384,8 +385,56 @@ def prop(kind, c, ang):
         mb.face([v(pA, .1), v(r1, H), v(pD, .1)], m)
         mb.face([v(pB, .1), v(pC, .1), v(r2, H)], m)
     return mb
+# autá, karavany a obytné autá sú modely z kempy/models (presné rozmery výrobcu); prop môže mať "model" a "color", inak sa striedajú
+sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), 'models'))
+import shell as kit, car as carmod, camper, gear
+kit.SET['q'] = OPT.get('q', 0.5)
+MODELS = {c['id']: c for f in ('cars.json', 'campers.json') for c in json.load(open(os.path.join(os.path.dirname(os.path.abspath(__file__)), 'models', f), encoding='utf-8'))}
+GEAR = {c['id']: c for c in json.load(open(os.path.join(os.path.dirname(os.path.abspath(__file__)), 'models', 'gear.json'), encoding='utf-8'))}
+TENTS = ['darwin3', 'vail4', 'bizon3', 'arpenaz41', 'q2seconds', 'tent6']
+DEFAULT = {'car': ['octaviacombi', 'kodiaq', 'golf', 'duster', 'passat', 'touran', 'fabia', 'x5'], 'caravan': ['hobby495', 'troll530', 'hobby720'],
+           'motorhome': ['sunlightt58', 'caradoa464', 'summit600', 'california']}
+CAR_COLORS = ['#2f4a3c', '#8d9399', '#27384f', '#7b1f24', '#e9e9e6', '#1d1f22', '#3f5f7a', '#b9b29f']
+BUILT = {}; COUNT = {}
+def vehicle(kind, pr, k):
+    n = COUNT.get(kind, 0); COUNT[kind] = n + 1
+    mid = pr.get('model') or DEFAULT[kind][n % len(DEFAULT[kind])]
+    spec = dict(MODELS[mid])
+    if pr.get('color'): spec['color'] = pr['color']
+    elif spec.get('cat') not in ('caravan', 'motorhome', 'campervan', 'van', 'minibus'): spec['color'] = CAR_COLORS[n % len(CAR_COLORS)]
+    key = (mid, spec.get('color'))
+    if key not in BUILT:
+        root, parts = (camper.build(spec) if 'body' not in spec else carmod.build_car(spec))
+        for o in [root] + parts:
+            for cl in list(o.users_collection): cl.objects.unlink(o)
+            C_PROPS.objects.link(o)
+        BUILT[key] = (root, parts)
+    else:                                               # ďalší kus toho istého modelu zdieľa sieť
+        r0, p0 = BUILT[key]; root = r0.copy(); C_PROPS.objects.link(root); parts = []
+        for o in p0:
+            o2 = o.copy(); o2.parent = root; C_PROPS.objects.link(o2); parts.append(o2)
+    root.name = 'vozidlo %s %d %s' % (kind, k, mid)
+    x, y = P(pr['c']); root.location = (x, y, 0); root.rotation_euler = (0, 0, -math.radians(pr.get('ang', 0)))
+    pr['model'] = mid
+    # život pri karavane a obytnom aute: každé druhé má vysunutú markízu a pod ňou stôl (prop môže určiť "awning": true/false)
+    if kind in ('caravan', 'motorhome') and pr.get('awning', n % 2 == 0):
+        Wv = spec['W'] / 1000; Hv = spec['H'] / 1000; aw = GEAR['f45s350' if (spec.get('Lbody') or spec.get('L')) > 5200 else 'f45s260']
+        col = gear.FABRICS[(n * 2 + 3) % len(gear.FABRICS)]
+        o = gear.build(aw, color=col, name='vozidlo markiza %d' % k, zwall=Hv - .28, y0=-Wv / 2, kit=kind == 'caravan'); place(o, pr)
+        t = gear.build(GEAR['set4'], color=col, name='vozidlo stol %d' % k); place(t, pr, (0, -(Wv / 2 + aw['parts']['extension'] / 2000 + .1)))
+def place(o, pr, off=(0, 0)):
+    for cl in list(o.users_collection): cl.objects.unlink(o)
+    C_PROPS.objects.link(o)
+    a = -math.radians(pr.get('ang', 0)); x, y = P(pr['c'])
+    o.location = (x + off[0] * math.cos(a) - off[1] * math.sin(a), y + off[0] * math.sin(a) + off[1] * math.cos(a), 0); o.rotation_euler = (0, 0, a)
+NT = 0
 for k, pr in enumerate(D.get('props', [])):
-    prop(pr['kind'], P(pr['c']), pr.get('ang', 0)).obj('%s %d' % (pr['kind'], k), C_PROPS)
+    if pr['kind'] in DEFAULT: vehicle(pr['kind'], pr, k)
+    elif pr['kind'] == 'tent' and (pr.get('model') or TENTS[NT % len(TENTS)]) in GEAR:
+        mid = pr.get('model') or TENTS[NT % len(TENTS)]; pr['model'] = mid
+        place(gear.build(GEAR[mid], color=pr.get('color') or gear.FABRICS[NT % len(gear.FABRICS)], name='vozidlo stan %d %s' % (k, mid)), pr); NT += 1
+    else: prop(pr['kind'], P(pr['c']), pr.get('ang', 0)).obj('%s %d' % (pr['kind'], k), C_PROPS)
+json.dump([{'kind': p['kind'], 'model': p.get('model')} for p in D.get('props', [])], open(os.path.join(CAMP, 'props.models.json'), 'w'))
 
 # ---------------------------------------------------------------- world, light, cameras
 world = bpy.data.worlds.new('svet'); sc.world = world; world.use_nodes = True

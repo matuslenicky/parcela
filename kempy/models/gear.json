@@ -1,0 +1,384 @@
+[
+ {
+  "id": "q2seconds",
+  "cat": "tent23",
+  "name": "Quechua 2 Seconds, 2-person pop-up tent (Decathlon model 340082, ref. 8755225)",
+  "L": 2300,
+  "W": 1400,
+  "H": 1020,
+  "shape": "popup",
+  "parts": {
+   "innerL": 2100,
+   "innerW": 1200,
+   "vestibuleDepth": null,
+   "poles": null,
+   "doors": 1,
+   "heightFront": 1020,
+   "heightRear": 820,
+   "groundArea_m2": 3.2,
+   "foldedDiscDiameter": 650
+  },
+  "src": [
+   "https://decathlon.com.gr/en/p/340082-camping-tent-2-seconds-2-person.html",
+   "https://contents.mediadecathlon.com/p2391925/1cr1/k$8aa00d6b23ecd712f9d439076ea0aca7/camping-tent-2-seconds-2-person.jpg"
+  ],
+  "conf": "derived"
+ },
+ {
+  "id": "darwin3",
+  "cat": "tent23",
+  "name": "Coleman Darwin 3 (3-person dome tent)",
+  "L": 2700,
+  "W": 1800,
+  "H": 1200,
+  "shape": "dome",
+  "parts": {
+   "innerL": 2100,
+   "innerW": 1800,
+   "vestibuleDepth": 600,
+   "poles": 2,
+   "doors": 1,
+   "innerHeight": 1100,
+   "sleepingArea_m2": 3.8,
+   "porchArea_m2": 0.6,
+   "pitchedArea_m2": 4.4
+  },
+  "src": [
+   "https://www.colemanuk.co.uk/tents/tents-by-style/adventure-tents/darwin-3-summer-tent/SAP_2227923.html",
+   "https://e-catalog.co.uk/COLEMAN-DARWIN-3.htm"
+  ],
+  "conf": "official"
+ },
+ {
+  "id": "bizon3",
+  "cat": "tent23",
+  "name": "Husky Bizon 3 Classic",
+  "L": 3300,
+  "W": 2300,
+  "H": 1350,
+  "shape": "dome",
+  "parts": {
+   "innerL": 2200,
+   "innerW": 2150,
+   "vestibuleDepth": 1100,
+   "poles": 3,
+   "doors": 2,
+   "innerDoors": 1,
+   "sleepingSectionDepth": 2200
+  },
+  "src": [
+   "https://www.huskycz.cz/bizon-3-classic-light-grey",
+   "https://cdn.hskcz.cz/temp/img/d0/ab/94/kempingovy-stan-pro-3-osoby-bizon-3-classic-w1200-h1200-d0ab9443000dfdfae998c819a394e1d5.png"
+  ],
+  "conf": "official"
+ },
+ {
+  "id": "arpenaz41",
+  "cat": "tentfam",
+  "name": "Quechua Arpenaz 4.1 (4 persons, 1 bedroom + living room; Decathlon model 4123)",
+  "L": 4550,
+  "W": 2600,
+  "H": 1900,
+  "shape": "tunnel",
+  "parts": {
+   "innerL": 2400,
+   "innerW": 2100,
+   "vestibuleDepth": null,
+   "poles": 3,
+   "doors": 1,
+   "bedrooms": 1,
+   "bedroomHeight": 1720,
+   "livingDepth": 2350,
+   "livingWidth": 2600,
+   "livingArea_m2": 5
+  },
+  "src": [
+   "https://www.decathlon.com.gr/en/p/4123-171195-camping-tent-with-poles-arpenaz-41-4-person-1-bedroom.html",
+   "https://contents.mediadecathlon.com/p2456980/1cr1/k$ccee9f52a14ada1c78bce04d40964cdd/tent-with-poles-arpenaz-41-4-man-1-bedroom.jpg",
+   "https://manuals.plus/asin/B085HFXWKG"
+  ],
+  "conf": "official"
+ },
+ {
+  "id": "vail4",
+  "cat": "tentfam",
+  "name": "Coleman Vail 4 (4-person tunnel tent, SKU 2000038917)",
+  "L": 4700,
+  "W": 3000,
+  "H": 2000,
+  "shape": "tunnel",
+  "parts": {
+   "innerL": 2800,
+   "innerW": 2100,
+   "vestibuleDepth": 950,
+   "poles": 4,
+   "doors": 2,
+   "bedrooms": 2,
+   "bedroomWidths": [
+    1400,
+    1400
+   ],
+   "livingDepth": 1650,
+   "livingWidth": null,
+   "livingArea_m2": 5,
+   "headroom": 1900,
+   "sleepingArea_m2": 5.9,
+   "pitchedArea_m2": 10.9
+  },
+  "src": [
+   "https://www.colemanuk.co.uk/tents/tents-by-style/family-tents/vail-4-tent/SP_2236085.html",
+   "https://e-catalog.co.uk/COLEMAN-VAIL-4.htm"
+  ],
+  "conf": "official"
+ },
+ {
+  "id": "tent6",
+  "cat": "tentfam",
+  "name": "Coleman Vail 6 (6-person tunnel tent, SKU 2000038911)",
+  "L": 4300,
+  "W": 3800,
+  "H": 2100,
+  "shape": "tunnel",
+  "parts": {
+   "innerL": 3600,
+   "innerW": 2100,
+   "vestibuleDepth": 700,
+   "poles": 4,
+   "doors": 2,
+   "bedrooms": 3,
+   "bedroomWidths": [
+    1200,
+    1200,
+    1200
+   ],
+   "livingDepth": 1350,
+   "livingWidth": null,
+   "livingArea_m2": 5.1,
+   "headroom": 2000,
+   "sleepingArea_m2": 7.6,
+   "pitchedArea_m2": 12.7
+  },
+  "src": [
+   "https://www.colemanuk.co.uk/tents/tents-by-style/family-tents/vail6-tent/SP_2236086.html",
+   "https://e-catalog.co.uk/COLEMAN-VAIL-6.htm"
+  ],
+  "conf": "official"
+ },
+ {
+  "id": "f45s260",
+  "cat": "awning",
+  "name": "Fiamma F45s 260",
+  "L": 2630,
+  "W": 2000,
+  "H": null,
+  "shape": "rect",
+  "parts": {
+   "caseLength": 2630,
+   "canopyLength": 2470,
+   "extension": 2000,
+   "shadeArea_m2": 4.9,
+   "caseDepth": 85,
+   "caseHeight": 136
+  },
+  "src": [
+   "https://www.fiammaexpert.com/image/data/download/catalogues/EN/Product_Catalogue_2026_EN.pdf",
+   "https://www.fiamma.it/en/product/f45s/"
+  ],
+  "conf": "official"
+ },
+ {
+  "id": "f45s350",
+  "cat": "awning",
+  "name": "Fiamma F45s 350",
+  "L": 3480,
+  "W": 2500,
+  "H": null,
+  "shape": "rect",
+  "parts": {
+   "caseLength": 3480,
+   "canopyLength": 3310,
+   "extension": 2500,
+   "shadeArea_m2": 8.3,
+   "caseDepth": 85,
+   "caseHeight": 136
+  },
+  "src": [
+   "https://www.fiammaexpert.com/image/data/download/catalogues/EN/Product_Catalogue_2026_EN.pdf",
+   "https://www.fiamma.it/en/product/f45s/"
+  ],
+  "conf": "official"
+ },
+ {
+  "id": "f45s450",
+  "cat": "awning",
+  "name": "Fiamma F45s 450",
+  "L": 4480,
+  "W": 2500,
+  "H": null,
+  "shape": "rect",
+  "parts": {
+   "caseLength": 4480,
+   "canopyLength": 4310,
+   "extension": 2500,
+   "shadeArea_m2": 10.8,
+   "caseDepth": 85,
+   "caseHeight": 136
+  },
+  "src": [
+   "https://www.fiammaexpert.com/image/data/download/catalogues/EN/Product_Catalogue_2026_EN.pdf",
+   "https://www.fiamma.it/en/product/f45s/"
+  ],
+  "conf": "official"
+ },
+ {
+  "id": "eventm",
+  "cat": "gazebo",
+  "name": "Coleman Event Shelter M (3 x 3 m, SKU 2000034470)",
+  "L": 3000,
+  "W": 3000,
+  "H": 2100,
+  "shape": "rect",
+  "parts": {
+   "legSpan": 3000,
+   "roofSize": 3000,
+   "headroomCentre": 2100,
+   "headroomSides": 1790,
+   "legs": 4
+  },
+  "src": [
+   "https://www.colemanuk.co.uk/shelters-gazebos/event-shelters/event-shelter-m/SP_1814268.html",
+   "https://www.garden4less.co.uk/product/coleman-medium-event-shelter-3-x-3m"
+  ],
+  "conf": "official"
+ },
+ {
+  "id": "eventl",
+  "cat": "gazebo",
+  "name": "Coleman Event Shelter L (3.65 x 3.65 m, SKU 2000034471)",
+  "L": 3650,
+  "W": 3650,
+  "H": 2180,
+  "shape": "rect",
+  "parts": {
+   "legSpan": 3650,
+   "roofSize": 3650,
+   "headroomCentre": 2180,
+   "headroomSides": 1690,
+   "legs": 4
+  },
+  "src": [
+   "https://colemanuk.co.uk/tents-shelters/shelters/event-shelters/event-shelter-l/SAP_2000034471.html"
+  ],
+  "conf": "official"
+ },
+ {
+  "id": "eventxl",
+  "cat": "gazebo",
+  "name": "Coleman Event Shelter XL (4.5 x 4.5 m, SKU 2000034472)",
+  "L": 4500,
+  "W": 4500,
+  "H": 2280,
+  "shape": "rect",
+  "parts": {
+   "legSpan": 4500,
+   "roofSize": 4500,
+   "headroomCentre": 2280,
+   "headroomSides": 1900,
+   "legs": 4
+  },
+  "src": [
+   "https://www.colemanuk.co.uk/shelters-gazebos/event-shelters/event-shelter-xl/SP_2236047.html"
+  ],
+  "conf": "official"
+ },
+ {
+  "id": "set2",
+  "cat": "tableset",
+  "name": "Folding camping table for 2 + 2 chairs (Quechua 2-4 people table + 2 Lafuma FGX XL)",
+  "L": 1700,
+  "W": 800,
+  "H": 820,
+  "shape": "rect",
+  "parts": {
+   "tableL": 800,
+   "tableW": 600,
+   "tableH": 700,
+   "chairW": 550,
+   "chairD": 550,
+   "chairH": 820,
+   "chairs": 2,
+   "layout": "1 chair on each long (800 mm) side, facing each other",
+   "acrossTable": 1700,
+   "alongTable": 800,
+   "products": {
+    "table": "Quechua (Decathlon) folding camping table, 2 to 4 people: top 80 x 60 cm, height 70 cm",
+    "chair": "Lafuma Mobilier FGX XL folding director's armchair (LFM1346): 55 W x 55 D x 82 H cm open"
+   }
+  },
+  "src": [
+   "https://www.decathlon.com.gr/en/p/6330-214464-quechua-camping-folding-table.html",
+   "https://www.lafuma-mobilier.fr/fauteuil-regisseur-pliant-fgx-xl-vert-moss-tube-titane-lfm1346-8557.html"
+  ],
+  "conf": "derived"
+ },
+ {
+  "id": "set4",
+  "cat": "tableset",
+  "name": "Folding camping table for 4 + 4 chairs (Quechua 4-6 people table + 4 Lafuma FGX XL)",
+  "L": 1700,
+  "W": 1200,
+  "H": 820,
+  "shape": "rect",
+  "parts": {
+   "tableL": 1200,
+   "tableW": 600,
+   "tableH": 700,
+   "chairW": 550,
+   "chairD": 550,
+   "chairH": 820,
+   "chairs": 4,
+   "layout": "2 chairs on each long (1200 mm) side",
+   "acrossTable": 1700,
+   "alongTable": 1200,
+   "products": {
+    "table": "Quechua (Decathlon) folding camping table, 4 to 6 people: top 120 x 60 cm, height 45 or 70 cm",
+    "chair": "Lafuma Mobilier FGX XL folding director's armchair (LFM1346): 55 W x 55 D x 82 H cm open"
+   }
+  },
+  "src": [
+   "https://www.decathlon.com.gr/en/p/109685-223183-quechua-camping-folding-table.html",
+   "https://www.lafuma-mobilier.fr/fauteuil-regisseur-pliant-fgx-xl-vert-moss-tube-titane-lfm1346-8557.html"
+  ],
+  "conf": "derived"
+ },
+ {
+  "id": "set6",
+  "cat": "tableset",
+  "name": "Folding camping table for 6 + 6 chairs (Quechua large 6-8 people table + 6 Lafuma FGX XL)",
+  "L": 1900,
+  "W": 1650,
+  "H": 820,
+  "shape": "rect",
+  "parts": {
+   "tableL": 1600,
+   "tableW": 800,
+   "tableH": 710,
+   "chairW": 550,
+   "chairD": 550,
+   "chairH": 820,
+   "chairs": 6,
+   "layout": "3 chairs on each long (1600 mm) side",
+   "acrossTable": 1900,
+   "alongTable": 1650,
+   "products": {
+    "table": "Quechua (Decathlon) large folding camping table, 6 to 8 people: top 160 x 80 cm, height 71 cm",
+    "chair": "Lafuma Mobilier FGX XL folding director's armchair (LFM1346): 55 W x 55 D x 82 H cm open"
+   }
+  },
+  "src": [
+   "https://www.decathlon.com.gr/en/p/10858-231892-quechua-camping-folding-table.html",
+   "https://www.lafuma-mobilier.fr/fauteuil-regisseur-pliant-fgx-xl-vert-moss-tube-titane-lfm1346-8557.html"
+  ],
+  "conf": "derived"
+ }
+]

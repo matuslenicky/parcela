@@ -1,0 +1,382 @@
+[
+ {
+  "id": "caddy",
+  "cat": "van",
+  "name": "VW Caddy 5 Cargo (short wheelbase)",
+  "years": "2020–",
+  "L": 4500,
+  "W": 1855,
+  "Wm": 2100,
+  "H": 1819,
+  "wb": 2755,
+  "fo": 890,
+  "ro": 855,
+  "feat": [
+   "sliding-door-right",
+   "rear-wing-doors"
+  ],
+  "src": [
+   "https://professional.auto-motor-und-sport.de/static-download/news/8135901/Volkswagen-Nutzfahrzeuge-Der-Caddy-Cargo-Preisliste.pdf"
+  ],
+  "conf": "official"
+ },
+ {
+  "id": "transporter",
+  "cat": "van",
+  "name": "VW Transporter T6.1 panel van (short wheelbase 3000)",
+  "years": "2019–2024",
+  "L": 4904,
+  "W": 1904,
+  "Wm": 2297,
+  "H": 1990,
+  "wb": 3000,
+  "fo": 908,
+  "ro": 996,
+  "feat": [
+   "sliding-door-right",
+   "tailgate"
+  ],
+  "src": [
+   "https://www.borgmann-krefeld.de/fileadmin/volkswagen-nutzfahrzeuge/vw-borgmann-krefeld-katalog-vw-transporter-6.1.pdf"
+  ],
+  "conf": "official"
+ },
+ {
+  "id": "sprinter",
+  "cat": "van",
+  "name": "Mercedes-Benz Sprinter panel van, long (A3, wheelbase 4325, high roof, RWD)",
+  "years": "2018–",
+  "L": 6967,
+  "W": 2020,
+  "Wm": 2345,
+  "H": 2616,
+  "wb": 4325,
+  "fo": 1021,
+  "ro": 1621,
+  "feat": [
+   "sliding-door-right",
+   "rear-wing-doors",
+   "high-roof"
+  ],
+  "src": [
+   "https://www.schade.de/fileadmin/docs/SCHADE/Neuwagen/Nfz/MB/Sprinter-Preisliste-0320.pdf",
+   "https://www.selectcarleasing.co.uk/van-leasing/mercedes/sprinter/large-van/315cdi-l3-rwd-35t-h2-pro-van-9g-tronic",
+   "https://autokatalog.pl/mercedes/sprinter/vs30/dane-techniczne",
+   "https://www.adac.de/rund-ums-fahrzeug/autokatalog/marken-modelle/mercedes-benz/sprinter/907-910/332798/",
+   "https://web.tremonia.com/wp-content/uploads/2026/08/Produktbroschuere_DE.pdf"
+  ],
+  "conf": "two-sources"
+ },
+ {
+  "id": "transitbus",
+  "cat": "minibus",
+  "name": "Ford Transit Minibus 460 L4 H3 \"Jumbo\" (RWD, twin rear wheels)",
+  "years": "2014– (data MY2025.5)",
+  "L": 6704,
+  "W": 2126,
+  "Wm": 2474,
+  "H": 2757,
+  "wb": 3750,
+  "fo": 1023,
+  "ro": 1931,
+  "seats": 18,
+  "feat": [
+   "sliding-door-right",
+   "rear-wing-doors",
+   "high-roof",
+   "twin-rear-wheels"
+  ],
+  "src": [
+   "https://www.ford.co.uk/content/dam/guxeu/uk/documents/brochures/cars/BRO-transit_m2_bus_25.5MY.pdf",
+   "https://www.selectcarleasing.co.uk/van-leasing/ford/transit/minibus/460-l4-minibus-rwd-20-ecoblue-165ps-h3-17-seater-leader-auto-nav"
+  ],
+  "conf": "official"
+ },
+ {
+  "id": "sprintertransfer",
+  "cat": "minibus",
+  "name": "Mercedes-Benz Sprinter Transfer 45 (built by Tremonia Mobility)",
+  "years": "2018– (data 2022 and 2026)",
+  "L": 7367,
+  "W": 2020,
+  "Wm": 2345,
+  "H": 2860,
+  "wb": 4325,
+  "fo": 1021,
+  "ro": 2021,
+  "seats": 23,
+  "feat": [
+   "sliding-door-right",
+   "high-roof",
+   "twin-rear-wheels"
+  ],
+  "src": [
+   "https://web.tremonia.com/wp-content/uploads/2026/08/Produktbroschuere_DE.pdf",
+   "https://www.kemas.com/files/site/Produktblatt_Sprinter_Transfer_45.pdf"
+  ],
+  "conf": "official"
+ },
+ {
+  "id": "sprintercity",
+  "cat": "minibus",
+  "name": "Mercedes-Benz Sprinter City 75 (built by Tremonia Mobility)",
+  "years": "2018– (data 2022 and 2026)",
+  "L": 8486,
+  "W": 2080,
+  "Wm": null,
+  "H": 2930,
+  "wb": 5095,
+  "fo": 1021,
+  "ro": 2370,
+  "seats": 20,
+  "feat": [
+   "low-floor",
+   "double-door-right-centre",
+   "single-door-right-rear",
+   "twin-rear-wheels",
+   "body-wider-at-rear"
+  ],
+  "src": [
+   "https://web.tremonia.com/wp-content/uploads/2026/08/Produktbroschuere_DE.pdf",
+   "https://www.kemas.com/files/site/Produktblatt_Sprinter_City_75.pdf",
+   "https://mbpassion.de/2018/09/iaa2018-die-neuen-mercedes-benz-minibusse-zeigen-sich/",
+   "https://mbpassion.de/2019/04/mercedes-benz-sprinter-city-75-ist-minibus-of-the-year-2019/"
+  ],
+  "conf": "official"
+ },
+ {
+  "id": "california",
+  "cat": "campervan",
+  "name": "VW California 6.1 Ocean",
+  "years": "2019–2024",
+  "L": 4904,
+  "W": 1904,
+  "Wm": 2297,
+  "H": 1990,
+  "wb": 3000,
+  "fo": 908,
+  "ro": 996,
+  "base": "VW Transporter T6.1 (short wheelbase)",
+  "berths": 4,
+  "feat": [
+   "pop-top",
+   "sliding-door-right",
+   "tailgate",
+   "awning"
+  ],
+  "src": [
+   "https://www.adac.de/rund-ums-fahrzeug/autokatalog/marken-modelle/vw-nutzfahrzeuge/transporter/6generation-facelift/303609",
+   "https://www.camping-car.com/fiches-techniques/29572-volkswagen-california-ocean-t61-20-tdi-150-ch-bvm6-2022/",
+   "https://www.borgmann-krefeld.de/fileadmin/volkswagen-nutzfahrzeuge/vw-borgmann-krefeld-katalog-vw-transporter-6.1.pdf"
+  ],
+  "conf": "two-sources"
+ },
+ {
+  "id": "summit600",
+  "cat": "campervan",
+  "name": "Pössl Summit 600 Plus (listed by Pössl as \"Summit 600\" in the current range)",
+  "years": "ca. 2018– (data MY2027)",
+  "L": 5998,
+  "W": 2050,
+  "Wm": 2508,
+  "H": 2580,
+  "wb": 4035,
+  "fo": 948,
+  "ro": 1015,
+  "base": "Citroën Jumper / Fiat Ducato panel van, 5998 mm, wheelbase 4035",
+  "berths": 2,
+  "feat": [
+   "sliding-door-right",
+   "rear-wing-doors",
+   "transverse-rear-bed",
+   "awning"
+  ],
+  "src": [
+   "https://www.poessl-group.de/de/marken/poessl/summit/summit-600",
+   "https://www.poessl-group.de/de/marken/poessl/summit",
+   "https://www.camping-car.com/fiches-techniques/36126-possl-summit-600-plus-french-edition-citroen-jumper-22-140-ch-2026/",
+   "https://www.carwow.de/fiat/ducato-kastenwagen/technische-daten"
+  ],
+  "conf": "official"
+ },
+ {
+  "id": "boxstar630",
+  "cat": "campervan",
+  "name": "Knaus BoxStar 630 ME Freeway",
+  "years": "until 2023 (data sheets exist for model years 2014–2023)",
+  "L": 6360,
+  "W": 2050,
+  "Wm": 2508,
+  "H": 2820,
+  "wb": 4035,
+  "fo": 948,
+  "ro": 1377,
+  "base": "Fiat Ducato extra-long high-roof panel van (6363 mm, wheelbase 4035)",
+  "berths": 4,
+  "feat": [
+   "sliding-door-right",
+   "rear-wing-doors",
+   "high-roof",
+   "single-beds-rear",
+   "awning"
+  ],
+  "src": [
+   "https://www.camping-car.com/fiches-techniques/30679-knaus-boxstar-630-me-freeway-fiat-ducato-22-140-ch-2023/",
+   "https://www.caraworld.de/360-grad-virtuelle-touren/knaus/campervan-2024/boxlife-pro.630-freeway-60-years.html",
+   "https://www.knaus.com/de-de/camper-vans-kastenwagen/boxlife-platinum-selection/630-me",
+   "https://www.carwow.de/fiat/ducato-kastenwagen/technische-daten"
+  ],
+  "conf": "two-sources"
+ },
+ {
+  "id": "sunlightt58",
+  "cat": "motorhome",
+  "name": "Sunlight T 58",
+  "years": "current (data MY2026/27; listed since at least 2018)",
+  "L": 5960,
+  "W": 2320,
+  "Wm": null,
+  "H": 2900,
+  "wb": 3450,
+  "fo": 948,
+  "ro": 1562,
+  "base": "Citroën Jumper chassis-cab",
+  "layout": "semi-integrated",
+  "berths": 2,
+  "feat": [
+   "habitation-door-right",
+   "french-bed-rear"
+  ],
+  "src": [
+   "https://www.sunlight.de/en-int/models/motorhomes/low-profiles-motorhomes/t-58/",
+   "https://www.carwow.de/fiat/ducato-kastenwagen/technische-daten"
+  ],
+  "conf": "official"
+ },
+ {
+  "id": "caradoa464",
+  "cat": "motorhome",
+  "name": "Carado A 464 (current A464 PRO)",
+  "years": "current (data MY2026/27)",
+  "L": 7260,
+  "W": 2320,
+  "Wm": null,
+  "H": 3140,
+  "wb": 4035,
+  "fo": 948,
+  "ro": 2277,
+  "base": "Citroën Jumper chassis-cab",
+  "layout": "alcove",
+  "berths": 6,
+  "feat": [
+   "alcove-overhang",
+   "rear-garage",
+   "transverse-rear-bed",
+   "habitation-door-right"
+  ],
+  "src": [
+   "https://carado.com/de/de/wohnmobile/alkoven/a464-citroen",
+   "https://www.carwow.de/fiat/ducato-kastenwagen/technische-daten"
+  ],
+  "conf": "official"
+ },
+ {
+  "id": "hymerbml890",
+  "cat": "motorhome",
+  "name": "Hymer B-Klasse MasterLine I 890",
+  "years": "2020–2025",
+  "L": 8990,
+  "W": 2350,
+  "Wm": null,
+  "H": 2960,
+  "wb": 4800,
+  "fo": 1000,
+  "ro": null,
+  "base": "Mercedes-Benz Sprinter front-wheel-drive cab unit with Hymer SLC chassis",
+  "layout": "integrated",
+  "berths": 4,
+  "feat": [
+   "tandem-axle",
+   "queen-bed",
+   "habitation-door-right"
+  ],
+  "src": [
+   "https://www.hymer.com/gb/en/new-layout-b-ml-i-890/p/103701",
+   "https://www.camping-car.com/fiches-techniques/30594-hymer-b-ml-i-890-mercedes-sprinter-20-150-ch-2023/",
+   "https://www.caraworld.de/print/cw28557906-de-DE1-expose.pdf",
+   "https://www.caraworld.de/print/cw27408186-de-DE1-expose.pdf",
+   "https://www.hymer.com/de/de/wohnmobile/hymer-b-klasse-masterline",
+   "https://www.promobil.de/neuheiten/hymer-b-klasse-880-masterline-2020/"
+  ],
+  "conf": "two-sources",
+  "foEst": true
+ },
+ {
+  "id": "troll530",
+  "cat": "caravan",
+  "name": "Eriba Touring 530 (Troll 530)",
+  "years": "current generation (launched 2022/23; data MY2027)",
+  "Ltotal": 5990,
+  "Lbody": 4710,
+  "W": 2100,
+  "H": 2270,
+  "axles": 1,
+  "berths": 3,
+  "feat": [
+   "pop-top",
+   "door-right",
+   "single-axle"
+  ],
+  "src": [
+   "https://www.eriba.com/de/de/modelle/wohnwagen/eriba-touring"
+  ],
+  "conf": "official"
+ },
+ {
+  "id": "hobby495",
+  "cat": "caravan",
+  "name": "Hobby De Luxe 495 UL",
+  "years": "current (data MY2027)",
+  "Ltotal": 7117,
+  "Lbody": 5947,
+  "W": 2300,
+  "H": 2638,
+  "axles": 1,
+  "berths": 4,
+  "feat": [
+   "door-right",
+   "single-axle",
+   "single-beds",
+   "round-lounge"
+  ],
+  "src": [
+   "https://www.hobby-caravan.de/wohnwagen/de-luxe/495-ul/",
+   "https://data.hobby-caravan.de/api/vehicle-model-types/1988/vehicle-technical-values"
+  ],
+  "conf": "official"
+ },
+ {
+  "id": "hobby720",
+  "cat": "caravan",
+  "name": "Hobby Prestige 720 KWFU",
+  "years": "current (data MY2027)",
+  "Ltotal": 9031,
+  "Lbody": 7868,
+  "W": 2500,
+  "H": 2640,
+  "axles": 2,
+  "berths": 6,
+  "feat": [
+   "tandem-axle",
+   "door-right",
+   "bunk-beds",
+   "french-bed",
+   "round-lounge"
+  ],
+  "src": [
+   "https://www.hobby-caravan.de/wohnwagen/prestige/720-kwfu/",
+   "https://data.hobby-caravan.de/api/vehicle-model-types/2018/vehicle-technical-values"
+  ],
+  "conf": "official"
+ }
+]
