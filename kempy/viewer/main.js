@@ -13,7 +13,7 @@ import { MeshoptDecoder } from 'three/examples/jsm/libs/meshopt_decoder.module.j
 import { mergeGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils.js';
 import { makeEnv } from './env.js';
 import { createRoom, registerModel } from './room.js';
-import { texturize, buildTrees, buildBuildings } from './look.js';
+import { texturize, buildTrees, buildBuildings, waterize, waterTick } from './look.js';
 import CAMP from 'camp-json';
 import GLB from 'camp-glb';
 
@@ -199,8 +199,8 @@ function mount(host, api) {
     cars.forEach((v) => { v.traverse((o) => { if (o.isMesh) o.geometry.dispose(); }); root.remove(v); });
     /* vzhľad: kresba povrchov, voda s odrazom oblohy, stromy s plnými korunami (keď má kemp ich výšky) */
     texturize(ground);
-    root.traverse((o) => { if (o.isMesh) (Array.isArray(o.material) ? o.material : [o.material]).forEach((m) => { if (/water/.test(m.name || '')) { m.roughness = 0.08; m.metalness = 0.0; m.envMapIntensity = 1.6; m.color.multiplyScalar(0.82); } }); });
-    const nice = buildTrees(CAMP); if (nice) { root.children.filter((c) => /^stromy/i.test(c.name)).forEach((c) => { c.visible = false; c.castShadow = false; }); scene.add(nice); }
+    waterize(root);
+    const nice = buildTrees(CAMP); if (nice) { root.children.filter((c) => /^stromy/i.test(c.name) || (nice.userData.shrubs && /^kriky/i.test(c.name))).forEach((c) => { c.visible = false; c.castShadow = false; }); scene.add(nice); }
     const houses = buildBuildings(CAMP); if (houses) { root.traverse((o) => { if (houses.names.includes(o.name) || (o.parent && houses.names.includes(o.parent.name))) { o.visible = false; o.castShadow = false; } }); scene.add(houses.group); }
     scene.add(root);
     ready = true; renderer.shadowMap.needsUpdate = true; $('.c3-load').remove(); update(); startView();
@@ -406,7 +406,7 @@ function mount(host, api) {
   function frame(now) {
     if (!running) return;
     raf = requestAnimationFrame(frame);
-    const dt = Math.min(0.05, (now - last) / 1000 || 0.016); last = now;
+    const dt = Math.min(0.05, (now - last) / 1000 || 0.016); last = now; waterTick(dt);
     if (mode === 'walk') {
       if (fly) flyStep(dt);
       const k = walk.keys, fx = Math.sin(walk.yaw), fz = -Math.cos(walk.yaw);

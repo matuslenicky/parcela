@@ -27,7 +27,7 @@ server.listen(0, '127.0.0.1', async () => {
       console.log('prelet: za 3 s posun o ' + moved.toFixed(1) + ' m, beží: ' + await page.evaluate(() => window.Camp3D.view.flying())); if (moved < 0.3) code = 1;
     }
     else if (argv.includes('--walk')) { await page.click('.c3-seg [data-mode="walk"]'); await page.waitForTimeout(1500); }
-    else for (let i = 0; i < 2; i++) { await page.click('.c3-zin'); await page.waitForTimeout(300); }
+    else { const z = +((argv.find((x) => x.startsWith('--zoom=')) || '').slice(7) || 2), at = (argv.find((x) => x.startsWith('--at=')) || '').slice(5); if (at) { await page.selectOption('.c3-go select', at); await page.waitForTimeout(1600); } for (let i = 0; i < z; i++) { await page.click('.c3-zin'); await page.waitForTimeout(300); } }
     for (const h of hours) {
       await page.evaluate((x) => window.Camp3D.view.setHour(x), h); await page.waitForTimeout(2200);
       const f = path.join(out, 'slnko-' + String(h).replace('.', '_') + '.png'); await page.screenshot({ path: f, timeout: 180000 });

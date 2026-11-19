@@ -666,7 +666,8 @@ var CAMP = /*CAMP_DATA*/null;
       var p = parcels.find(function (q) { return q.id === id; }); if (!p) return null;
       var ok = !p.taken && fits(p, state.v);
       // room: voľnú parcelu alebo plochu si hosť môže v 3D zariadiť aj vtedy, keď hrubý odhad hovorí, že sa nezmestí (rozhodne až skutočná zostava)
-      return { title: unitName(p) + ' ' + p.id, chip: chipText(p, fits(p, state.v)), ok: ok, room: !p.taken && p.unit !== 'cabin', facts: factsOf(p), total: ok ? 'Spolu za pobyt ' + money(quote(p).sum) : '' };
+      var roomy = !p.taken && p.unit !== 'cabin' && !fits(p, state.v) && !(state.kit && state.kitFor === p.id);   // hrubý odhad vraví nie: v 3D si to hosť overí sám
+      return { title: unitName(p) + ' ' + p.id, chip: roomy ? 'Voľná, overte si ju v 3D' : chipText(p, fits(p, state.v) || (state.kit && state.kitFor === p.id)), ok: ok, room: !p.taken && p.unit !== 'cabin', facts: factsOf(p), total: ok ? 'Spolu za pobyt ' + money(quote(p).sum) : '' };
     },
     select: function (id) { select(id); },
     kit: function (names) { state.kit = names; state.kitFor = state.sel; },
