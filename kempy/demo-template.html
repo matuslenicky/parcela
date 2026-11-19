@@ -193,6 +193,13 @@ p { margin: 0; }
 .c3-f { display: flex; flex-wrap: wrap; gap: 2px 14px; color: var(--muted); font-size: .93rem; }
 .c3-sum { font-weight: 800; }
 .c3-hint { position: absolute; left: 12px; bottom: 12px; max-width: calc(100% - 104px); padding: 8px 12px; border-radius: 10px; background: var(--paper); border: 1px solid var(--line); color: var(--muted); font-size: .88rem; line-height: 1.35; }
+.c3-sun { position: absolute; top: 12px; left: 50%; transform: translateX(-50%); display: flex; align-items: center; gap: 4px; padding: 4px 10px 4px 4px; border-radius: 12px; background: var(--paper); border: 1px solid var(--line); box-shadow: var(--shadow); }
+.c3-sun button { min-height: 44px; padding: 0 12px; border: 0; border-radius: 8px; background: transparent; color: var(--muted); font: inherit; font-size: .93rem; font-weight: 700; cursor: pointer; }
+.c3-sun button[aria-pressed="true"] { background: var(--ink); color: var(--paper); }
+.c3-sun input { width: 130px; accent-color: var(--sign); }
+.c3-sun output { min-width: 3.2em; text-align: right; font-weight: 700; font-size: .93rem; }
+.c3.rooming .c3-sun { top: 128px; left: calc(190px + 50%); z-index: 2; }
+@media (max-width: 760px) { .c3-sun { top: auto; bottom: 64px; left: 12px; transform: none; } .c3-sun input { display: none; } .c3.rooming .c3-sun { top: 62px; bottom: auto; left: auto; right: 8px; } .c3.rooming .c3-sun output { display: none; } }
 .c3-load { position: absolute; inset: 0; display: grid; place-items: center; padding: 24px; text-align: center; color: var(--muted); background: var(--soft); }
 @media (max-width: 620px) { .c3-top { top: 74px; } .c3-go select { max-width: calc(100vw - 96px); } }  /* roleta pod prepínačom, vedľa tlačidiel priblíženia */
 @media (max-height: 480px) { .c3-card { bottom: 58px; gap: 6px; padding: 12px 16px; } }  /* telefón na šírku: karta nesmie siahať na roletu */

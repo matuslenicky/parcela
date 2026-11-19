@@ -68,6 +68,7 @@ function mount(host, api) {
     + '<button type="button" class="c3-fwd" aria-label="Ísť dopredu" hidden>' + ico('up') + '</button>'
     + '</div>'
     + '<div class="c3-card" hidden role="group" aria-label="Vybrané miesto"><button type="button" class="c3-x" aria-label="Zavrieť kartu">' + ico('close') + '</button><div class="c3-tip"></div><button type="button" class="btn btn-sign c3-fit">Zariadiť parcelu</button><button type="button" class="btn btn-line c3-book">Pokračovať k rezervácii</button></div>'
+    + '<div class="c3-sun" role="group" aria-label="Denná doba a slnko"><button type="button" data-h="8">Ráno</button><button type="button" data-h="13" aria-pressed="true">Poludnie</button><button type="button" data-h="19">Večer</button><input type="range" min="5" max="21" step="0.25" value="13" aria-label="Hodina dňa"><output>13:00</output></div>'
     + '<p class="c3-hint"></p><p class="sr c3-say" role="status"></p><div class="c3-load" role="status">Načítavam 3D model kempu…</div>';
   const $ = (s) => host.querySelector(s);
   const stage = $('.c3-stage'), card = $('.c3-card'), hint = $('.c3-hint'), pick = $('.c3-go select'), fwd = $('.c3-fwd');
@@ -100,18 +101,34 @@ function mount(host, api) {
   const sc = sun.shadow.camera, half = SPAN * .75; sc.left = -half; sc.right = half; sc.top = half; sc.bottom = -half; sc.near = 5; sc.far = SPAN * 2.6;
   sun.shadow.mapSize.set(touch ? 2048 : 4096, touch ? 2048 : 4096); sun.shadow.bias = -0.0012; sun.shadow.normalBias = touch ? 2.4 : 1.2; sun.shadow.radius = 2;
   scene.add(sun, sun.target);
-  let envDark = null; const sunDir = new THREE.Vector3(0.35, 0.8, 0.45);
+  /* slnko podľa skutočnej dráhy: zemepisná poloha kempu, deň pobytu a hodina miestneho letného času (camp.json: sun) */
+  const SUNC = Object.assign({ lat: 48.7, lon: 19.5, tz: 2, doy: 194, north: 0 }, CAMP.sun || {}), sunDir = new THREE.Vector3(0.35, 0.8, 0.45);
+  let envKey = '', hour = 13, envT = 0;
+  function sunAt(h) {                    // výška a azimut slnka (od severu v smere hodinových ručičiek), radiány
+    const g = 2 * Math.PI / 365 * (SUNC.doy - 1 + (h - 12) / 24), la = SUNC.lat * Math.PI / 180;
+    const decl = 0.006918 - 0.399912 * Math.cos(g) + 0.070257 * Math.sin(g) - 0.006758 * Math.cos(2 * g) + 0.000907 * Math.sin(2 * g) - 0.002697 * Math.cos(3 * g) + 0.00148 * Math.sin(3 * g);
+    const eqt = 229.18 * (0.000075 + 0.001868 * Math.cos(g) - 0.032077 * Math.sin(g) - 0.014615 * Math.cos(2 * g) - 0.040849 * Math.sin(2 * g));
+    const ha = ((h * 60 + eqt + 4 * SUNC.lon - 60 * SUNC.tz) / 4 - 180) * Math.PI / 180;
+    const el = Math.asin(Math.sin(la) * Math.sin(decl) + Math.cos(la) * Math.cos(decl) * Math.cos(ha));
+    return { el, az: Math.atan2(Math.sin(ha), Math.cos(ha) * Math.sin(la) - Math.tan(decl) * Math.cos(la)) + Math.PI + SUNC.north * Math.PI / 180 };
+  }
   function applyTheme() {
     const t = document.documentElement.getAttribute('data-theme'), dark = t === 'dark' || (t !== 'light' && matchMedia('(prefers-color-scheme: dark)').matches);
-    SKY.set(dark ? 0x2f3e44 : 0xcfe6f2); scene.fog.color.copy(SKY);
+    const s = sunAt(hour), up = Math.max(0, Math.sin(s.el)), k = clamp(up / 0.5, 0, 1), day = clamp(up / 0.12, 0, 1);
+    sunDir.set(Math.sin(s.az) * Math.cos(s.el), Math.max(0.04, Math.sin(s.el)), -Math.cos(s.az) * Math.cos(s.el)).normalize();
+    sun.position.copy(CENTER).addScaledVector(sunDir, SPAN); sun.intensity = 2.6 * day * (1 + 2.4 * (1 - k)) * (dark ? 0.6 : 1);   // nízke slnko dopadá na zem šikmo: silnejšie svetlo, aby tiene ostali čitateľné sun.color.set(0xffa860).lerp(new THREE.Color(0xfff4e0), k);
+    const top = new THREE.Color(dark ? 0x1f2b31 : 0x7096c8).lerp(new THREE.Color(dark ? 0x1f2b31 : 0x8fc3e6), k), hor = new THREE.Color(dark ? 0x4a4038 : 0xf5c596).lerp(new THREE.Color(dark ? 0x2f3e44 : 0xcfe6f2), k);
+    const dusk = new THREE.Color(0x27303a); top.lerp(dusk, (1 - day) * 0.75); hor.lerp(dusk, (1 - day) * 0.6);
+    SKY.copy(hor); scene.fog.color.copy(SKY);
     if (scene.background) scene.background.dispose();
-    scene.background = dark ? skyTexture('#1f2b31', '#2f3e44') : skyTexture('#8fc3e6', '#cfe6f2');
-    renderer.toneMappingExposure = dark ? 0.72 : 1.18; hemi.intensity = dark ? 0.62 : 1.0;
-    if (envDark !== dark) {                  // obloha ako zdroj odrazov pre lak, sklo a chróm vozidiel
-      if (scene.environment) scene.environment.dispose();
-      scene.environment = makeEnv(renderer, dark ? { top: '#1f2b31', horizon: '#3a4b52', ground: '#1c2622', sunPower: 0.15, sun: sunDir } : { sun: sunDir });
-      scene.environmentIntensity = dark ? 0.5 : 0.6; envDark = dark;
+    scene.background = skyTexture('#' + top.getHexString(), '#' + hor.getHexString());
+    renderer.toneMappingExposure = (dark ? 0.72 : 1.18) * (0.5 + 0.5 * day); hemi.intensity = (dark ? 0.62 : 1.0) * (0.4 + 0.6 * day) * (0.6 + 0.4 * k);
+    const key = dark + ':' + Math.round(hour * 2);
+    if (envKey !== key) {                // obloha ako zdroj odrazov pre lak, sklo a chróm vozidiel (pri ťahaní posuvníka až po zastavení)
+      envKey = key; clearTimeout(envT);
+      envT = setTimeout(() => { if (scene.environment) scene.environment.dispose(); scene.environment = makeEnv(renderer, { top: '#' + top.getHexString(), horizon: '#' + hor.getHexString(), ground: dark ? '#1c2622' : '#5d6f55', sunPower: (dark ? 0.15 : 1) * day, sun: sunDir.clone() }); scene.environmentIntensity = dark ? 0.5 : 0.6; }, scene.environment ? 220 : 0);
     }
+    renderer.shadowMap.needsUpdate = true;
   }
   applyTheme();
 
@@ -350,6 +367,10 @@ function mount(host, api) {
   const zoom = (k) => { const v = camera.position.clone().sub(controls.target); v.setLength(clamp(v.length() * k, controls.minDistance, controls.maxDistance)); camera.position.copy(controls.target).add(v); };
   $('.c3-zin').addEventListener('click', () => zoom(0.7)); $('.c3-zout').addEventListener('click', () => zoom(1.4));
   $('.c3-x').addEventListener('click', () => { card.hidden = true; cardId = null; });
+  const sunUi = $('.c3-sun'), sunRange = sunUi.querySelector('input');
+  function setHour(h) { hour = clamp(+h, 5, 21); sunRange.value = hour; sunUi.querySelector('output').textContent = Math.floor(hour) + ':' + String(Math.round(hour % 1 * 60)).padStart(2, '0'); sunUi.querySelectorAll('button').forEach((b) => b.setAttribute('aria-pressed', +b.dataset.h === hour ? 'true' : 'false')); applyTheme(); }
+  sunUi.addEventListener('click', (e) => { const b = e.target.closest('[data-h]'); if (b) setHour(b.dataset.h); });
+  sunRange.addEventListener('input', () => setHour(sunRange.value));
   $('.c3-book').addEventListener('click', () => { if (cardId) api.book(cardId); });
   $('.c3-fit').addEventListener('click', () => { if (cardId) enterRoom(cardId); });
   pick.addEventListener('change', () => { if (pick.value) { choose(pick.value, true); pick.value = ''; } });
@@ -383,7 +404,7 @@ function mount(host, api) {
   function resume() { if (running) return; running = true; renderer.shadowMap.needsUpdate = true; applyTheme(); size(); update(); last = performance.now(); raf = requestAnimationFrame(frame); }
   function pause() { running = false; cancelAnimationFrame(raf); walk.keys = {}; }
   setHint();
-  return window.Camp3D.view = { ok: true, update, pause, resume, setMode, enterRoom, leaveRoom, room, focusUnit(id) { if (byId[id]) { showCard(id); flyTo(byId[id]); } },
+  return window.Camp3D.view = { ok: true, setHour, sun: () => { const q = sunAt(hour); return { hour, el: +(q.el * 180 / Math.PI).toFixed(1), az: +(q.az * 180 / Math.PI).toFixed(1) }; }, update, pause, resume, setMode, enterRoom, leaveRoom, room, focusUnit(id) { if (byId[id]) { showCard(id); flyTo(byId[id]); } },
     state: () => ({ mode, ready, room: room.state(), cam: camera.position.toArray().map((v) => Math.round(v * 10) / 10), walk: { x: Math.round(walk.x * 10) / 10, z: Math.round(walk.z * 10) / 10 }, card: cardId, calls: renderer.info.render.calls, tris: renderer.info.render.triangles }),
     destroy() { pause(); room.destroy(); ro.disconnect(); window.removeEventListener('keydown', kd); window.removeEventListener('keyup', ku); window.removeEventListener('blur', kb); renderer.dispose(); host.innerHTML = ''; } };
 }

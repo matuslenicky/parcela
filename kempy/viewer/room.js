@@ -104,7 +104,7 @@ export function createRoom(o) {
 
   const G = new THREE.Group(); G.name = 'izba'; scene.add(G);                   // sústava parcely
   const deco = new THREE.Group(); G.add(deco);                                  // mriežka, kóty
-  let P = null, items = [], sel = null, active = false, uid = 1, tab = 'auto', sub = '', drag = null, dirty = false;
+  let P = null, items = [], sel = null, active = false, uid = 1, tab = 'auto', sub = '', drag = null, dirty = false, trunks = [];
   const v3 = new THREE.Vector3(), ray = new THREE.Raycaster(), ndc = new THREE.Vector2(), ground = new THREE.Plane(new THREE.Vector3(0, 1, 0), 0);
   const C_OK = new THREE.Color(0x0a5bab), C_BAD = new THREE.Color(0xd23b25), C_IDLE = new THREE.Color(0xffffff);
 
@@ -166,12 +166,12 @@ export function createRoom(o) {
     const hw = P.w / 2 + 0.03, hh = P.h / 2 + 0.03;
     items.forEach((it) => { it.poly = poly(it); });
     items.forEach((it) => {
-      const out = it.poly.some((p) => Math.abs(p[0]) > hw || Math.abs(p[1]) > hh), hit = items.find((b) => clash(it, b));
-      it.bad = out ? 'Prečnieva cez hranicu parcely.' : hit ? 'Prekrýva sa: ' + hit.e.n + '.' : '';
+      const out = it.poly.some((p) => Math.abs(p[0]) > hw || Math.abs(p[1]) > hh), hit = items.find((b) => clash(it, b)), tree = !out && !hit && it.e.att !== 'roof' && trunks.some((t) => overlap(it.poly, t));
+      it.bad = out ? 'Prečnieva cez hranicu parcely.' : hit ? 'Prekrýva sa: ' + hit.e.n + '.' : tree ? 'Na tomto mieste stojí strom.' : '';
     });
     return items.every((it) => !it.bad);
   }
-  function tryAt(it, x, z, rot) { it.x = x; it.z = z; it.rot = rot; seat(it); it.poly = poly(it); const hw = P.w / 2 + 0.03, hh = P.h / 2 + 0.03; return !it.poly.some((p) => Math.abs(p[0]) > hw || Math.abs(p[1]) > hh) && !items.some((b) => b !== it && (b.poly = b.poly || poly(b)) && clash(it, b)); }
+  function tryAt(it, x, z, rot) { it.x = x; it.z = z; it.rot = rot; seat(it); it.poly = poly(it); const hw = P.w / 2 + 0.03, hh = P.h / 2 + 0.03; return !it.poly.some((p) => Math.abs(p[0]) > hw || Math.abs(p[1]) > hh) && !items.some((b) => b !== it && (b.poly = b.poly || poly(b)) && clash(it, b)) && !trunks.some((t) => overlap(it.poly, t)); }
   function autoPlace(it) {              // prvé voľné miesto od rohu parcely; vec leží pozdĺž dlhšej strany, pravým bokom (dvere, markíza) dovnútra
     const long = P.h > P.w ? Math.PI / 2 : 0, cx = long ? P.w / 2 : -P.w / 2, cz = -P.h / 2; let best = null;
     items.forEach((b) => { if (b !== it) b.poly = poly(b); });
@@ -356,6 +356,12 @@ export function createRoom(o) {
     const ang = (raw.ang || 0) * Math.PI / 180, fresh = !P || P.id !== u.id;
     P = { id: u.id, w: raw.w / CAMP.pxPerM, h: raw.h / CAMP.pxPerM, word: u.unit === 'zone' ? 'Plocha' : 'Parcela', r: u.r };
     G.position.set(u.c[0], u.top + 0.004, u.c[1]); G.rotation.set(0, -ang, 0); G.updateMatrixWorld(true);
+    // stromy, ktoré na parcele naozaj stoja (camp.json: trees a mladé stromčeky v shrubs): kmeň je prekážka
+    trunks = [];
+    (CAMP.trees || []).concat((CAMP.shrubs || []).filter((s) => s[2] >= 6)).forEach((t) => {
+      v3.set((t[0] - CAMP.origin[0]) / CAMP.pxPerM, 0, (t[1] - CAMP.origin[1]) / CAMP.pxPerM); G.worldToLocal(v3);
+      const k = t.length > 3 ? 0.3 : 0.2; if (Math.abs(v3.x) < P.w / 2 - 0.1 && Math.abs(v3.z) < P.h / 2 - 0.1) trunks.push([[v3.x - k, v3.z - k], [v3.x + k, v3.z - k], [v3.x + k, v3.z + k], [v3.x - k, v3.z + k]]);
+    });
     active = true; ui.hidden = false; deco.visible = true; decorate();
     if (fresh) { sel = null; load(); }
     tab = items.length ? 'kit' : 'auto'; renderTabs(); hint(); layout(); o.shadows();
@@ -366,6 +372,6 @@ export function createRoom(o) {
     summary: () => items.map((it) => it.e.n),
     screenOf(i) { const it = items[i]; if (!it) return null; it.obj.updateWorldMatrix(true, false); const b = it.e.box, r = renderer.domElement.getBoundingClientRect();   // stred veci na obrazovke (skúšky)
       v3.set((b[0] + b[2]) / 2, 0.3, (b[1] + b[3]) / 2); it.obj.localToWorld(v3); v3.project(camera); return [r.left + (v3.x + 1) / 2 * r.width, r.top + (1 - v3.y) / 2 * r.height]; },
-    state: () => ({ active, parcel: P && P.id, tab, sel: sel ? sel.e.id : null, items: items.map((it) => ({ id: it.e.id, x: it.x, z: it.z, rot: +it.rot.toFixed(3), bad: it.bad, host: it.host ? it.host.e.id : null, loaded: !!it.model })) }),
+    state: () => ({ active, parcel: P && P.id, trunks: trunks.length, tab, sel: sel ? sel.e.id : null, items: items.map((it) => ({ id: it.e.id, x: it.x, z: it.z, rot: +it.rot.toFixed(3), bad: it.bad, host: it.host ? it.host.e.id : null, loaded: !!it.model })) }),
     destroy() { window.removeEventListener('keydown', onKey, true); ui.remove(); } };
 }
