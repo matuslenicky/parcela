@@ -17,6 +17,7 @@ import { texturize, buildTrees, buildBuildings, waterize, waterTick, fadeTrees, 
 import { makeSky, makeGrass, makeGovernor } from './detail.js';
 import { buildContext } from './town.js';
 import { makeHolo } from './holo.js';
+import { makeProps } from './props.js';
 import CAMP from 'camp-json';
 import GLB from 'camp-glb';
 
@@ -103,7 +104,7 @@ function mount(host, api) {
   scene.add(sun, sun.target);
   /* slnko podľa skutočnej dráhy: zemepisná poloha kempu, deň pobytu a hodina miestneho letného času (camp.json: sun) */
   const SUNC = Object.assign({ lat: 48.7, lon: 19.5, tz: 2, doy: 194, north: 0 }, CAMP.sun || {}), sunDir = new THREE.Vector3(0.35, 0.8, 0.45);
-  let envKey = '', hour = 13, envT = 0;
+  let envKey = '', hour = 13, envT = 0, nightV = 0, gear = null;
   function sunAt(h) {                    // výška a azimut slnka (od severu v smere hodinových ručičiek), radiány
     const g = 2 * Math.PI / 365 * (SUNC.doy - 1 + (h - 12) / 24), la = SUNC.lat * Math.PI / 180;
     const decl = 0.006918 - 0.399912 * Math.cos(g) + 0.070257 * Math.sin(g) - 0.006758 * Math.cos(2 * g) + 0.000907 * Math.sin(2 * g) - 0.002697 * Math.cos(3 * g) + 0.00148 * Math.sin(3 * g);
@@ -122,6 +123,7 @@ function mount(host, api) {
     const dusk = new THREE.Color(0x27303a); top.lerp(dusk, (1 - day) * 0.75); hor.lerp(dusk, (1 - day) * 0.6);
     SKY.copy(hor); scene.fog.color.copy(SKY);
     sky.set(top, hor, sunDir, sun.color, day, dark);
+    nightV = Math.max(dark ? 0.5 : 0, clamp(1 - up / 0.16, 0, 1)); if (gear) gear.night(nightV);          // za šera sa rozsvietia lampy
     renderer.toneMappingExposure = (dark ? 0.72 : 1.18) * (0.5 + 0.5 * day); hemi.intensity = (dark ? 0.62 : 1.0) * (0.4 + 0.6 * day) * (0.6 + 0.4 * k);
     const key = dark + ':' + Math.round(hour * 2);
     if (envKey !== key) {                // obloha ako zdroj odrazov pre lak, sklo a chróm vozidiel (pri ťahaní posuvníka až po zastavení)
@@ -163,6 +165,8 @@ function mount(host, api) {
   const blocked = (x, z) => x < LIM.x0 || x > LIM.x1 || z < LIM.z0 || z > LIM.z1 || !inArea(x, z) || solids.some((s) => inPoly(x, z, s)) || TRUNKS.some((t) => (x - t[0]) * (x - t[0]) + (z - t[1]) * (z - t[1]) < t[2]);
   /* hologramy: názov a stav parcely vo výške očí, tabule miest v kempe */
   const holo = makeHolo({ CAMP, units: UNITS, api, still, font: getComputedStyle(host).fontFamily }); scene.add(holo.mesh);
+  /* drobné vybavenie: elektrické stĺpiky, lampy, lavičky, ihrisko */
+  gear = makeProps({ CAMP, units: UNITS }); scene.add(gear.group); gear.night(nightV);
   const roomy = (x, z) => { let n = 0; for (let k = 0; k < 8; k++) if (!blocked(x + Math.cos(k * 0.7854) * 1.5, z + Math.sin(k * 0.7854) * 1.5)) n++; return n >= 6; };
   const treeGap = (x, z) => TRUNKS.reduce((m, t) => Math.min(m, Math.hypot(x - t[0], z - t[1])), 99);
   function freeSpot(x, z) {              // najbližšie miesto, kde sa dá stáť
@@ -209,7 +213,7 @@ function mount(host, api) {
     const houses = buildBuildings(CAMP); if (houses) { root.traverse((o) => { if (houses.names.includes(o.name) || (o.parent && houses.names.includes(o.parent.name))) { o.visible = false; o.castShadow = false; } }); scene.add(houses.group); }
     town = buildContext(CAMP); if (town) { root.traverse((o) => { if (town.hide.test(o.name) || (o.parent && town.hide.test(o.parent.name))) { o.visible = false; o.castShadow = false; } }); scene.add(town.group); }
     scene.add(root); scene.updateMatrixWorld(true);
-    grass = makeGrass(renderer, scene, [overlays, sky.mesh, holo.mesh].concat(nice ? [nice] : []), { x0: Math.min(...bx) - 30, x1: Math.max(...bx) + 30, z0: Math.min(...bz) - 30, z1: Math.max(...bz) + 30 }); grass.quality(grassQ);
+    grass = makeGrass(renderer, scene, [overlays, sky.mesh, holo.mesh].concat(nice ? [nice] : [], gear.glow ? [gear.glow] : []), { x0: Math.min(...bx) - 30, x1: Math.max(...bx) + 30, z0: Math.min(...bz) - 30, z1: Math.max(...bz) + 30 }); grass.quality(grassQ);
     ready = true; renderer.shadowMap.needsUpdate = true; $('.c3-load').remove(); update(); startView(); gov.reset();   // prvé snímky s modelom (preklad shaderov) sa do plynulosti nepočítajú
   }, (err) => { $('.c3-load').textContent = '3D model sa nepodarilo načítať.'; console.error(err); });
 
@@ -441,11 +445,11 @@ function mount(host, api) {
   function resume() { if (running) return; running = true; gov.reset(); renderer.shadowMap.needsUpdate = true; applyTheme(); size(); update(); last = performance.now(); raf = requestAnimationFrame(frame); }
   function pause() { running = false; cancelAnimationFrame(raf); walk.keys = {}; }
   setHint();
-  const view = { ok: true, setHour, startFly, flying: () => !!fly, flyAt(t) { startFly(); if (fly) { fly.t = t; const p = fly.curve.getPointAt(t), a = fly.curve.getPointAt(Math.min(1, t + 6 / fly.len)); walk.yaw = Math.atan2(a.x - p.x, -(a.z - p.z)); } }, sun: () => { const q = sunAt(hour); return { hour, el: +(q.el * 180 / Math.PI).toFixed(1), az: +(q.az * 180 / Math.PI).toFixed(1) }; }, update, pause, resume, setMode, enterRoom, leaveRoom, room, focusUnit(id) { if (byId[id]) { showCard(id); flyTo(byId[id]); } },
-    state: () => ({ mode, ready, room: room.state(), cam: camera.position.toArray().map((v) => Math.round(v * 10) / 10), walk: { x: Math.round(walk.x * 10) / 10, z: Math.round(walk.z * 10) / 10 }, card: cardId, calls: renderer.info.render.calls, tris: renderer.info.render.triangles, holo: holo.count(), level: gov.level(), pr: +renderer.getPixelRatio().toFixed(2), grass: grass ? grass.count() : 0 }),
+  const view = { ok: true, setHour, startFly, flying: () => !!fly, flyAt(t) { startFly(); if (fly) { fly.t = t; const p = fly.curve.getPointAt(t), a = fly.curve.getPointAt(Math.min(1, t + 6 / fly.len)); walk.yaw = Math.atan2(a.x - p.x, -(a.z - p.z)); } }, sun: () => { const q = sunAt(hour); return { hour, el: +(q.el * 180 / Math.PI).toFixed(1), az: +(q.az * 180 / Math.PI).toFixed(1) }; }, update, pause, resume, setMode, look(x, z, d) { setMode('map'); anim = null; controls.target.set(x, 0, z); camera.position.set(x + d * 0.3, d * 0.5, z + d * 0.8); controls.update(); }, enterRoom, leaveRoom, room, focusUnit(id) { if (byId[id]) { showCard(id); flyTo(byId[id]); } },
+    state: () => ({ mode, ready, room: room.state(), cam: camera.position.toArray().map((v) => Math.round(v * 10) / 10), walk: { x: Math.round(walk.x * 10) / 10, z: Math.round(walk.z * 10) / 10 }, card: cardId, calls: renderer.info.render.calls, tris: renderer.info.render.triangles, holo: holo.count(), lamps: gear.lamps, level: gov.level(), pr: +renderer.getPixelRatio().toFixed(2), grass: grass ? grass.count() : 0 }),
     destroy() { pause(); clearTimeout(envT);
       scene.traverse((o) => { if (o.geometry) o.geometry.dispose(); (Array.isArray(o.material) ? o.material : o.material ? [o.material] : []).forEach((m) => { Object.keys(m).forEach((k) => { if (m[k] && m[k].isTexture) m[k].dispose(); }); m.dispose(); }); });
-      if (window.Camp3D.view === view) window.Camp3D.view = null; if (scene.environment) { scene.environment.dispose(); scene.environment = null; } room.destroy(); sky.dispose(); holo.dispose(); if (town) town.dispose(); if (grass) grass.dispose(); ro.disconnect(); window.removeEventListener('keydown', kd); window.removeEventListener('keyup', ku); window.removeEventListener('blur', kb); renderer.dispose(); host.innerHTML = ''; } };
+      if (window.Camp3D.view === view) window.Camp3D.view = null; if (scene.environment) { scene.environment.dispose(); scene.environment = null; } room.destroy(); sky.dispose(); holo.dispose(); gear.dispose(); if (town) town.dispose(); if (grass) grass.dispose(); ro.disconnect(); window.removeEventListener('keydown', kd); window.removeEventListener('keyup', ku); window.removeEventListener('blur', kb); renderer.dispose(); host.innerHTML = ''; } };
   return window.Camp3D.view = view;
 }
 window.Camp3D = { mount, model: registerModel };
