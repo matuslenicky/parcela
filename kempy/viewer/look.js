@@ -121,6 +121,24 @@ export function waterize(root) {
     mats.forEach((x) => { if (!/water/.test(x.name || '') || done.has(x)) return; done.add(x); x.normalMap = waterMap; x.normalScale = new THREE.Vector2(0.35, 0.35); x.roughness = 0.1; x.metalness = 0; x.envMapIntensity = 1.5; x.color.multiplyScalar(0.8); x.needsUpdate = true; });
   });
 }
+/* živé ploty z Blenderu sú jednofarebné kvádre: dostanú kresbu lístia (súradnice textúry z polohy vo svete) */
+let hedgeMap = null;
+export function hedgeize(root) {
+  const v = new THREE.Vector3();
+  root.traverse((m) => {
+    if (!m.isMesh) return; const mats = Array.isArray(m.material) ? m.material : [m.material]; if (!mats.some((x) => /^m_hedge/.test(x.name || ''))) return;
+    const g = m.geometry, p = g.attributes.position; if (!g.attributes.uv) { const uv = new Float32Array(p.count * 2); for (let i = 0; i < p.count; i++) { v.fromBufferAttribute(p, i).applyMatrix4(m.matrixWorld); uv[i * 2] = (v.x + v.z) / 1.7; uv[i * 2 + 1] = v.y / 1.7 + (v.x - v.z) * 0.21; } g.setAttribute('uv', new THREE.BufferAttribute(uv, 2)); }
+    mats.forEach((x) => {
+      if (!/^m_hedge/.test(x.name || '') || x.map) return;
+      if (!hedgeMap) {
+        const N = 256, c = document.createElement('canvas'); c.width = c.height = N; const k = c.getContext('2d'), r = rng(47); k.fillStyle = '#2f5f33'; k.fillRect(0, 0, N, N);
+        for (let i = 0; i < 900; i++) { const x0 = r() * N, y0 = r() * N, l = 5 + r() * 8, t = 105 + Math.floor(r() * 95), a = r() * 6.28; k.fillStyle = 'rgb(' + Math.floor(t * 0.62) + ',' + t + ',' + Math.floor(t * 0.42) + ')'; for (const dx of [-N, 0, N]) for (const dy of [-N, 0, N]) { k.save(); k.translate(x0 + dx, y0 + dy); k.rotate(a); k.beginPath(); k.ellipse(0, 0, l, l * 0.45, 0, 0, 7); k.fill(); k.restore(); } }
+        hedgeMap = new THREE.CanvasTexture(c); hedgeMap.wrapS = hedgeMap.wrapT = THREE.RepeatWrapping; hedgeMap.colorSpace = THREE.SRGBColorSpace; hedgeMap.anisotropy = 4;
+      }
+      x.map = hedgeMap; x.color.set(0xffffff); x.roughness = 0.95; x.needsUpdate = true;
+    });
+  });
+}
 /* v izbe parcely koruny spriehľadnejú, aby neprekrývali parcelu; kmene a tiene ostávajú */
 export function fadeTrees(grp, on) { if (!grp || !grp.userData.mats) return; grp.userData.mats.forEach((m, i) => { m.transparent = on; m.opacity = on ? (i ? 0.3 : 0.16) : 1; m.depthWrite = !on; m.needsUpdate = true; }); }
 export function waterTick(dt) { if (waterMap) { waterMap.offset.x += dt * 0.035; waterMap.offset.y += dt * 0.012; } }

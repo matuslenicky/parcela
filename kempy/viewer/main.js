@@ -13,7 +13,7 @@ import { MeshoptDecoder } from 'three/examples/jsm/libs/meshopt_decoder.module.j
 import { mergeGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils.js';
 import { makeEnv } from './env.js';
 import { createRoom, registerModel } from './room.js';
-import { texturize, buildTrees, buildBuildings, waterize, waterTick, fadeTrees, trunkRadius } from './look.js';
+import { texturize, buildTrees, buildBuildings, waterize, hedgeize, waterTick, fadeTrees, trunkRadius } from './look.js';
 import { makeSky, makeGrass, makeGovernor } from './detail.js';
 import { buildContext } from './town.js';
 import { makeHolo } from './holo.js';
@@ -212,6 +212,7 @@ function mount(host, api) {
     if (tracks.length) root.traverse((o) => { if (o.isMesh && (tracks.includes(o.name) || (o.parent && tracks.includes(o.parent.name)))) { o.visible = false; o.castShadow = false; } });
     texturize(ground, CAMP.parcelStyle === 'lawn');
     waterize(root);
+    hedgeize(root);
     const nice = niceTrees = buildTrees(CAMP); if (nice) { root.children.filter((c) => /^stromy/i.test(c.name) || (nice.userData.shrubs && /^kriky/i.test(c.name))).forEach((c) => { c.visible = false; c.castShadow = false; }); scene.add(nice); }
     const houses = buildBuildings(CAMP); if (houses) { root.traverse((o) => { if (houses.names.includes(o.name) || (o.parent && houses.names.includes(o.parent.name))) { o.visible = false; o.castShadow = false; } }); scene.add(houses.group); }
     town = buildContext(CAMP); if (town) { root.traverse((o) => { if (town.hide.test(o.name) || (o.parent && town.hide.test(o.parent.name))) { o.visible = false; o.castShadow = false; } }); scene.add(town.group); }
