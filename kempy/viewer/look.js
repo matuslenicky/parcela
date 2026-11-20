@@ -7,16 +7,19 @@ function rng(seed) { let s = seed * 9301 + 49297; return () => ((s = (s * 16807)
 
 /* kresba povrchu: odtiene sivej okolo bielej, násobia farbu materiálu; dlaždica sa opakuje bez švu */
 export function surfaceTexture(kind) {
-  const N = 256, c = document.createElement('canvas'); c.width = c.height = N; const g = c.getContext('2d'), r = rng(kind === 'grass' ? 3 : kind === 'gravel' ? 5 : 7);
+  const N = COARSE ? 256 : 512, Q = N / 256, c = document.createElement('canvas'); c.width = c.height = N; const g = c.getContext('2d'), r = rng(kind === 'grass' ? 3 : kind === 'gravel' ? 5 : 7);   /* na počítači dvojnásobné rozlíšenie: pri pohľade z výšky očí je kresba ostrá */
   g.fillStyle = kind === 'grass' ? '#d8d8d8' : '#dcdcdc'; g.fillRect(0, 0, N, N);
   const dot = (x, y, rad, col) => { for (const dx of [-N, 0, N]) for (const dy of [-N, 0, N]) { g.beginPath(); g.arc(x + dx, y + dy, rad, 0, 7); g.fillStyle = col; g.fill(); } };
   if (kind === 'grass') {
-    for (let i = 0; i < 70; i++) { const v = 200 + Math.floor(r() * 55); dot(r() * N, r() * N, 14 + r() * 30, 'rgba(' + v + ',' + v + ',' + v + ',0.22)'); }       // škvrny rôzne vysokej trávy
-    for (let i = 0; i < 2600; i++) { const v = 150 + Math.floor(r() * 105), x = r() * N, y = r() * N; g.strokeStyle = 'rgba(' + v + ',' + v + ',' + v + ',0.5)'; g.lineWidth = 1; g.beginPath(); g.moveTo(x, y); g.lineTo(x + (r() - 0.5) * 3, y - 2 - r() * 3); g.stroke(); }
+    for (let i = 0; i < 70; i++) { const v = 200 + Math.floor(r() * 55); dot(r() * N, r() * N, (14 + r() * 30) * Q, 'rgba(' + v + ',' + v + ',' + v + ',0.22)'); }       // škvrny rôzne vysokej trávy
+    for (let i = 0; i < 2600 * Q * Q; i++) { const v = 150 + Math.floor(r() * 105), x = r() * N, y = r() * N; g.strokeStyle = 'rgba(' + v + ',' + v + ',' + v + ',0.5)'; g.lineWidth = 1; g.beginPath(); g.moveTo(x, y); g.lineTo(x + (r() - 0.5) * 3, y - 2 - r() * 3); g.stroke(); }
   } else {
-    const n = kind === 'gravel' ? 3200 : 1800;
+    const n = (kind === 'gravel' ? 3200 : 1800) * Q * Q;
     for (let i = 0; i < n; i++) { const v = (kind === 'gravel' ? 150 : 185) + Math.floor(r() * 70); dot(r() * N, r() * N, kind === 'gravel' ? 0.8 + r() * 1.8 : 0.6 + r() * 1.1, 'rgba(' + v + ',' + v + ',' + v + ',0.7)'); }
-    for (let i = 0; i < 24; i++) { const v = 205 + Math.floor(r() * 45); dot(r() * N, r() * N, 18 + r() * 28, 'rgba(' + v + ',' + v + ',' + v + ',0.16)'); }
+    for (let i = 0; i < 24; i++) { const v = 205 + Math.floor(r() * 45); dot(r() * N, r() * N, (18 + r() * 28) * Q, 'rgba(' + v + ',' + v + ',' + v + ',0.16)'); }
+    if (kind === 'hard') {               /* praskliny starého asfaltu */
+      for (let i = 0; i < 7 * Q; i++) { let x = r() * N, y = r() * N, a = r() * 6.28; g.strokeStyle = 'rgba(70,70,70,' + (0.35 + r() * 0.3) + ')'; g.lineWidth = 0.8 + r() * 0.8; g.beginPath(); g.moveTo(x, y); for (let k = 0; k < 9; k++) { a += (r() - 0.5) * 1.3; x += Math.cos(a) * (6 + r() * 12) * Q; y += Math.sin(a) * (6 + r() * 12) * Q; g.lineTo(x, y); } g.stroke(); }
+    }
   }
   const t = new THREE.CanvasTexture(c); t.wrapS = t.wrapT = THREE.RepeatWrapping; t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = 8; return t;
 }

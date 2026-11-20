@@ -30,7 +30,7 @@ export function makeHolo(o) {
     L.push({ kind: 'unit', id: u.id, x: at2[0], z: at2[1], y: roof || (busy ? 3.5 : 1.75), w: 1.9, far: 46, grow: 0.07, top: t.label || (u.unit === 'zone' ? 'Plocha' : u.unit === 'cabin' ? 'Chatka' : 'Parcela'), title: u.id, sub: '', state: '' });
   });
   const poi = (name, x, z, y) => { if (name && !L.some((l) => l.kind === 'poi' && l.title === name)) L.push({ kind: 'poi', x, z, y, w: 2.9, far: 900, grow: 0.027, top: '', title: name, sub: '', state: 'poi' }); };
-  (CAMP.buildings || []).forEach((b) => { if (b.context || !(b.short || b.name)) return; const k = at(b); if (k) poi(b.short || b.name, k[0], k[1], (b.height || 3) + 1.5); });
+  (CAMP.buildings || []).forEach((b) => { if (b.context || !String(b.short || b.name || '').trim()) return;   /* short: ' ' = budova bez popisu */ const k = at(b); if (k) poi(b.short || b.name, k[0], k[1], (b.height || 3) + 1.5); });
   (CAMP.pools || []).forEach((p) => { const k = at(p); if (k) poi(p.name, k[0], k[1], 2.4); });
   (CAMP.areas || []).forEach((a) => { if (!a.name || a.kind === 'gravel' || ((a.kind === 'paved' || a.kind === 'asphalt') && !a.label)) return; const k = at(a); if (k) poi(a.name, k[0], k[1], 2.6); });
 

@@ -149,7 +149,7 @@ function mount(host, api) {
   });
   /* prekážky pre chôdzu: budovy a chatky */
   const PAD = 2.6 * S;   // chodec sa k stene nedostane bližšie než 1,3 m, inak by mu vyplnila celý výhľad
-  const solids = (CAMP.buildings || []).map((b) => rectPts(b.c, b.w + PAD, b.d + PAD, b.ang || 0).map(W));
+  const solids = (CAMP.buildings || []).filter((b) => !(b.style && b.style.open)).map((b) => rectPts(b.c, b.w + PAD, b.d + PAD, b.ang || 0).map(W));
   CAMP.parcels.forEach((p) => {
     const t = CAMP.types[p.t] || {}; if (t.unit !== 'cabin') return;
     const cb = t.cabin || [4.4, 3.6], a = (p.ang || 0) * Math.PI / 180;      // chatka stojí v zadnej časti pozemku (build_camp.py: off(0, h * 0.17))

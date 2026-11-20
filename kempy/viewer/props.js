@@ -149,12 +149,12 @@ export function makeProps(o) {
     const t = new THREE.CanvasTexture(c); t.wrapS = THREE.RepeatWrapping; t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = 4; return t;
   };
 
-  /* ---- tabule a múriky s nápisom: camp.json signs [{ kind: 'wall' | 'board', c, ang, w, h, y, title, sub, bg }] */
+  /* ---- tabule a múriky s nápisom: camp.json signs [{ kind: 'wall' | 'board' | 'plate' (tabuľa bez stĺpikov, napr. na fasáde), c, ang, w, h, y, title, sub, bg }] */
   const signs = [];
   (CAMP.signs || []).forEach((sg) => {
     if (!sg.c) return; const c = W(sg.c), rot = (sg.ang || 0) * Math.PI / 180, w = sg.w || 3, h = sg.h || 1.6, y0 = sg.kind === 'wall' ? 0 : (sg.y || 1.6), dep = sg.kind === 'wall' ? 0.4 : 0.06;
     if (sg.kind === 'wall') item(c[0], c[1], rot, [{ w, h, d: dep, y: h / 2, c: '#b3a693' }, { w: w + 0.1, h: 0.08, d: dep + 0.1, y: h + 0.04, c: '#8f8474' }]);
-    else item(c[0], c[1], rot, [{ w: 0.09, h: y0 + h, d: 0.09, x: -w / 2 + 0.12, y: (y0 + h) / 2, c: DARK }, { w: 0.09, h: y0 + h, d: 0.09, x: w / 2 - 0.12, y: (y0 + h) / 2, c: DARK }, { w, h, d: dep, y: y0 + h / 2, c: sg.bg || '#24402f' }]);
+    else item(c[0], c[1], rot, (sg.kind === 'plate' ? [] : [{ w: 0.09, h: y0 + h, d: 0.09, x: -w / 2 + 0.12, y: (y0 + h) / 2, c: DARK }, { w: 0.09, h: y0 + h, d: 0.09, x: w / 2 - 0.12, y: (y0 + h) / 2, c: DARK }]).concat([{ w, h, d: dep, y: y0 + h / 2, c: sg.bg || '#24402f' }]));
     const cv = document.createElement('canvas'); cv.width = 512; cv.height = Math.max(64, Math.round(512 * h / w)); const g = cv.getContext('2d'), CW = cv.width, CHh = cv.height, font = o.font || 'sans-serif';
     if (sg.kind === 'wall') {             // lámaný kameň a biely kruh s názvom
       g.fillStyle = '#b3a693'; g.fillRect(0, 0, CW, CHh); let sd = 7; const rnd = () => ((sd = (sd * 16807) % 2147483647) / 2147483647);
@@ -163,7 +163,8 @@ export function makeProps(o) {
       g.fillStyle = '#2f3d36'; g.textAlign = 'center'; g.textBaseline = 'middle'; g.font = '700 ' + Math.round(R * 0.36) + 'px ' + font; g.fillText(sg.title || '', CW / 2, CHh / 2 - R * 0.06); g.font = '600 ' + Math.round(R * 0.13) + 'px ' + font; g.fillText(sg.sub || '', CW / 2, CHh / 2 + R * 0.3);
     } else {
       g.fillStyle = sg.bg || '#24402f'; g.fillRect(0, 0, CW, CHh); g.fillStyle = '#f4f2ec'; g.textAlign = 'center'; g.textBaseline = 'middle';
-      g.font = '700 ' + Math.round(CHh * (sg.sub ? 0.34 : 0.46)) + 'px ' + font; g.fillText(sg.title || '', CW / 2, CHh * (sg.sub ? 0.36 : 0.52), CW * 0.9); if (sg.sub) { g.font = '500 ' + Math.round(CHh * 0.2) + 'px ' + font; g.fillText(sg.sub, CW / 2, CHh * 0.74, CW * 0.9); }
+      const TW = CW * (sg.kind === 'plate' ? 0.9 : Math.max(0.5, 1 - 0.46 / w));   /* text sa zmestí medzi stĺpiky tabule */
+      g.font = '700 ' + Math.round(CHh * (sg.sub ? 0.34 : 0.46)) + 'px ' + font; g.fillText(sg.title || '', CW / 2, CHh * (sg.sub ? 0.36 : 0.52), TW); if (sg.sub) { g.font = '500 ' + Math.round(CHh * 0.2) + 'px ' + font; g.fillText(sg.sub, CW / 2, CHh * 0.74, TW); }
     }
     const t = new THREE.CanvasTexture(cv); t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = 4;
     const f1 = new THREE.PlaneGeometry(w, h); f1.translate(0, y0 + h / 2, dep / 2 + 0.012); const f2 = new THREE.PlaneGeometry(w, h); f2.rotateY(Math.PI); f2.translate(0, y0 + h / 2, -dep / 2 - 0.012);
