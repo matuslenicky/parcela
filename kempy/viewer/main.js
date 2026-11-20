@@ -207,6 +207,9 @@ function mount(host, api) {
     });
     cars.forEach((v) => { v.traverse((o) => { if (o.isMesh) o.geometry.dispose(); }); root.remove(v); });
     /* vzhľad: kresba povrchov, voda s odrazom oblohy, stromy s plnými korunami (keď má kemp ich výšky) */
+    const tracks = (CAMP.roads || []).filter((r) => r.tracks).map((r) => THREE.PropertyBinding.sanitizeNodeName('cesta ' + r.name));
+    /* štrkové cesty s koľajami: plocha cesty sa nekreslí, pod ňou je trávnik terénu (rastie na ňom tráva), koľaje kreslí props.js */
+    if (tracks.length) root.traverse((o) => { if (o.isMesh && (tracks.includes(o.name) || (o.parent && tracks.includes(o.parent.name)))) { o.visible = false; o.castShadow = false; } });
     texturize(ground);
     waterize(root);
     const nice = niceTrees = buildTrees(CAMP); if (nice) { root.children.filter((c) => /^stromy/i.test(c.name) || (nice.userData.shrubs && /^kriky/i.test(c.name))).forEach((c) => { c.visible = false; c.castShadow = false; }); scene.add(nice); }

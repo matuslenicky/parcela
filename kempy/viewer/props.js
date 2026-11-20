@@ -11,7 +11,7 @@ export function makeProps(o) {
   const rect = (c, w, h, ang) => { const a = (ang || 0) * Math.PI / 180, ca = Math.cos(a), sa = Math.sin(a); return [[-w / 2, -h / 2], [w / 2, -h / 2], [w / 2, h / 2], [-w / 2, h / 2]].map((d) => W([c[0] + d[0] * ca - d[1] * sa, c[1] + d[0] * sa + d[1] * ca])); };
   const mid = (pts) => { const a = pts.reduce((s, p) => [s[0] + p[0], s[1] + p[1]], [0, 0]); return [a[0] / pts.length, a[1] / pts.length]; };
   const builds = (CAMP.buildings || []).map((b) => (b.pts && b.pts.length > 2 ? b.pts.map(W) : b.c ? rect(b.c, b.w, b.d, b.ang) : null)).filter(Boolean);
-  const roads = (CAMP.roads || []).filter((r) => !r.context && r.pts && r.pts.length > 1).map((r) => ({ pts: r.pts.concat(r.closed ? [r.pts[0]] : []).map(W), half: (r.w || 0) / S / 2, kind: r.kind }));
+  const roads = (CAMP.roads || []).filter((r) => !r.context && r.pts && r.pts.length > 1).map((r) => ({ pts: r.pts.concat(r.closed ? [r.pts[0]] : []).map(W), half: (r.w || 0) / S / 2, kind: r.kind, tracks: !!r.tracks }));
   const waters = (CAMP.water || []).filter((w) => !w.context && w.w && w.pts && w.pts.length > 1).map((w) => ({ pts: w.pts.map(W), half: w.w / S / 2 }));
   const pools = (CAMP.pools || []).map((p) => (p.pts && p.pts.length ? { c: W(mid(p.pts)), r: Math.max(...p.pts.map((q) => Math.hypot(...W(q).map((v, i) => v - W(mid(p.pts))[i])))) } : p.c ? { c: W(p.c), r: (p.r || 30) / S } : null)).filter(Boolean);
   const boundary = (CAMP.boundary || []).map(W);
@@ -25,7 +25,7 @@ export function makeProps(o) {
   /* kus = kváder alebo valec v miestnych súradniciach predmetu (x doprava, y hore, z dopredu), predmet stojí na [px, pz] otočený o rot */
   function item(px, pz, rot, list) {
     list.forEach((k) => {
-      const g = k.r ? new THREE.CylinderGeometry(k.r2 === undefined ? k.r : k.r2, k.r, k.h, k.seg || 8) : new THREE.BoxGeometry(k.w, k.h, k.d);
+      const g = k.ball ? new THREE.IcosahedronGeometry(k.ball, 1).scale(1, k.sy || 1, 1) : k.r ? new THREE.CylinderGeometry(k.r2 === undefined ? k.r : k.r2, k.r, k.h, k.seg || 8) : new THREE.BoxGeometry(k.w, k.h, k.d);
       E.set(k.rx || 0, k.ry || 0, k.rz || 0); Q.setFromEuler(E); M.compose(new THREE.Vector3(k.x || 0, k.y || 0, k.z || 0), Q, new THREE.Vector3(1, 1, 1)); g.applyMatrix4(M);
       g.rotateY(-rot); g.translate(px, 0, pz); (k.bulb ? bulbs : parts).push(paint(g, k.c));
     });
@@ -107,6 +107,17 @@ export function makeProps(o) {
       }
     }
   });
+
+  /* ---- štrkové cesty ako dve vyjazdené koľaje v tráve (camp.json: roads[].tracks); pás medzi nimi a okolo je trávnik */
+  roads.filter((r) => r.tracks).forEach((r, ri) => {
+    for (const sd of [-1, 1]) for (let i = 1; i < r.pts.length; i++) {
+      const a = r.pts[i - 1], b = r.pts[i], L = Math.hypot(b[0] - a[0], b[1] - a[1]); if (L < 0.2) continue; const dx = (b[0] - a[0]) / L, dz = (b[1] - a[1]) / L, off = sd * 0.72;
+      item((a[0] + b[0]) / 2 - dz * off, (a[1] + b[1]) / 2 + dx * off, Math.atan2(dz, dx), [{ w: L + 0.45, h: 0.02, d: 0.48 + ((i * 7 + ri * 3 + (sd > 0 ? 2 : 0)) % 5) * 0.035, y: 0.03, c: (i + ri) % 2 ? '#d8ccb2' : '#cfc3a8' }]);
+    }
+  });
+
+  /* ---- mladé stromčeky (alej pri plote, rohy parciel): camp.json saplings [[x px, y px, výška m]] */
+  (CAMP.saplings || []).forEach((t, i) => { const w = W(t), h = t[2] || 4.5, r = h * 0.2; item(w[0], w[1], i * 0.9, [{ r: 0.06, r2: 0.035, h: h * 0.5, y: h * 0.25, c: '#7a6048', seg: 6 }, { ball: r, sy: 1.5, y: h * 0.66, c: i % 3 ? '#5f9c4c' : '#6aa653' }, { ball: r * 0.7, sy: 1.3, x: r * 0.35, y: h * 0.52, z: r * 0.2, c: '#548f45' }]); });
 
   /* ---- tuje v radoch: camp.json columns [[x px, y px, výška m]] */
   (CAMP.columns || []).forEach((t, i) => { const w = W(t), h = t[2] || 3, r = Math.max(0.35, h * 0.16); item(w[0], w[1], i * 1.3, [{ r, r2: r * 0.92, h: h * 0.5, y: h * 0.27, c: i % 2 ? '#2f5d36' : '#35663b', seg: 9 }, { r: r * 0.92, r2: 0.06, h: h * 0.5, y: h * 0.75, c: i % 2 ? '#376a3e' : '#3d7244', seg: 9 }]); });
