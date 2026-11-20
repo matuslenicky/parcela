@@ -334,6 +334,7 @@ export function createRoom(o) {
 
   /* ---------------- vstup a odchod */
   function decorate() {
+    deco.children.forEach((c) => { c.geometry.dispose(); if (c.material.map) c.material.map.dispose(); c.material.dispose(); });   /* clear() mriežku a kóty predošlého vstupu len odpojí: zásobníky, textúry a materiály treba uvoľniť */
     deco.clear();
     const hw = P.w / 2, hh = P.h / 2, pos = [];
     for (let x = Math.ceil(-hw); x <= hw; x++) pos.push(x, 0, -hh, x, 0, hh);

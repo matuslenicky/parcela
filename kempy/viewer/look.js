@@ -187,6 +187,14 @@ export function buildTrees(CAMP) {
     });
     body.castShadow = body.receiveShadow = true; lv.receiveShadow = true; stem.castShadow = true; [body, lv, stem, stake].forEach((m) => { m.frustumCulled = false; m.userData.tree = true; }); grp.add(body, lv, stem, stake);   // tree: v prehľade sa parcela vyberá aj cez stromček, rovnako ako cez kmeň
   }
+  const COL = CAMP.columns || [];      // stĺpovité tuje a cyprusy [x px, y px, výška m]: úzke vretenovité telo s lístím, hore do špičky
+  if (COL.length) {
+    const ico = new THREE.IcosahedronGeometry(1, 2); ico.deleteAttribute('uv'); const g2 = mergeVertices(ico, 1e-4); ico.dispose();
+    { const p = g2.attributes.position, col = new Float32Array(p.count * 3); for (let i = 0; i < p.count; i++) { const x = p.getX(i), y = p.getY(i), z = p.getZ(i), k = (y > 0 ? 1 - 0.55 * y * y : 1 - 0.12 * y * y) * (1 + 0.1 * Math.sin(Math.atan2(z, x) * 6 + y * 9)); p.setXYZ(i, x * k, y, z * k); col[i * 3] = col[i * 3 + 1] = col[i * 3 + 2] = 0.6 + 0.4 * Math.min(1, Math.hypot(x, z)); } g2.setAttribute('color', new THREE.BufferAttribute(col, 3)); g2.computeVertexNormals(); }
+    const body = new THREE.InstancedMesh(g2, leaf, COL.length), lv = new THREE.InstancedMesh(cardGeo(37, g2, 160), cardMat, COL.length);
+    COL.forEach((t, i) => { const h = t[2] || 3, rad = Math.max(0.4, h * 0.13); q.setFromAxisAngle(up, r() * 6.28); m4.compose(new THREE.Vector3((t[0] - OX) / S, h * 0.5, (t[1] - OY) / S), q, new THREE.Vector3(rad, h * 0.5, rad)); body.setMatrixAt(i, m4); lv.setMatrixAt(i, m4); c.set(i % 2 ? 0x2f5a36 : 0x376640).multiplyScalar(0.9 + r() * 0.2); lv.setColorAt(i, c); c.multiplyScalar(0.8); body.setColorAt(i, c); });
+    body.castShadow = body.receiveShadow = true; lv.receiveShadow = true; [body, lv].forEach((m) => { m.frustumCulled = false; m.userData.tree = true; }); grp.add(body, lv);
+  }
   return grp;
 }
 

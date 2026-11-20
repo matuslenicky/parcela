@@ -12,7 +12,7 @@ if (!fs.existsSync(min) || fs.statSync(min).mtimeMs < fs.statSync(glb).mtimeMs) 
 }
 // do prehliadky ide z camp.json len to, čo potrebuje
 const camp = JSON.parse(fs.readFileSync(json, 'utf8')), slim = {};
-for (const k of ['name', 'pxPerM', 'origin', 'extent', 'boundary', 'types', 'parcels', 'buildings', 'props', 'boxes', 'trees', 'shrubs', 'areas', 'pools', 'roads', 'roundabouts', 'water', 'columns', 'strips', 'fences', 'signs', 'saplings', 'catalogBase', 'sun', 'tour', 'parcelStyle', 'things', 'hookups']) if (camp[k] !== undefined) slim[k] = camp[k];
+for (const k of ['name', 'pxPerM', 'origin', 'extent', 'boundary', 'types', 'parcels', 'buildings', 'props', 'boxes', 'trees', 'shrubs', 'areas', 'pools', 'roads', 'roundabouts', 'water', 'columns', 'strips', 'fences', 'signs', 'saplings', 'catalogBase', 'sun', 'tour', 'parcelStyle', 'things', 'hookups', 'lamps']) if (camp[k] !== undefined) slim[k] = camp[k];
 // rozmery vozidiel z katalógu modelov (prekážky pri prechádzke); ktorý model kde stojí, zapísal build_camp.py do props.models.json
 const cat = {}; for (const f of ['cars.json', 'campers.json', 'gear.json']) JSON.parse(fs.readFileSync(path.join(__dirname, 'models', f), 'utf8')).forEach((m) => { cat[m.id] = m; });
 const pm = path.join(dir, 'props.models.json'), placed = fs.existsSync(pm) ? JSON.parse(fs.readFileSync(pm, 'utf8')) : [];
