@@ -214,6 +214,20 @@ export function buildBuildings(CAMP) {
     }
     const ov = st.over === undefined ? 0.45 : st.over, rt = roofTex(st.roof), rmat = new THREE.MeshStandardMaterial({ map: rt, roughness: 0.6, metalness: 0.15, side: THREE.DoubleSide });
     const wallm = new THREE.MeshStandardMaterial({ color: st.wall, roughness: 0.9, side: THREE.DoubleSide });
+    if (st.porch) {                      // camp.json style.porch = { toward: [x px, y px], depth m, wood }: veranda pri dlhej stene najbližšie k bodu toward
+      const tw = st.porch.toward ? [(st.porch.toward[0] - OX) / S, (st.porch.toward[1] - OY) / S] : [cx, cz], dep = st.porch.depth || 2.4; let pi = -1, pd = 1e9;
+      for (let i = 0; i < 4; i++) { if (LEN[i] < longMin) continue; const a = C[i], q = C[(i + 1) % 4], dd = Math.hypot((a[0] + q[0]) / 2 - tw[0], (a[1] + q[1]) / 2 - tw[1]); if (dd < pd) { pd = dd; pi = i; } }
+      if (pi >= 0) {
+        const a = C[pi], q = C[(pi + 1) % 4], L = LEN[pi], ex = (q[0] - a[0]) / L, ez = (q[1] - a[1]) / L; let nx = -ez, nz = ex; if (((a[0] + q[0]) / 2 - cx) * nx + ((a[1] + q[1]) / 2 - cz) * nz < 0) { nx = -nx; nz = -nz; }
+        const th = Math.atan2(ez, ex), ph = e - 0.45, wood = new THREE.MeshStandardMaterial({ color: st.porch.wood || '#b5804c', roughness: 0.85 }), conc = new THREE.MeshStandardMaterial({ color: '#b9b6ad', roughness: 0.95 }), rope = new THREE.MeshStandardMaterial({ color: '#d8c9a8', roughness: 1 });
+        const box = (w2, h2, d2, along, out, y, mat) => { const m = new THREE.Mesh(new THREE.BoxGeometry(w2, h2, d2), mat); m.position.set(a[0] + ex * along + nx * out, y, a[1] + ez * along + nz * out); m.rotation.y = -th; m.castShadow = m.receiveShadow = true; grp.add(m); };
+        box(L, 0.28, dep, L / 2, dep / 2, 0.14, conc);                                              // podlaha
+        const n = Math.max(2, Math.round(L / 3)); for (let k = 0; k <= n; k++) box(0.16, ph - 0.28, 0.16, 0.1 + (L - 0.2) * k / n, dep - 0.12, 0.28 + (ph - 0.28) / 2, wood);   // stĺpy
+        box(L, 0.18, 0.14, L / 2, dep - 0.12, ph - 0.09, wood);                                     // väznica
+        box(L, 0.035, 0.035, L / 2, dep - 0.12, 1.2, rope); box(L, 0.035, 0.035, L / 2, dep - 0.12, 0.8, rope);   // laná namiesto zábradlia
+        add(quadGeo([[a[0] + nx * (dep + 0.3), ph - 0.04, a[1] + nz * (dep + 0.3)], [q[0] + nx * (dep + 0.3), ph - 0.04, q[1] + nz * (dep + 0.3)], [q[0], e + 0.03, q[1]], [a[0], e + 0.03, a[1]]], [0, 0, L / 1.2, 0, L / 1.2, 1, 0, 1]), rmat);
+      }
+    }
     const R = (dx, dz, yy) => { const q = P(dx, dz); return [q[0], yy, q[1]]; }, W2 = w / 2 + ov, D2 = d / 2 + ov;
     if (type === 'flat') { add(quadGeo([R(-W2 + 0.2, D2 - 0.2, hgt + 0.1), R(W2 - 0.2, D2 - 0.2, hgt + 0.1), R(W2 - 0.2, -D2 + 0.2, hgt + 0.1), R(-W2 + 0.2, -D2 + 0.2, hgt + 0.1)], [0, 0, w / 1.2, 0, w / 1.2, d / 1.2, 0, d / 1.2]), rmat); const f = new THREE.Mesh(new THREE.BoxGeometry(w + 2 * ov - 0.4, 0.2, d + 2 * ov - 0.4), new THREE.MeshStandardMaterial({ color: st.fascia || st.roof, roughness: 0.8 })); f.position.set(cx, hgt, cz); f.rotation.y = -a; f.castShadow = true; grp.add(f); }
     else if (type === 'mono') { const k = (hgt - e) / d, y0 = hgt + ov * k + 0.06, y1 = e - ov * k + 0.06; add(quadGeo([R(-W2, D2, y1), R(W2, D2, y1), R(W2, -D2, y0), R(-W2, -D2, y0)], [0, 0, w / 1.2, 0, w / 1.2, d / 1.2, 0, d / 1.2]), rmat); }

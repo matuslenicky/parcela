@@ -166,7 +166,7 @@ function mount(host, api) {
   /* hologramy: názov a stav parcely vo výške očí, tabule miest v kempe */
   const holo = makeHolo({ CAMP, units: UNITS, api, still, font: getComputedStyle(host).fontFamily }); scene.add(holo.mesh);
   /* drobné vybavenie: elektrické stĺpiky, lampy, lavičky, ihrisko */
-  gear = makeProps({ CAMP, units: UNITS }); scene.add(gear.group); gear.night(nightV);
+  gear = makeProps({ CAMP, units: UNITS, font: getComputedStyle(host).fontFamily }); scene.add(gear.group); gear.night(nightV);
   const roomy = (x, z) => { let n = 0; for (let k = 0; k < 8; k++) if (!blocked(x + Math.cos(k * 0.7854) * 1.5, z + Math.sin(k * 0.7854) * 1.5)) n++; return n >= 6; };
   const treeGap = (x, z) => TRUNKS.reduce((m, t) => Math.min(m, Math.hypot(x - t[0], z - t[1])), 99);
   function freeSpot(x, z) {              // najbližšie miesto, kde sa dá stáť
@@ -445,7 +445,7 @@ function mount(host, api) {
   function resume() { if (running) return; running = true; gov.reset(); renderer.shadowMap.needsUpdate = true; applyTheme(); size(); update(); last = performance.now(); raf = requestAnimationFrame(frame); }
   function pause() { running = false; cancelAnimationFrame(raf); walk.keys = {}; }
   setHint();
-  const view = { ok: true, setHour, startFly, flying: () => !!fly, flyAt(t) { startFly(); if (fly) { fly.t = t; const p = fly.curve.getPointAt(t), a = fly.curve.getPointAt(Math.min(1, t + 6 / fly.len)); walk.yaw = Math.atan2(a.x - p.x, -(a.z - p.z)); } }, sun: () => { const q = sunAt(hour); return { hour, el: +(q.el * 180 / Math.PI).toFixed(1), az: +(q.az * 180 / Math.PI).toFixed(1) }; }, update, pause, resume, setMode, look(x, z, d) { setMode('map'); anim = null; controls.target.set(x, 0, z); camera.position.set(x + d * 0.3, d * 0.5, z + d * 0.8); controls.update(); }, enterRoom, leaveRoom, room, focusUnit(id) { if (byId[id]) { showCard(id); flyTo(byId[id]); } },
+  const view = { ok: true, setHour, startFly, flying: () => !!fly, flyAt(t) { startFly(); if (fly) { fly.t = t; const p = fly.curve.getPointAt(t), a = fly.curve.getPointAt(Math.min(1, t + 6 / fly.len)); walk.yaw = Math.atan2(a.x - p.x, -(a.z - p.z)); } }, sun: () => { const q = sunAt(hour); return { hour, el: +(q.el * 180 / Math.PI).toFixed(1), az: +(q.az * 180 / Math.PI).toFixed(1) }; }, update, pause, resume, setMode, look(x, z, d, az = 0.36, up = 0.5) { setMode('map'); anim = null; controls.target.set(x, 0, z); camera.position.set(x + d * 0.85 * Math.sin(az), d * up, z + d * 0.85 * Math.cos(az)); controls.update(); }, enterRoom, leaveRoom, room, focusUnit(id) { if (byId[id]) { showCard(id); flyTo(byId[id]); } },
     state: () => ({ mode, ready, room: room.state(), cam: camera.position.toArray().map((v) => Math.round(v * 10) / 10), walk: { x: Math.round(walk.x * 10) / 10, z: Math.round(walk.z * 10) / 10 }, card: cardId, calls: renderer.info.render.calls, tris: renderer.info.render.triangles, holo: holo.count(), lamps: gear.lamps, level: gov.level(), pr: +renderer.getPixelRatio().toFixed(2), grass: grass ? grass.count() : 0 }),
     destroy() { pause(); clearTimeout(envT);
       scene.traverse((o) => { if (o.geometry) o.geometry.dispose(); (Array.isArray(o.material) ? o.material : o.material ? [o.material] : []).forEach((m) => { Object.keys(m).forEach((k) => { if (m[k] && m[k].isTexture) m[k].dispose(); }); m.dispose(); }); });

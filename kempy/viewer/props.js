@@ -11,7 +11,7 @@ export function makeProps(o) {
   const rect = (c, w, h, ang) => { const a = (ang || 0) * Math.PI / 180, ca = Math.cos(a), sa = Math.sin(a); return [[-w / 2, -h / 2], [w / 2, -h / 2], [w / 2, h / 2], [-w / 2, h / 2]].map((d) => W([c[0] + d[0] * ca - d[1] * sa, c[1] + d[0] * sa + d[1] * ca])); };
   const mid = (pts) => { const a = pts.reduce((s, p) => [s[0] + p[0], s[1] + p[1]], [0, 0]); return [a[0] / pts.length, a[1] / pts.length]; };
   const builds = (CAMP.buildings || []).map((b) => (b.pts && b.pts.length > 2 ? b.pts.map(W) : b.c ? rect(b.c, b.w, b.d, b.ang) : null)).filter(Boolean);
-  const roads = (CAMP.roads || []).filter((r) => !r.context && r.pts && r.pts.length > 1).map((r) => ({ pts: r.pts.map(W), half: (r.w || 0) / S / 2, kind: r.kind }));
+  const roads = (CAMP.roads || []).filter((r) => !r.context && r.pts && r.pts.length > 1).map((r) => ({ pts: r.pts.concat(r.closed ? [r.pts[0]] : []).map(W), half: (r.w || 0) / S / 2, kind: r.kind }));
   const waters = (CAMP.water || []).filter((w) => !w.context && w.w && w.pts && w.pts.length > 1).map((w) => ({ pts: w.pts.map(W), half: w.w / S / 2 }));
   const pools = (CAMP.pools || []).map((p) => (p.pts && p.pts.length ? { c: W(mid(p.pts)), r: Math.max(...p.pts.map((q) => Math.hypot(...W(q).map((v, i) => v - W(mid(p.pts))[i])))) } : p.c ? { c: W(p.c), r: (p.r || 30) / S } : null)).filter(Boolean);
   const boundary = (CAMP.boundary || []).map(W);
@@ -54,12 +54,10 @@ export function makeProps(o) {
       acc -= L;
     }
   });
-  lamps.forEach(([x, z, rot]) => {
-    item(x, z, rot, [{ r: 0.075, r2: 0.05, h: 4.3, y: 2.15, c: STEEL }, { r: 0.11, h: 0.5, y: 0.25, c: DARK }, { w: 0.06, h: 0.06, d: 0.9, y: 4.28, z: -0.42, c: STEEL }, { w: 0.3, h: 0.09, d: 0.55, y: 4.25, z: -0.95, c: DARK },
-      { w: 0.22, h: 0.03, d: 0.42, y: 4.19, z: -0.95, c: '#fff3d6', bulb: true }]);
-    const gx = x + Math.sin(rot) * 0.95, gz = z - Math.cos(rot) * 0.95;                 // bod pod svietidlom
-    const d = new THREE.CircleGeometry(6.5, 24); d.rotateX(-Math.PI / 2); d.translate(gx, 0.09, gz); glows.push(d);
-    const h = new THREE.CircleGeometry(0.75, 12); h.rotateX(Math.PI / 2); h.translate(gx, 4.16, gz); glows.push(h);
+  lamps.forEach(([x, z]) => {          // lampa ako v kempe: svetlý stĺp s plochým kruhovým svietidlom
+    item(x, z, 0, [{ r: 0.13, r2: 0.09, h: 0.9, y: 0.45, c: '#e4e5e1', seg: 10 }, { r: 0.07, r2: 0.055, h: 3.6, y: 2.7, c: '#cfd1cd' }, { r: 0.43, r2: 0.36, h: 0.14, y: 4.6, c: '#7b7f82', seg: 16 }, { r: 0.33, h: 0.05, y: 4.5, c: '#fff3d6', seg: 16, bulb: true }]);
+    const d = new THREE.CircleGeometry(6.5, 24); d.rotateX(-Math.PI / 2); d.translate(x, 0.09, z); glows.push(d);
+    const h = new THREE.CircleGeometry(0.8, 12); h.rotateX(Math.PI / 2); h.translate(x, 4.46, z); glows.push(h);
   });
 
   /* ---- lavičky: dve pri každom bazéne (čelom k vode), jedna pri ihrisku */
@@ -93,6 +91,70 @@ export function makeProps(o) {
     }
   });
 
+  /* ---- obrubníky pozdĺž spevnených ciest (prerušené tam, kde sa pripája iná cesta alebo spevnená plocha) */
+  const hard = (CAMP.areas || []).filter((a) => a.pts && a.pts.length > 2 && /paved|gravel|asphalt/.test(a.kind || '')).map((a) => a.pts.map(W));
+  const rounds = (CAMP.roundabouts || []).filter((q) => q.c).map((q) => ({ c: W(q.c), r: ((q.r || 0) + (q.w || 0) / 2) / S }));   /* kruhový objazd: obrubník ramena končí na jeho okraji */
+  roads.filter((r) => (r.kind === 'paved' || r.kind === 'asphalt') && r.half >= 1.4).forEach((r) => {
+    for (const sd of [-1, 1]) for (let i = 1; i < r.pts.length; i++) {
+      const a = r.pts[i - 1], b = r.pts[i], L = Math.hypot(b[0] - a[0], b[1] - a[1]); if (L < 0.3) continue; const dx = (b[0] - a[0]) / L, dz = (b[1] - a[1]) / L;
+      /* zákruta: na vnútornej strane sa obrubník skráti, na vonkajšej predĺži, aby sa susedné úseky stretli v rohu a nevbiehali do vozovky */
+      const cut = (p, q, first) => { if (!p || !q) return 0; const l = Math.hypot(q[0] - p[0], q[1] - p[1]); if (l < 0.3) return 0; const ux = (q[0] - p[0]) / l, uz = (q[1] - p[1]) / l, cr = first ? ux * dz - uz * dx : dx * uz - dz * ux, dt = ux * dx + uz * dz; return Math.max(-1.5, Math.min(L * 0.45, (r.half + 0.06) * cr * sd / Math.max(0.25, 1 + dt))); };
+      const t0 = cut(r.pts[i - 2], a, true), Lk = L - t0 - cut(b, r.pts[i + 1], false); if (Lk < 0.3) continue; const n = Math.max(1, Math.round(Lk / 1.2));
+      for (let k = 0; k < n; k++) {
+        const t = t0 + (k + 0.5) / n * Lk, x = a[0] + dx * t - dz * sd * (r.half + 0.06), z = a[1] + dz * t + dx * sd * (r.half + 0.06);
+        if (lineD(x, z, r) < 0.03 || rounds.some((q) => Math.hypot(x - q.c[0], z - q.c[1]) < q.r + 0.15) || roads.some((q) => q !== r && lineD(x, z, q) < 0.2) || hard.some((h) => inPoly(x, z, h)) || builds.some((q) => inPoly(x, z, q))) continue;
+        item(x, z, Math.atan2(dz, dx), [{ w: Lk / n + 0.03, h: 0.1, d: 0.12, y: 0.075, c: '#c9c7be' }]);
+      }
+    }
+  });
+
+  /* ---- tuje v radoch: camp.json columns [[x px, y px, výška m]] */
+  (CAMP.columns || []).forEach((t, i) => { const w = W(t), h = t[2] || 3, r = Math.max(0.35, h * 0.16); item(w[0], w[1], i * 1.3, [{ r, r2: r * 0.92, h: h * 0.5, y: h * 0.27, c: i % 2 ? '#2f5d36' : '#35663b', seg: 9 }, { r: r * 0.92, r2: 0.06, h: h * 0.5, y: h * 0.75, c: i % 2 ? '#376a3e' : '#3d7244', seg: 9 }]); });
+
+  /* ---- pásy v trávniku (betónové pásy medzi radmi státia): camp.json strips [{ w px, pts, color }] */
+  (CAMP.strips || []).forEach((st) => { const P = (st.pts || []).map(W), w = (st.w || 5) / S; for (let i = 1; i < P.length; i++) { const a = P[i - 1], b = P[i], L = Math.hypot(b[0] - a[0], b[1] - a[1]); if (L < 0.05) continue; item((a[0] + b[0]) / 2, (a[1] + b[1]) / 2, Math.atan2(b[1] - a[1], b[0] - a[0]), [{ w: L, h: 0.05, d: w, y: 0.045, c: st.color || '#cfcdc4' }]); } });
+
+  /* ---- ploty: camp.json fences [{ kind: 'metal' | 'wood', h, pts }]; výplň je textúra na jednej ploche, stĺpiky sú kvádre */
+  const fenceQ = { metal: [], wood: [], panel: [] }, TILE = { metal: 0.9, wood: 0.6, panel: 2.5 };
+  (CAMP.fences || []).forEach((f) => {
+    const P = (f.pts || []).map(W), h = f.h || 1.6, kind = fenceQ[f.kind] ? f.kind : 'metal'; let run = 0;
+    for (let i = 1; i < P.length; i++) {
+      const a = P[i - 1], b = P[i], L = Math.hypot(b[0] - a[0], b[1] - a[1]); if (L < 0.05) continue;
+      const g = new THREE.BufferGeometry(); g.setAttribute('position', new THREE.Float32BufferAttribute([a[0], 0.04, a[1], b[0], 0.04, b[1], b[0], h, b[1], a[0], h, a[1]], 3));
+      g.setAttribute('uv', new THREE.Float32BufferAttribute([run / TILE[kind], 0, (run + L) / TILE[kind], 0, (run + L) / TILE[kind], 1, run / TILE[kind], 1], 2)); g.setIndex([0, 1, 2, 0, 2, 3]); g.computeVertexNormals(); fenceQ[kind].push(g); run += L;
+      const n = Math.max(1, Math.round(L / 2.5)), rot = Math.atan2(b[1] - a[1], b[0] - a[0]);
+      for (let k = i === 1 ? 0 : 1; k <= n; k++) item(a[0] + (b[0] - a[0]) * k / n, a[1] + (b[1] - a[1]) * k / n, rot, [{ w: 0.09, h: h + 0.08, d: 0.09, y: (h + 0.08) / 2, c: kind === 'wood' ? '#8f6a45' : kind === 'panel' ? '#8d9296' : '#2b2e30' }]);
+    }
+  });
+  const fenceTex = (kind) => {
+    const c = document.createElement('canvas'); c.width = kind === 'wood' ? 96 : 64; c.height = 128; const g = c.getContext('2d');
+    if (kind === 'wood') { const cols = ['#c8a678', '#bf9c6c', '#d0b084', '#c2a172']; for (let i = 0; i < 4; i++) { g.fillStyle = cols[i]; g.fillRect(i * 24, 0, 24, 128); g.fillStyle = 'rgba(60,40,20,0.55)'; g.fillRect(i * 24, 0, 1.5, 128); g.fillStyle = 'rgba(255,255,255,0.08)'; g.fillRect(i * 24 + 8, 0, 3, 128); } }
+    else if (kind === 'panel') { g.fillStyle = '#b4b9bc'; g.fillRect(0, 0, 64, 128); for (let y = 0; y < 128; y += 16) { g.fillStyle = 'rgba(255,255,255,0.1)'; g.fillRect(0, y, 64, 2); g.fillStyle = 'rgba(0,0,0,0.12)'; g.fillRect(0, y + 14, 64, 2); } g.fillStyle = 'rgba(0,0,0,0.25)'; g.fillRect(0, 0, 1.5, 128); }
+    else { g.clearRect(0, 0, 64, 128); g.fillStyle = '#26292b'; for (let x = 3; x < 64; x += 10.67) g.fillRect(x, 4, 3.2, 120); g.fillRect(0, 8, 64, 5); g.fillRect(0, 108, 64, 5); }
+    const t = new THREE.CanvasTexture(c); t.wrapS = THREE.RepeatWrapping; t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = 4; return t;
+  };
+
+  /* ---- tabule a múriky s nápisom: camp.json signs [{ kind: 'wall' | 'board', c, ang, w, h, y, title, sub, bg }] */
+  const signs = [];
+  (CAMP.signs || []).forEach((sg) => {
+    if (!sg.c) return; const c = W(sg.c), rot = (sg.ang || 0) * Math.PI / 180, w = sg.w || 3, h = sg.h || 1.6, y0 = sg.kind === 'wall' ? 0 : (sg.y || 1.6), dep = sg.kind === 'wall' ? 0.4 : 0.06;
+    if (sg.kind === 'wall') item(c[0], c[1], rot, [{ w, h, d: dep, y: h / 2, c: '#b3a693' }, { w: w + 0.1, h: 0.08, d: dep + 0.1, y: h + 0.04, c: '#8f8474' }]);
+    else item(c[0], c[1], rot, [{ w: 0.09, h: y0 + h, d: 0.09, x: -w / 2 + 0.12, y: (y0 + h) / 2, c: DARK }, { w: 0.09, h: y0 + h, d: 0.09, x: w / 2 - 0.12, y: (y0 + h) / 2, c: DARK }, { w, h, d: dep, y: y0 + h / 2, c: sg.bg || '#24402f' }]);
+    const cv = document.createElement('canvas'); cv.width = 512; cv.height = Math.max(64, Math.round(512 * h / w)); const g = cv.getContext('2d'), CW = cv.width, CHh = cv.height, font = o.font || 'sans-serif';
+    if (sg.kind === 'wall') {             // lámaný kameň a biely kruh s názvom
+      g.fillStyle = '#b3a693'; g.fillRect(0, 0, CW, CHh); let sd = 7; const rnd = () => ((sd = (sd * 16807) % 2147483647) / 2147483647);
+      for (let y = 0; y < CHh; y += 26) for (let x = -20 + (y / 26 % 2) * 30; x < CW; ) { const ww = 40 + rnd() * 50, v = 150 + Math.floor(rnd() * 60); g.fillStyle = 'rgb(' + (v + 12) + ',' + (v + 2) + ',' + (v - 14) + ')'; g.fillRect(x + 1.5, y + 1.5, ww - 3, 23); x += ww; }
+      const R = CHh * 0.4; g.beginPath(); g.arc(CW / 2, CHh / 2, R, 0, 7); g.fillStyle = '#f4f2ec'; g.fill(); g.lineWidth = 3; g.strokeStyle = '#8f8474'; g.stroke();
+      g.fillStyle = '#2f3d36'; g.textAlign = 'center'; g.textBaseline = 'middle'; g.font = '700 ' + Math.round(R * 0.36) + 'px ' + font; g.fillText(sg.title || '', CW / 2, CHh / 2 - R * 0.06); g.font = '600 ' + Math.round(R * 0.13) + 'px ' + font; g.fillText(sg.sub || '', CW / 2, CHh / 2 + R * 0.3);
+    } else {
+      g.fillStyle = sg.bg || '#24402f'; g.fillRect(0, 0, CW, CHh); g.fillStyle = '#f4f2ec'; g.textAlign = 'center'; g.textBaseline = 'middle';
+      g.font = '700 ' + Math.round(CHh * (sg.sub ? 0.34 : 0.46)) + 'px ' + font; g.fillText(sg.title || '', CW / 2, CHh * (sg.sub ? 0.36 : 0.52), CW * 0.9); if (sg.sub) { g.font = '500 ' + Math.round(CHh * 0.2) + 'px ' + font; g.fillText(sg.sub, CW / 2, CHh * 0.74, CW * 0.9); }
+    }
+    const t = new THREE.CanvasTexture(cv); t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = 4;
+    const f1 = new THREE.PlaneGeometry(w, h); f1.translate(0, y0 + h / 2, dep / 2 + 0.012); const f2 = new THREE.PlaneGeometry(w, h); f2.rotateY(Math.PI); f2.translate(0, y0 + h / 2, -dep / 2 - 0.012);
+    const gm = mergeGeometries([f1, f2], false); gm.rotateY(-rot); gm.translate(c[0], 0, c[1]); signs.push([gm, t]);
+  });
+
   /* ---- siete */
   const grp = new THREE.Group(); grp.name = 'vybavenie kempu';
   const merge = (list) => { if (!list.length) return null; const g = mergeGeometries(list.map((x) => (x.index ? x.toNonIndexed() : x)), false); list.forEach((x) => x.dispose()); return g; };
@@ -101,6 +163,9 @@ export function makeProps(o) {
   const bulbMat = new THREE.MeshStandardMaterial({ color: 0xf2efe6, emissive: 0xffd28a, emissiveIntensity: 0, roughness: 0.4 });
   if (body) { const m = new THREE.Mesh(body, bodyMat); m.castShadow = m.receiveShadow = true; grp.add(m); }
   if (bulbGeo) grp.add(new THREE.Mesh(bulbGeo, bulbMat));
+  const extra = [];
+  for (const kind of ['metal', 'wood', 'panel']) { if (!fenceQ[kind].length) continue; const t = fenceTex(kind); extra.push(t); const m = new THREE.Mesh(mergeGeometries(fenceQ[kind], false), new THREE.MeshStandardMaterial({ map: t, alphaTest: kind === 'metal' ? 0.5 : 0, side: THREE.DoubleSide, roughness: 0.8 })); m.castShadow = kind !== 'metal'; m.receiveShadow = true; grp.add(m); }
+  signs.forEach(([g, t]) => { extra.push(t); const m = new THREE.Mesh(g, new THREE.MeshStandardMaterial({ map: t, roughness: 0.85 })); m.receiveShadow = true; grp.add(m); });
   let glow = null, glowTex = null;
   if (glowGeo) {
     const c = document.createElement('canvas'); c.width = c.height = 128; const g = c.getContext('2d'), gr = g.createRadialGradient(64, 64, 0, 64, 64, 64); gr.addColorStop(0, 'rgba(255,255,255,1)'); gr.addColorStop(0.25, 'rgba(255,255,255,0.55)'); gr.addColorStop(0.6, 'rgba(255,255,255,0.16)'); gr.addColorStop(1, 'rgba(255,255,255,0)'); g.fillStyle = gr; g.fillRect(0, 0, 128, 128);
@@ -112,6 +177,6 @@ export function makeProps(o) {
     group: grp, glow, lamps: lamps.length,
     /* night 0 – 1: za šera sa lampy rozsvietia (žiarovka žiari, na zemi svetelný kruh) */
     night(v) { bulbMat.emissiveIntensity = v * 4; if (glow) { glow.material.opacity = v * 0.55; glow.visible = v > 0.02; } },
-    dispose() { if (glowTex) glowTex.dispose(); grp.traverse((m) => { if (m.isMesh) { m.geometry.dispose(); m.material.dispose(); } }); },
+    dispose() { if (glowTex) glowTex.dispose(); extra.forEach((t) => t.dispose()); grp.traverse((m) => { if (m.isMesh) { m.geometry.dispose(); m.material.dispose(); } }); },
   };
 }
