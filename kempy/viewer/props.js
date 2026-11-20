@@ -32,9 +32,9 @@ export function makeProps(o) {
   }
   const WOOD = '#9b6f47', STEEL = '#565c60', DARK = '#3a3f42';
 
-  /* ---- elektrické stĺpiky: roh každej parcely */
+  /* ---- elektrické stĺpiky: roh každej parcely; kemp so zameranými prípojkami (camp.json hookups) má skrinky v things */
   units.forEach((u) => {
-    if (u.unit !== 'parcel') return; const p = u.pts[0], x = p[0] + (u.c[0] - p[0]) * 0.07, z = p[1] + (u.c[1] - p[1]) * 0.07;
+    if (u.unit !== 'parcel' || CAMP.hookups) return; const p = u.pts[0], x = p[0] + (u.c[0] - p[0]) * 0.07, z = p[1] + (u.c[1] - p[1]) * 0.07;
     item(x, z, 0, [{ w: 0.2, h: 0.95, d: 0.2, y: 0.475, c: '#d9dddd' }, { w: 0.24, h: 0.1, d: 0.24, y: 1.0, c: '#2f6fb5' }, { w: 0.13, h: 0.13, d: 0.02, y: 0.72, z: 0.105, c: '#2f6fb5' }, { w: 0.13, h: 0.13, d: 0.02, y: 0.72, z: -0.105, c: '#2f6fb5' }]);
   });
 
@@ -68,10 +68,11 @@ export function makeProps(o) {
   (CAMP.areas || []).forEach((a) => {
     if (!a.pts || a.pts.length < 3) return; const P = a.pts.map(W), c = mid(P), name = (a.name || '').toLowerCase();
     let li = 0, ll = 0; P.forEach((p, i) => { const q = P[(i + 1) % P.length], l = Math.hypot(q[0] - p[0], q[1] - p[1]); if (l > ll) { ll = l; li = i; } });
-    const q = P[(li + 1) % P.length], rot = Math.atan2(q[1] - P[li][1], q[0] - P[li][0]), ux = Math.cos(rot), uz = Math.sin(rot), at = (d) => [c[0] + ux * d, c[1] + uz * d];
+    const q = P[(li + 1) % P.length], rot0 = Math.atan2(q[1] - P[li][1], q[0] - P[li][0]), rd = (s) => Math.min(...roads.map((r) => lineD(c[0] - Math.sin(rot0) * s, c[1] + Math.cos(rot0) * s, r))), rot = rd(3) < rd(-3) ? rot0 + Math.PI : rot0, ux   /* šmykľavka a lavička mieria od cesty, nie do nej */
+      = Math.cos(rot), uz = Math.sin(rot), at = (d) => [c[0] + ux * d, c[1] + uz * d];
     /* športové ihrisko (futbal, kind 'pitch') ani terasa nie sú detské ihrisko, hojdačka tam nepatrí */
     if ((a.kind === 'play' || /ihrisk/.test(name)) && a.kind !== 'pitch' && !/futbal|volejbal|basket|tenis|šport|sport|golf|teras/.test(name)) {
-      const s = at(-2.4), t = at(2.4), RED = '#c9463d', YEL = '#e2b53a', BLU = '#3f7fbf';
+      const s = at(-2.4), t = at(2.4), wd = a.look === 'wood', RED = wd ? '#3f7fbf' : '#c9463d', YEL = wd ? '#c7cbcc' : '#e2b53a', BLU = wd ? '#5a3f2b' : '#3f7fbf';   // look: 'wood' = drevená veža a modrá hojdačka
       item(s[0], s[1], rot, [{ r: 0.045, h: 2.5, x: -1.4, y: 1.15, z: -0.55, rx: 0.42, c: RED }, { r: 0.045, h: 2.5, x: -1.4, y: 1.15, z: 0.55, rx: -0.42, c: RED }, { r: 0.045, h: 2.5, x: 1.4, y: 1.15, z: -0.55, rx: 0.42, c: RED }, { r: 0.045, h: 2.5, x: 1.4, y: 1.15, z: 0.55, rx: -0.42, c: RED },
         { r: 0.05, h: 3, y: 2.28, rz: Math.PI / 2, c: RED }, ...[-0.6, 0.6].flatMap((x) => [{ w: 0.45, h: 0.04, d: 0.2, x, y: 0.5, c: DARK }, { w: 0.015, h: 1.76, d: 0.015, x: x - 0.2, y: 1.4, c: STEEL }, { w: 0.015, h: 1.76, d: 0.015, x: x + 0.2, y: 1.4, c: STEEL }])]);
       item(t[0], t[1], rot, [{ w: 1.1, h: 0.08, d: 1.1, y: 1.4, c: WOOD }, ...[[-0.5, -0.5], [0.5, -0.5], [0.5, 0.5], [-0.5, 0.5]].map(([x, z]) => ({ w: 0.09, h: 2.3, d: 0.09, x, y: 1.15, z, c: BLU })),
@@ -112,12 +113,13 @@ export function makeProps(o) {
   roads.filter((r) => r.tracks).forEach((r, ri) => {
     for (const sd of [-1, 1]) for (let i = 1; i < r.pts.length; i++) {
       const a = r.pts[i - 1], b = r.pts[i], L = Math.hypot(b[0] - a[0], b[1] - a[1]); if (L < 0.2) continue; const dx = (b[0] - a[0]) / L, dz = (b[1] - a[1]) / L, off = sd * 0.72;
-      item((a[0] + b[0]) / 2 - dz * off, (a[1] + b[1]) / 2 + dx * off, Math.atan2(dz, dx), [{ w: L + 0.45, h: 0.02, d: 0.48 + ((i * 7 + ri * 3 + (sd > 0 ? 2 : 0)) % 5) * 0.035, y: 0.03, c: (i + ri) % 2 ? '#d8ccb2' : '#cfc3a8' }]);
+      item((a[0] + b[0]) / 2 - dz * off, (a[1] + b[1]) / 2 + dx * off, Math.atan2(dz, dx), [{ w: L + 0.45, h: 0.02, d: 0.48 + ((i * 7 + ri * 3 + (sd > 0 ? 2 : 0)) % 5) * 0.035, y: 0.03, c: (i + ri) % 2 ? '#b9af9a' : '#aea48f' }]);
     }
   });
 
   /* ---- mladé stromčeky (alej pri plote, rohy parciel): camp.json saplings [[x px, y px, výška m]] */
-  (CAMP.saplings || []).forEach((t, i) => { const w = W(t), h = t[2] || 4.5, r = h * 0.2; item(w[0], w[1], i * 0.9, [{ r: 0.06, r2: 0.035, h: h * 0.5, y: h * 0.25, c: '#7a6048', seg: 6 }, { ball: r, sy: 1.5, y: h * 0.66, c: i % 3 ? '#5f9c4c' : '#6aa653' }, { ball: r * 0.7, sy: 1.3, x: r * 0.35, y: h * 0.52, z: r * 0.2, c: '#548f45' }]); });
+  if (!(CAMP.trees || []).some((t) => t.length > 3 && t[3] > 0)) (CAMP.saplings || []).forEach((t, i) => { const w = W(t), h = t[2] || 4.5, r = h * 0.2; item(   // kemp s výškami stromov ich kreslí look.js s lístím
+    w[0], w[1], i * 0.9, [{ r: 0.06, r2: 0.035, h: h * 0.5, y: h * 0.25, c: '#7a6048', seg: 6 }, { ball: r, sy: 1.5, y: h * 0.66, c: i % 3 ? '#5f9c4c' : '#6aa653' }, { ball: r * 0.7, sy: 1.3, x: r * 0.35, y: h * 0.52, z: r * 0.2, c: '#548f45' }]); });
 
   /* ---- tuje v radoch: camp.json columns [[x px, y px, výška m]] */
   (CAMP.columns || []).forEach((t, i) => { const w = W(t), h = t[2] || 3, r = Math.max(0.35, h * 0.16); item(w[0], w[1], i * 1.3, [{ r, r2: r * 0.92, h: h * 0.5, y: h * 0.27, c: i % 2 ? '#2f5d36' : '#35663b', seg: 9 }, { r: r * 0.92, r2: 0.06, h: h * 0.5, y: h * 0.75, c: i % 2 ? '#376a3e' : '#3d7244', seg: 9 }]); });
@@ -164,6 +166,16 @@ export function makeProps(o) {
     const t = new THREE.CanvasTexture(cv); t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = 4;
     const f1 = new THREE.PlaneGeometry(w, h); f1.translate(0, y0 + h / 2, dep / 2 + 0.012); const f2 = new THREE.PlaneGeometry(w, h); f2.rotateY(Math.PI); f2.translate(0, y0 + h / 2, -dep / 2 - 0.012);
     const gm = mergeGeometries([f1, f2], false); gm.rotateY(-rot); gm.translate(c[0], 0, c[1]); signs.push([gm, t]);
+  });
+
+  /* ---- drobné predmety z dát kempu: camp.json things [{ at: [x px, y px], ang °, parts: [kusy ako v item()] }] */
+  (CAMP.things || []).forEach((t) => { const w = W(t.at); item(w[0], w[1], (t.ang || 0) * Math.PI / 180, t.parts || []); });
+  /* ---- káble od karavanov a obytných áut k najbližšej prípojke (camp.json hookups [[x px, y px]]) */
+  (CAMP.props || []).forEach((p, i) => {
+    if (!CAMP.hookups || !/caravan|motorhome|camper/.test(p.kind || '')) return; const a = W(p.c); let best = null, bd = 30;
+    CAMP.hookups.forEach((h) => { const q = W(h), d = Math.hypot(q[0] - a[0], q[1] - a[1]); if (d < bd) { bd = d; best = q; } }); if (!best || bd < 2) return;
+    const n = Math.max(4, Math.round(bd / 1.2)), dx = (best[0] - a[0]) / bd, dz = (best[1] - a[1]) / bd; let px = a[0] + dx * 1.2, pz = a[1] + dz * 1.2;
+    for (let k = 1; k <= n; k++) { const t = k / n, wob = Math.sin(t * Math.PI) * Math.sin(t * 9 + i) * 0.5, x = a[0] + dx * (1.2 + (bd - 1.35) * t) - dz * wob, z = a[1] + dz * (1.2 + (bd - 1.35) * t) + dx * wob, L = Math.hypot(x - px, z - pz); item((x + px) / 2, (z + pz) / 2, Math.atan2(z - pz, x - px), [{ w: L + 0.02, h: 0.03, d: 0.035, y: 0.11, c: i % 2 ? '#d9731c' : '#26282a' }]); px = x; pz = z; }
   });
 
   /* ---- siete */

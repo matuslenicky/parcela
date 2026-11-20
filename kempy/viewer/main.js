@@ -185,7 +185,7 @@ function mount(host, api) {
       const n = ((o.parent && o.parent !== root && o.parent.name) || o.name || '').toLowerCase();
       (Array.isArray(o.material) ? o.material : [o.material]).forEach((m) => { m.side = THREE.DoubleSide; });
       const flat = /^(teren|voda|jazero|plocha|cesta|kruhovy|parcela)/.test(n), label = /^stitok/.test(n);
-      o.userData.tree = /^stromy/.test(n); o.userData.noGrass = /^parcela/.test(n);
+      o.userData.tree = /^stromy/.test(n); o.userData.noGrass = /^parcela/.test(n) && CAMP.parcelStyle !== 'lawn';   // parcela na trávniku je trávnik: steblá rastú aj na nej
       o.receiveShadow = !label; o.castShadow = !flat && !label;
       if (label) { o.renderOrder = 5; (Array.isArray(o.material) ? o.material : [o.material]).forEach((m) => { m.polygonOffset = true; m.polygonOffsetFactor = -4; m.polygonOffsetUnits = -4; }); }
       if (flat) ground.push(o);
@@ -210,7 +210,7 @@ function mount(host, api) {
     const tracks = (CAMP.roads || []).filter((r) => r.tracks).map((r) => THREE.PropertyBinding.sanitizeNodeName('cesta ' + r.name));
     /* štrkové cesty s koľajami: plocha cesty sa nekreslí, pod ňou je trávnik terénu (rastie na ňom tráva), koľaje kreslí props.js */
     if (tracks.length) root.traverse((o) => { if (o.isMesh && (tracks.includes(o.name) || (o.parent && tracks.includes(o.parent.name)))) { o.visible = false; o.castShadow = false; } });
-    texturize(ground);
+    texturize(ground, CAMP.parcelStyle === 'lawn');
     waterize(root);
     const nice = niceTrees = buildTrees(CAMP); if (nice) { root.children.filter((c) => /^stromy/i.test(c.name) || (nice.userData.shrubs && /^kriky/i.test(c.name))).forEach((c) => { c.visible = false; c.castShadow = false; }); scene.add(nice); }
     const houses = buildBuildings(CAMP); if (houses) { root.traverse((o) => { if (houses.names.includes(o.name) || (o.parent && houses.names.includes(o.parent.name))) { o.visible = false; o.castShadow = false; } }); scene.add(houses.group); }
@@ -250,8 +250,8 @@ function mount(host, api) {
       const u = byId[s.id]; if (!u) return;
       const m = u.fill.material;
       if (s.sel) { m.color.set(0x0a5bab); m.opacity = mode === 'room' ? 0.14 : 0.62; }
-      else if (s.taken) { m.color.set(0x8d969b); m.opacity = 0.78; }
-      else if (!s.fit) { m.color.set(0xf2f5f3); m.opacity = 0.6; }
+      else if (s.taken) { m.color.set(0x8d969b); m.opacity = mode === 'walk' ? 0.26 : 0.78; }   // z výšky očí je stav na holograme, výplň len naznačená
+      else if (!s.fit) { m.color.set(0xf2f5f3); m.opacity = mode === 'walk' ? 0.16 : 0.6; }
       else m.opacity = 0;
       u.ring.visible = !!s.sel;
     });
@@ -301,7 +301,7 @@ function mount(host, api) {
       controls.target.set(walk.x, 0, walk.z);
       camera.position.set(walk.x + 14, 44, walk.z + 50); camera.fov = 45; controls.update();
     }
-    camera.updateProjectionMatrix(); setHint();
+    camera.updateProjectionMatrix(); setHint(); update();
   }
 
   /* ---------------- izba parcely (room.js): hosť si na parcele poskladá, s čím príde */
@@ -442,7 +442,7 @@ function mount(host, api) {
     }
     sky.tick(mdt, camera);
     holo.tick(dt, mode === 'walk' || camera.position.distanceTo(controls.target) < 75 ? 1 : 0, mode !== 'room');
-    if (grass) { const w = mode === 'walk'; if (w) grass.update(walk.x, walk.z, 0, mdt); else grass.update(controls.target.x, controls.target.z, camera.position.distanceTo(controls.target), mdt); }
+    if (grass) { const w = mode === 'walk'; if (w) grass.update(walk.x, walk.z, 0, mdt); else grass.update(controls.target.x, controls.target.z, mode === 'room' ? 999 : camera.position.distanceTo(controls.target), mdt);   /* v izbe parcely sa steblá nekreslia, aby neprerastali cez mriežku a položené veci */ }
     renderer.render(scene, camera);
   }
   function resume() { if (running) return; running = true; gov.reset(); renderer.shadowMap.needsUpdate = true; applyTheme(); size(); update(); last = performance.now(); raf = requestAnimationFrame(frame); }
@@ -451,7 +451,8 @@ function mount(host, api) {
   const view = { ok: true, setHour, startFly, flying: () => !!fly, flyAt(t) { startFly(); if (fly) { fly.t = t; const p = fly.curve.getPointAt(t), a = fly.curve.getPointAt(Math.min(1, t + 6 / fly.len)); walk.yaw = Math.atan2(a.x - p.x, -(a.z - p.z)); } }, sun: () => { const q = sunAt(hour); return { hour, el: +(q.el * 180 / Math.PI).toFixed(1), az: +(q.az * 180 / Math.PI).toFixed(1) }; }, update, pause, resume, setMode, look(x, z, d, az = 0.36, up = 0.5) { setMode('map'); anim = null; controls.target.set(x, 0, z); camera.position.set(x + d * 0.85 * Math.sin(az), d * up, z + d * 0.85 * Math.cos(az)); controls.update(); }, enterRoom, leaveRoom, room, focusUnit(id) { if (byId[id]) { showCard(id); flyTo(byId[id]); } },
     state: () => ({ mode, ready, room: room.state(), cam: camera.position.toArray().map((v) => Math.round(v * 10) / 10), walk: { x: Math.round(walk.x * 10) / 10, z: Math.round(walk.z * 10) / 10 }, card: cardId, calls: renderer.info.render.calls, tris: renderer.info.render.triangles, holo: holo.count(), lamps: gear.lamps, level: gov.level(), pr: +renderer.getPixelRatio().toFixed(2), grass: grass ? grass.count() : 0 }),
     destroy() { pause(); clearTimeout(envT);
-      scene.traverse((o) => { if (o.geometry) o.geometry.dispose(); (Array.isArray(o.material) ? o.material : o.material ? [o.material] : []).forEach((m) => { Object.keys(m).forEach((k) => { if (m[k] && m[k].isTexture) m[k].dispose(); }); m.dispose(); }); });
+      scene.traverse((o) => { if (o.isInstancedMesh) o.dispose();   // polohy a farby inštancií (stromy, stromčeky, kríky, tráva) majú vlastné zásobníky
+        if (o.geometry) o.geometry.dispose(); (Array.isArray(o.material) ? o.material : o.material ? [o.material] : []).forEach((m) => { Object.keys(m).forEach((k) => { if (m[k] && m[k].isTexture) m[k].dispose(); }); m.dispose(); }); });
       if (window.Camp3D.view === view) window.Camp3D.view = null; if (scene.environment) { scene.environment.dispose(); scene.environment = null; } room.destroy(); sky.dispose(); holo.dispose(); gear.dispose(); if (town) town.dispose(); if (grass) grass.dispose(); ro.disconnect(); window.removeEventListener('keydown', kd); window.removeEventListener('keyup', ku); window.removeEventListener('blur', kb); renderer.dispose(); host.innerHTML = ''; } };
   return window.Camp3D.view = view;
 }

@@ -243,7 +243,7 @@ if D.get('hedges'):
     mb.obj('ziva ploty kempu', C_GREEN)
 if D.get('shrubs'):
     mb = MB(); mi_s = mb.mi('shrub')
-    for sx, sy, sr in D['shrubs']:
+    for sx, sy, sr in (s_[:3] for s_ in D['shrubs']):   # štvrtý údaj (farba lístia) číta len prehliadka
         mx, my = P((sx, sy)); r_ = sr / S; before = set(mb.bm.faces)
         bmesh.ops.create_icosphere(mb.bm, subdivisions=1, radius=r_, matrix=Matrix.Translation((mx, my, r_ * 0.95)) @ Matrix.Diagonal((1, 1, 1.25, 1)))
         for f in set(mb.bm.faces) - before: f.material_index = mi_s
@@ -379,7 +379,7 @@ def put_tree(x, y, r, kind, hh=None):
 
 for tr_ in D.get('trees', []):         # [x, y, polomer koruny px, výška m (nepovinná), druh (nepovinný: pine)]
     x, y, r = tr_[:3]; mx, my = P((x, y)); hh_ = tr_[3] if len(tr_) > 3 else None; kd = tr_[4] if len(tr_) > 4 else None
-    if hh_: put_tree(mx, my, max(0.6, r / S), kd or random.choice(['leaf1', 'leaf2', 'leaf3']), hh_)
+    if hh_: put_tree(mx, my, max(0.6, r / S), (kd if kd in PAL else None) or random.choice(['leaf1', 'leaf2', 'leaf3']), hh_)
     else: put_tree(mx, my, max(1.6, r / S * 0.9), random.choice(['leaf1', 'leaf2', 'leaf3']))
 for cf in D.get('conifers', []):
     mx, my = P((cf[0], cf[1])); put_tree(mx, my, cf[2] if len(cf) > 2 else random.uniform(1.5, 2.3), 'pine')

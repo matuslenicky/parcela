@@ -22,7 +22,7 @@ export function surfaceTexture(kind) {
 }
 
 /* trávnik nie je jednofarebný: veľké svetlejšie a tmavšie škvrny podľa polohy vo svete (šum v shaderi, bez ďalšej textúry) */
-const NATURAL = new THREE.Color(0x6f9e4c);
+const NATURAL = new THREE.Color(0x7c9c42);          // tráva na záberoch z kempu je žltozelená, nie mätová
 function macro(m) {
   m.onBeforeCompile = (sh) => {
     sh.vertexShader = 'varying vec2 vGw;\n' + sh.vertexShader.replace('#include <begin_vertex>', '#include <begin_vertex>\n vGw = (modelMatrix * vec4(transformed, 1.0)).xz;');
@@ -33,7 +33,8 @@ function macro(m) {
 }
 
 /* rovným plochám z Blendera chýbajú textúrové súradnice: berú sa z polohy vo svete (1 dlaždica = size metrov) */
-export function texturize(meshes) {
+export function texturize(meshes, lawn) {
+  let turf = null; if (lawn) meshes.forEach((o) => (Array.isArray(o.material) ? o.material : [o.material]).forEach((m) => { if (/^m_inside/.test(m.name || '')) turf = m.color.clone(); }));
   const tex = { grass: surfaceTexture('grass'), gravel: surfaceTexture('gravel'), hard: surfaceTexture('hard') }, SIZE = { grass: 5, gravel: 3, hard: 4 }, done = new Set(), v = new THREE.Vector3();
   meshes.forEach((o) => {
     const g = o.geometry, p = g.attributes.position; if (!p) return;
@@ -41,7 +42,8 @@ export function texturize(meshes) {
     if (/water|label|line|pool/.test(n)) return;
     const kind = /gravel|sand|play/.test(n) ? 'gravel' : /asphalt|paved/.test(n) ? 'hard' : 'grass'; o.userData.surf = kind;
     if (!g.attributes.uv) { const uv = new Float32Array(p.count * 2); for (let i = 0; i < p.count; i++) { v.fromBufferAttribute(p, i).applyMatrix4(o.matrixWorld); uv[i * 2] = v.x / SIZE[kind]; uv[i * 2 + 1] = v.z / SIZE[kind]; } g.setAttribute('uv', new THREE.BufferAttribute(uv, 2)); }
-    mats.forEach((mm) => { if (done.has(mm)) return; done.add(mm); mm.map = tex[kind]; mm.color.multiplyScalar(1.16); if (kind === 'grass') { mm.color.lerp(NATURAL, 0.3); macro(mm); } mm.roughness = kind === 'hard' ? 0.82 : 0.95; mm.needsUpdate = true; });
+    mats.forEach((mm) => { if (done.has(mm)) return; done.add(mm); mm.map = tex[kind]; if (turf && /type_/.test(mm.name || '')) mm.color.lerp(turf, 0.72);   // parcela na trávniku: len jemný odtieň, hranicu drží obrys
+      mm.color.multiplyScalar(1.16); if (kind === 'grass') { mm.color.lerp(NATURAL, /edge_/.test(mm.name || '') ? 0.15 : /type_/.test(mm.name || '') && !turf ? 0.3 : 0.5); macro(mm); } mm.roughness = kind === 'hard' ? 0.82 : 0.95; mm.needsUpdate = true; });
   });
 }
 
@@ -126,11 +128,12 @@ export function waterTick(dt) { if (waterMap) { waterMap.offset.x += dt * 0.035;
 export function trunkRadius(t, S) { return Math.min(0.42, Math.max(0.09, Math.max(t[3] * 0.028, t[2] / S * 0.07))); }
 /* stromy z camp.json [x px, y px, polomer koruny px, výška m]: vráti skupinu, alebo null, keď kemp výšky stromov nemá */
 export function buildTrees(CAMP) {
-  const T = (CAMP.trees || []).filter((t) => t.length > 3 && t[3] > 0); if (!T.length) return null;
+  const ALL = (CAMP.trees || []).filter((t) => t.length > 3 && t[3] > 0); if (!ALL.length) return null;
+  const isCon = (t) => t[4] === 'spruce' || t[4] === 'pine', T = ALL.filter((t) => !isCon(t)), CON = ALL.filter(isCon);   // piaty údaj stromu = druh: spruce, pine, red (červenolistý)
   const S = CAMP.pxPerM, OX = CAMP.origin[0], OY = CAMP.origin[1], grp = new THREE.Group(), VAR = 3, r = rng(11);
   const leaf = new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.92 }), cardMat = new THREE.MeshStandardMaterial({ map: leafTexture(), vertexColors: true, alphaTest: 0.42, side: THREE.DoubleSide, roughness: 0.85 }), bark = new THREE.MeshStandardMaterial({ map: barkTexture(), roughness: 0.95 });
   const by = Array.from({ length: VAR }, () => []); T.forEach((t, i) => by[i % VAR].push(t));
-  const m4 = new THREE.Matrix4(), q = new THREE.Quaternion(), up = new THREE.Vector3(0, 1, 0), c = new THREE.Color(), GREENS = [0x4f9a4a, 0x3f8a45, 0x5aa24c, 0x47914f, 0x66a850];
+  const m4 = new THREE.Matrix4(), q = new THREE.Quaternion(), up = new THREE.Vector3(0, 1, 0), c = new THREE.Color(), GREENS = [0x5f9a40, 0x4f8a3c, 0x6aa446, 0x578f40, 0x78ab4c], YOUNG = [0x86b44e, 0x7aa947, 0x93bd58, 0x6f9f44];
   const trunk = new THREE.InstancedMesh(trunkGeo(), bark, T.length); let ti = 0;
   by.forEach((list, k) => {
     if (!list.length) return;
@@ -138,7 +141,7 @@ export function buildTrees(CAMP) {
     list.forEach((t, i) => {
       const rad = Math.max(0.6, t[2] / S), h = Math.max(rad * 1.6, t[3]), x = (t[0] - OX) / S, z = (t[1] - OY) / S, clear = h > 3 ? Math.min(3.2, Math.max(1.5, h * 0.32)) : h * 0.3, sy = Math.max(rad * 0.42, (h - clear) / 2), yc = clear + sy * 0.95;
       q.setFromAxisAngle(up, r() * 6.28); m4.compose(new THREE.Vector3(x, yc, z), q, new THREE.Vector3(rad * 1.12, sy, rad * 1.12)); im.setMatrixAt(i, m4); cards.setMatrixAt(i, m4); br.setMatrixAt(i, m4);
-      c.set(GREENS[Math.floor(r() * GREENS.length)]).multiplyScalar(0.9 + r() * 0.22); cards.setColorAt(i, c); c.multiplyScalar(0.84); im.setColorAt(i, c);   // vnútro koruny je tmavšie než lístie na povrchu
+      c.set(t[4] === 'red' ? 0x8e4a3a : GREENS[Math.floor(r() * GREENS.length)]).multiplyScalar(0.9 + r() * 0.22); cards.setColorAt(i, c); c.multiplyScalar(0.84); im.setColorAt(i, c);   // vnútro koruny je tmavšie než lístie na povrchu
       const tr = trunkRadius(t, S); m4.compose(new THREE.Vector3(x, 0, z), q, new THREE.Vector3(tr, yc, tr)); trunk.setMatrixAt(ti++, m4);
     });
     im.castShadow = im.receiveShadow = true; im.userData.tree = true; im.frustumCulled = false; grp.add(im);
@@ -146,17 +149,49 @@ export function buildTrees(CAMP) {
     br.receiveShadow = true; br.userData.tree = true; br.frustumCulled = false; grp.add(br);
   });
   trunk.castShadow = true; trunk.userData.tree = true; trunk.frustumCulled = false; grp.add(trunk); grp.name = 'stromy z dat'; grp.userData.mats = [leaf, cardMat];
-  const SH = CAMP.shrubs || [];        // kríky medzi parcelami: malá koruna s lístím pri zemi
+  const SH = CAMP.shrubs || [];        // kríky medzi parcelami: malá koruna s lístím pri zemi; štvrtý údaj kríka: y = žltolistý, r = červenolistý
   if (SH.length) {
     const cg = crownGeo(9, 1, 4), body = new THREE.InstancedMesh(cg, leaf, SH.length), lv = new THREE.InstancedMesh(cardGeo(9, cg, 70), cardMat, SH.length);
-    SH.forEach((t, i) => { const rad = t[2] / S * 1.15; q.setFromAxisAngle(up, r() * 6.28); m4.compose(new THREE.Vector3((t[0] - OX) / S, rad * 0.8, (t[1] - OY) / S), q, new THREE.Vector3(rad, rad * 1.05, rad)); body.setMatrixAt(i, m4); lv.setMatrixAt(i, m4); c.set(GREENS[Math.floor(r() * GREENS.length)]).multiplyScalar(0.85 + r() * 0.2); lv.setColorAt(i, c); c.multiplyScalar(0.72); body.setColorAt(i, c); });
+    SH.forEach((t, i) => { const rad = t[2] / S * 1.15; q.setFromAxisAngle(up, r() * 6.28); m4.compose(new THREE.Vector3((t[0] - OX) / S, rad * 0.8, (t[1] - OY) / S), q, new THREE.Vector3(rad, rad * 1.05, rad)); body.setMatrixAt(i, m4); lv.setMatrixAt(i, m4); c.set(t[3] === 'y' ? 0xc9c64a : t[3] === 'r' ? 0x8e4038 : GREENS[Math.floor(r() * GREENS.length)]).multiplyScalar(0.85 + r() * 0.2); lv.setColorAt(i, c); c.multiplyScalar(0.72); body.setColorAt(i, c); });
     body.castShadow = body.receiveShadow = true; lv.receiveShadow = true; body.frustumCulled = lv.frustumCulled = false; grp.add(body, lv); grp.userData.shrubs = true;
+  }
+  if (CON.length) {                    // ihličnany: 'spruce' = kužeľ z poschodí vetiev až po zem, 'pine' = vysoký holý kmeň a plochá koruna hore
+    const tiers = []; for (let i = 0; i < 7; i++) { const k = i / 7, cg = new THREE.ConeGeometry(1 - k * 0.84, 1.2, 11, 1, true); cg.translate(0, 0.4 + 3.05 * k + 0.6, 0); cg.deleteAttribute('uv'); tiers.push(cg); }
+    const sg = mergeGeometries(tiers, false); tiers.forEach((x) => x.dispose());
+    { const p = sg.attributes.position, col = new Float32Array(p.count * 3); for (let i = 0; i < p.count; i++) { const x = p.getX(i), y = p.getY(i), z = p.getZ(i), a = Math.atan2(z, x), w = 1 + 0.16 * Math.sin(a * 5 + y * 2.3), t = 0.5 + 0.5 * Math.min(1, Math.hypot(x, z) / Math.max(0.15, 1 - (y - 0.4) / 4.4)); p.setX(i, x * w); p.setZ(i, z * w); col[i * 3] = col[i * 3 + 1] = col[i * 3 + 2] = t; } sg.setAttribute('color', new THREE.BufferAttribute(col, 3)); sg.computeVertexNormals(); }
+    const pg = crownGeo(21, 1, 6); pg.scale(1.1, 0.55, 1.1);
+    const stemG = new THREE.CylinderGeometry(0.6, 1, 1, 8).translate(0, 0.5, 0), DARKS = [0x3a6a40, 0x33603b, 0x437547, 0x5a8a4a];
+    [['spruce', sg, 240], ['pine', pg, 200]].forEach(([kind, geo, n]) => {
+      const list = CON.filter((t) => t[4] === kind); if (!list.length) return;
+      const body = new THREE.InstancedMesh(geo, leaf, list.length), lv = new THREE.InstancedMesh(cardGeo(kind === 'pine' ? 31 : 33, geo, n), cardMat, list.length), st = new THREE.InstancedMesh(stemG, bark, list.length);
+      list.forEach((t, i) => {
+        const rad = Math.max(0.8, t[2] / S), h = t[3], x = (t[0] - OX) / S, z = (t[1] - OY) / S, tr = trunkRadius(t, S); q.setFromAxisAngle(up, r() * 6.28);
+        if (kind === 'pine') { const R = Math.min(h * 0.36, Math.max(2, rad)); m4.compose(new THREE.Vector3(x, h - R * 0.5, z), q, new THREE.Vector3(R, R, R)); body.setMatrixAt(i, m4); lv.setMatrixAt(i, m4); m4.compose(new THREE.Vector3(x, 0, z), q, new THREE.Vector3(tr, h - R * 0.55, tr)); st.setMatrixAt(i, m4); }
+        else { const sx = Math.min(h * 0.3, Math.max(h * 0.17, rad * 0.8)); m4.compose(new THREE.Vector3(x, 0, z), q, new THREE.Vector3(sx, h / 4.2, sx)); body.setMatrixAt(i, m4); lv.setMatrixAt(i, m4); m4.compose(new THREE.Vector3(x, 0, z), q, new THREE.Vector3(tr, h * 0.45, tr)); st.setMatrixAt(i, m4); }
+        c.set(DARKS[Math.floor(r() * DARKS.length)]).multiplyScalar(kind === 'pine' ? 1.05 : 0.95); lv.setColorAt(i, c); c.multiplyScalar(0.75); body.setColorAt(i, c);
+      });
+      body.castShadow = body.receiveShadow = true; lv.receiveShadow = true; st.castShadow = true; [body, lv, st].forEach((m) => { m.frustumCulled = false; m.userData.tree = true; }); grp.add(body, lv, st);
+    });
+  }
+  const SP = CAMP.saplings || [];      // mladé stromčeky [x px, y px, výška m]: tenký kmeň s kolíkom, úzka riedka koruna svetlejšej zelene
+  if (SP.length) {
+    const cg = crownGeo(17, 1, 5), body = new THREE.InstancedMesh(cg, leaf, SP.length), lv = new THREE.InstancedMesh(cardGeo(17, cg, 120), cardMat, SP.length);
+    const stem = new THREE.InstancedMesh(new THREE.CylinderGeometry(0.5, 1, 1, 6).translate(0, 0.5, 0), bark, SP.length), stake = new THREE.InstancedMesh(new THREE.CylinderGeometry(1, 1, 1, 5).translate(0, 0.5, 0), new THREE.MeshStandardMaterial({ color: 0xb08a5c, roughness: 0.9 }), SP.length);
+    SP.forEach((t, i) => {
+      const h = (t[2] || 4.5) * (0.86 + r() * 0.26), rad = h * (0.15 + r() * 0.06), clear = h * (0.3 + r() * 0.08), sy = (h - clear) / 2, x = (t[0] - OX) / S, z = (t[1] - OY) / S;
+      q.setFromAxisAngle(up, r() * 6.28); m4.compose(new THREE.Vector3(x, clear + sy, z), q, new THREE.Vector3(rad, sy, rad)); lv.setMatrixAt(i, m4);
+      m4.compose(new THREE.Vector3(x, clear + sy, z), q, new THREE.Vector3(rad * 0.8, sy * 0.86, rad * 0.8)); body.setMatrixAt(i, m4);
+      c.set(YOUNG[Math.floor(r() * YOUNG.length)]).multiplyScalar(0.92 + r() * 0.18); lv.setColorAt(i, c); c.multiplyScalar(0.78); body.setColorAt(i, c);
+      m4.compose(new THREE.Vector3(x, 0, z), q, new THREE.Vector3(0.05 + h * 0.006, clear + sy * 0.9, 0.05 + h * 0.006)); stem.setMatrixAt(i, m4);
+      m4.compose(new THREE.Vector3(x + 0.22 * Math.cos(i * 2.4), 0, z + 0.22 * Math.sin(i * 2.4)), q, new THREE.Vector3(0.028, 1.5, 0.028)); stake.setMatrixAt(i, m4);
+    });
+    body.castShadow = body.receiveShadow = true; lv.receiveShadow = true; stem.castShadow = true; [body, lv, stem, stake].forEach((m) => { m.frustumCulled = false; m.userData.tree = true; }); grp.add(body, lv, stem, stake);   // tree: v prehľade sa parcela vyberá aj cez stromček, rovnako ako cez kmeň
   }
   return grp;
 }
 
 /* ---------------- budovy s fasádou: steny s oknami, dverami a soklom nakreslené do textúry, strecha s presahom.
-   camp.json: buildings[].style = { wall, plinth, roof, type: gable|mono|flat, clad: 'larch', win: { every, w, h, sill, frame }, door } */
+   camp.json: buildings[].style = { wall, plinth, roof, type: gable|mono|flat, open: true (len strecha na stĺpoch), clad: 'larch', win: { every, w, h, sill, frame }, door } */
 const COARSE = typeof matchMedia === 'function' && matchMedia('(pointer: coarse)').matches;
 function facade(L, Hh, st, long, seed) {
   const PX = Math.max(COARSE ? 28 : 40, Math.min(COARSE ? 64 : 112, (COARSE ? 1024 : 1792) / Math.max(L, Hh))), c = document.createElement('canvas'); c.width = Math.max(64, Math.round(L * PX)); c.height = Math.max(64, Math.round(Hh * PX)); const g = c.getContext('2d'), r = rng(seed), W = c.width, Hc = c.height;
@@ -207,7 +242,15 @@ export function buildBuildings(CAMP) {
     const C = [P(-w / 2, -d / 2), P(w / 2, -d / 2), P(w / 2, d / 2), P(-w / 2, d / 2)], LEN = [w, d, w, d], longMin = Math.max(w, d) * 0.8;
     const add = (geo, mat) => { const m = new THREE.Mesh(geo, mat); m.castShadow = m.receiveShadow = true; grp.add(m); };
     const hi = type === 'mono' ? [hgt, hgt, e, e] : [e, e, e, e];       // pultová strecha: stena pri hrane 0 – 1 je vyššia
-    for (let i = 0; i < 4; i++) {
+    if (st.open) {                       // otvorený prístrešok (style.open): strecha na stĺpoch, bez stien
+      const pm = new THREE.MeshStandardMaterial({ color: st.post || '#8a6a4a', roughness: 0.85 }), nx = Math.max(2, Math.round(w / 3)), nz = Math.max(2, Math.round(d / 3));
+      for (let ix = 0; ix <= nx; ix++) for (let iz = 0; iz <= nz; iz++) {
+        if (ix % nx && iz % nz) continue;
+        const dz = -d / 2 + 0.1 + (d - 0.2) * iz / nz, ph = type === 'mono' ? hgt + (e - hgt) * (dz + d / 2) / d : e;   // stĺp končí pod strechou: pri sedlovej a pultovej je odkvap nižšie než hrebeň
+        const q = P(-w / 2 + 0.1 + (w - 0.2) * ix / nx, dz), m = new THREE.Mesh(new THREE.BoxGeometry(0.14, ph, 0.14), pm); m.position.set(q[0], ph / 2, q[1]); m.rotation.y = -a; m.castShadow = true; grp.add(m);
+      }
+    }
+    for (let i = 0; i < 4 && !st.open; i++) {
       const p = C[i], q = C[(i + 1) % 4], h0 = hi[i], h1 = hi[(i + 1) % 4], Hw = Math.max(h0, h1);
       const mat = new THREE.MeshStandardMaterial({ map: facade(LEN[i], Hw, st, LEN[i] >= longMin, bi * 7 + i + 1), roughness: 0.88, side: THREE.DoubleSide }); if (st.clad !== 'larch') { mat.bumpMap = plasterBump(LEN[i], Hw); mat.bumpScale = 0.7; }
       add(quadGeo([[q[0], 0, q[1]], [p[0], 0, p[1]], [p[0], h0, p[1]], [q[0], h1, q[1]]], [0, 0, 1, 0, 1, h0 / Hw, 0, h1 / Hw]), mat);
