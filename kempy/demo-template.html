@@ -511,7 +511,8 @@ var CAMP = /*CAMP_DATA*/null;
   });
   // klikacia plocha parcely aspoň ~26 css px pri najužšej mape (min-width 780 px), najviac 48 jednotiek plánu;
   // na malom pláne by väčšia plocha prekryla susednú parcelu a ťuk na jej okraj by vybral suseda
-  var HIT = Math.min(48, (ex[2] - ex[0]) / 30);
+  // camp.json hit = vlastná veľkosť klikacej plochy (kemp s úzkymi parcelami vedľa seba: prekryv plôch rieši nearestUnit nižšie)
+  var HIT = CAMP.hit || Math.min(48, (ex[2] - ex[0]) / 30);
   // zväčšené plochy dvoch blízkych chatiek sa v medzere prekrývajú: ťuk tam dostane chatka alebo plocha, ku ktorej je bližšie
   function bodyDist(q, x, y) {
     var r = q.raw, a = -(r.ang || 0) * Math.PI / 180, dx = x - r.c[0], dy = y - r.c[1];

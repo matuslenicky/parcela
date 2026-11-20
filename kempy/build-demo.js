@@ -11,7 +11,7 @@ const tpl = fs.readFileSync(path.join(__dirname, 'demo-template.html'), 'utf8');
 const SITE = 'https://matuslenicky.github.io/parcela/';
 
 // only what the page needs goes into the page
-const keep = ['name', 'place', 'pxPerM', 'extent', 'types', 'boundary', 'water', 'lakes', 'pools', 'roads', 'roundabouts', 'areas', 'buildings', 'parcels', 'trees', 'conifers', 'dates', 'taken', 'focusX', 'startV', 'person', 'elec', 'tax'];
+const keep = ['name', 'place', 'pxPerM', 'extent', 'types', 'boundary', 'water', 'lakes', 'pools', 'roads', 'roundabouts', 'areas', 'buildings', 'parcels', 'trees', 'conifers', 'dates', 'taken', 'focusX', 'startV', 'person', 'elec', 'tax', 'hit'];
 // texty stránky: kemp s chatkami alebo bez parciel si ich nastaví v camp.json, inak platia tieto
 const TEXT = {
   H1: camp.headline || 'Takto by si hosť vybral parcelu vo vašom kempe',

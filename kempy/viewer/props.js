@@ -11,7 +11,7 @@ export function makeProps(o) {
   const rect = (c, w, h, ang) => { const a = (ang || 0) * Math.PI / 180, ca = Math.cos(a), sa = Math.sin(a); return [[-w / 2, -h / 2], [w / 2, -h / 2], [w / 2, h / 2], [-w / 2, h / 2]].map((d) => W([c[0] + d[0] * ca - d[1] * sa, c[1] + d[0] * sa + d[1] * ca])); };
   const mid = (pts) => { const a = pts.reduce((s, p) => [s[0] + p[0], s[1] + p[1]], [0, 0]); return [a[0] / pts.length, a[1] / pts.length]; };
   const builds = (CAMP.buildings || []).map((b) => (b.pts && b.pts.length > 2 ? b.pts.map(W) : b.c ? rect(b.c, b.w, b.d, b.ang) : null)).filter(Boolean);
-  const roads = (CAMP.roads || []).filter((r) => !r.context && r.pts && r.pts.length > 1).map((r) => ({ pts: r.pts.concat(r.closed ? [r.pts[0]] : []).map(W), half: (r.w || 0) / S / 2, kind: r.kind, tracks: !!r.tracks }));
+  const roads = (CAMP.roads || []).filter((r) => !r.context && r.pts && r.pts.length > 1).map((r) => ({ pts: r.pts.concat(r.closed ? [r.pts[0]] : []).map(W), half: (r.w || 0) / S / 2, kind: r.kind, tracks: !!r.tracks, nolamps: r.lamps === false }));
   const waters = (CAMP.water || []).filter((w) => !w.context && w.w && w.pts && w.pts.length > 1).map((w) => ({ pts: w.pts.map(W), half: w.w / S / 2 }));
   const pools = (CAMP.pools || []).map((p) => (p.pts && p.pts.length ? { c: W(mid(p.pts)), r: Math.max(...p.pts.map((q) => Math.hypot(...W(q).map((v, i) => v - W(mid(p.pts))[i])))) } : p.c ? { c: W(p.c), r: (p.r || 30) / S } : null)).filter(Boolean);
   const boundary = (CAMP.boundary || []).map(W);
@@ -38,9 +38,9 @@ export function makeProps(o) {
     item(x, z, 0, [{ w: 0.2, h: 0.95, d: 0.2, y: 0.475, c: '#d9dddd' }, { w: 0.24, h: 0.1, d: 0.24, y: 1.0, c: '#2f6fb5' }, { w: 0.13, h: 0.13, d: 0.02, y: 0.72, z: 0.105, c: '#2f6fb5' }, { w: 0.13, h: 0.13, d: 0.02, y: 0.72, z: -0.105, c: '#2f6fb5' }]);
   });
 
-  /* ---- lampy pozdĺž spevnených ciest, striedavo po stranách, každých ~22 m */
+  /* ---- lampy pozdĺž spevnených ciest, striedavo po stranách, každých ~22 m; cesta s lamps: false má lampy len z camp.json lamps */
   const lamps = [];
-  roads.filter((r) => r.kind === 'paved' || r.kind === 'asphalt').forEach((r) => {
+  roads.filter((r) => (r.kind === 'paved' || r.kind === 'asphalt') && !r.nolamps).forEach((r) => {
     let acc = 11, side = 1;
     for (let i = 1; i < r.pts.length; i++) {
       const a = r.pts[i - 1], b = r.pts[i], L = Math.hypot(b[0] - a[0], b[1] - a[1]), dx = (b[0] - a[0]) / L, dz = (b[1] - a[1]) / L;
@@ -73,12 +73,12 @@ export function makeProps(o) {
       = Math.cos(rot), uz = Math.sin(rot), at = (d) => [c[0] + ux * d, c[1] + uz * d];
     /* športové ihrisko (futbal, kind 'pitch') ani terasa nie sú detské ihrisko, hojdačka tam nepatrí */
     if ((a.kind === 'play' || /ihrisk/.test(name)) && a.kind !== 'pitch' && !/futbal|volejbal|basket|tenis|šport|sport|golf|teras/.test(name)) {
-      const s = at(-2.4), t = at(2.4), wd = a.look === 'wood', RED = wd ? '#3f7fbf' : '#c9463d', YEL = wd ? '#c7cbcc' : '#e2b53a', BLU = wd ? '#5a3f2b' : '#3f7fbf';   // look: 'wood' = drevená veža a modrá hojdačka
+      const s = at(-2.4), t = at(2.4), wd = a.look === 'wood', RED = wd ? '#3f7fbf' : '#c9463d', YEL = wd ? '#e6d04a' : '#e2b53a', ROOF = wd ? '#6b4a33' : RED, BLU = wd ? '#5a3f2b' : '#3f7fbf';   // look: 'wood' = drevená veža a modrá hojdačka
       item(s[0], s[1], rot, [{ r: 0.045, h: 2.5, x: -1.4, y: 1.15, z: -0.55, rx: 0.42, c: RED }, { r: 0.045, h: 2.5, x: -1.4, y: 1.15, z: 0.55, rx: -0.42, c: RED }, { r: 0.045, h: 2.5, x: 1.4, y: 1.15, z: -0.55, rx: 0.42, c: RED }, { r: 0.045, h: 2.5, x: 1.4, y: 1.15, z: 0.55, rx: -0.42, c: RED },
         { r: 0.05, h: 3, y: 2.28, rz: Math.PI / 2, c: RED }, ...[-0.6, 0.6].flatMap((x) => [{ w: 0.45, h: 0.04, d: 0.2, x, y: 0.5, c: DARK }, { w: 0.015, h: 1.76, d: 0.015, x: x - 0.2, y: 1.4, c: STEEL }, { w: 0.015, h: 1.76, d: 0.015, x: x + 0.2, y: 1.4, c: STEEL }])]);
       item(t[0], t[1], rot, [{ w: 1.1, h: 0.08, d: 1.1, y: 1.4, c: WOOD }, ...[[-0.5, -0.5], [0.5, -0.5], [0.5, 0.5], [-0.5, 0.5]].map(([x, z]) => ({ w: 0.09, h: 2.3, d: 0.09, x, y: 1.15, z, c: BLU })),
         { w: 0.55, h: 0.05, d: 2.7, y: 0.72, z: 1.72, rx: 0.56, c: YEL }, { w: 0.04, h: 0.16, d: 2.7, x: -0.29, y: 0.8, z: 1.72, rx: 0.56, c: RED }, { w: 0.04, h: 0.16, d: 2.7, x: 0.29, y: 0.8, z: 1.72, rx: 0.56, c: RED },
-        ...[0.3, 0.6, 0.9, 1.2].map((y) => ({ w: 0.5, h: 0.04, d: 0.05, y, z: -0.58 - (1.4 - y) * 0.25, c: STEEL })), { w: 1.2, h: 0.05, d: 1.2, y: 2.32, c: RED }]);
+        ...[0.3, 0.6, 0.9, 1.2].map((y) => ({ w: 0.5, h: 0.04, d: 0.05, y, z: -0.58 - (1.4 - y) * 0.25, c: STEEL })), { w: 1.2, h: 0.05, d: 1.2, y: 2.32, c: ROOF }]);
       const b = at(0); if (free(b[0] - uz * 4.2, b[1] + ux * 4.2)) bench(b[0] - uz * 4.2, b[1] + ux * 4.2, rot + Math.PI);
     } else if (/stoln\S* tenis|ping/.test(name)) {
       item(c[0], c[1], rot, [{ w: 2.74, h: 0.04, d: 1.525, y: 0.76, c: '#1f5fae' }, { w: 2.74, h: 0.045, d: 0.03, y: 0.76, c: '#f2f2f2' }, { w: 0.03, h: 0.045, d: 1.525, x: -1.355, y: 0.76, c: '#f2f2f2' }, { w: 0.03, h: 0.045, d: 1.525, x: 1.355, y: 0.76, c: '#f2f2f2' },
