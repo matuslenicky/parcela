@@ -22,6 +22,8 @@ import CAMP from 'camp-json';
 import GLB from 'camp-glb';
 
 const EYE = 1.7, WALK = 5.5, S = CAMP.pxPerM, OX = CAMP.origin[0], OY = CAMP.origin[1];
+/* camp.json view: 'top' = len pohľad zhora: bez prechádzky a preletu, kamera sa nedostane k horizontu, výber miesta naň priblíži */
+const TOP = CAMP.view === 'top', POLAR = TOP ? 1.0 : 1.36;
 const W = (p) => [(p[0] - OX) / S, (p[1] - OY) / S];                    // px plánu -> metre (x, z)
 const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
 const ease = (t) => (t < .5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2);
@@ -63,7 +65,7 @@ function mount(host, api) {
     '<div class="c3-stage"></div>'
     + '<div class="c3-top"><div class="c3-go"><select aria-label="Prejsť na miesto"><option value="">Prejsť na miesto…</option></select></div></div>'
     + '<div class="c3-ctl">'
-    + '<div class="c3-seg" role="group" aria-label="Režim pohľadu"><button type="button" data-mode="map" aria-pressed="true">' + ico('map') + '<span>Prehľad</span></button><button type="button" data-mode="walk" aria-pressed="false">' + ico('walk') + '<span>Prechádzka</span></button>' + (CAMP.tour ? '<button type="button" data-mode="fly" aria-pressed="false">' + ico('play') + '<span>Prelet</span></button>' : '') + '</div>'
+    + (TOP ? '<div class="c3-seg"><button type="button" data-home>' + ico('map') + '<span>Celý kemp</span></button></div>' : '<div class="c3-seg" role="group" aria-label="Režim pohľadu"><button type="button" data-mode="map" aria-pressed="true">' + ico('map') + '<span>Prehľad</span></button><button type="button" data-mode="walk" aria-pressed="false">' + ico('walk') + '<span>Prechádzka</span></button>' + (CAMP.tour ? '<button type="button" data-mode="fly" aria-pressed="false">' + ico('play') + '<span>Prelet</span></button>' : '') + '</div>')
     + '<div class="c3-stack c3-zoom"><button type="button" class="c3-zin" aria-label="Priblížiť">' + ico('plus') + '</button><button type="button" class="c3-zout" aria-label="Oddialiť">' + ico('minus') + '</button></div>'
     + '<button type="button" class="c3-fwd" aria-label="Ísť dopredu" hidden>' + ico('up') + '</button>'
     + '</div>'
@@ -217,14 +219,14 @@ function mount(host, api) {
     const houses = buildBuildings(CAMP); if (houses) { root.traverse((o) => { if (houses.names.includes(o.name) || (o.parent && houses.names.includes(o.parent.name))) { o.visible = false; o.castShadow = false; } }); scene.add(houses.group); }
     town = buildContext(CAMP); if (town) { root.traverse((o) => { if (town.hide.test(o.name) || (o.parent && town.hide.test(o.parent.name))) { o.visible = false; o.castShadow = false; } }); scene.add(town.group); }
     scene.add(root); scene.updateMatrixWorld(true);
-    grass = makeGrass(renderer, scene, [overlays, sky.mesh, holo.mesh].concat(nice ? [nice] : [], gear.glow ? [gear.glow] : []), { x0: Math.min(...bx) - 30, x1: Math.max(...bx) + 30, z0: Math.min(...bz) - 30, z1: Math.max(...bz) + 30 }); grass.quality(grassQ);
+    if (!TOP) grass = makeGrass(renderer, scene, [overlays, sky.mesh, holo.mesh].concat(nice ? [nice] : [], gear.glow ? [gear.glow] : []), { x0: Math.min(...bx) - 30, x1: Math.max(...bx) + 30, z0: Math.min(...bz) - 30, z1: Math.max(...bz) + 30 }); if (grass) grass.quality(grassQ);   /* zhora sa steblá nekreslia, trávnik je len kresba povrchu */
     ready = true; renderer.shadowMap.needsUpdate = true; $('.c3-load').remove(); update(); startView(); gov.reset();   // prvé snímky s modelom (preklad shaderov) sa do plynulosti nepočítajú
   }, (err) => { $('.c3-load').textContent = '3D model sa nepodarilo načítať.'; console.error(err); });
 
   /* ---------------- ovládanie: prehľad */
   const controls = new MapControls(camera, renderer.domElement);
   controls.enableDamping = true; controls.dampingFactor = 0.12; controls.screenSpacePanning = false; controls.zoomToCursor = true;
-  controls.minDistance = 8; controls.maxDistance = SPAN * 1.7; controls.maxPolarAngle = 1.36; controls.rotateSpeed = 0.6;
+  controls.minDistance = 8; controls.maxDistance = SPAN * 1.7; controls.maxPolarAngle = POLAR; controls.rotateSpeed = 0.6;
   controls.touches.ONE = THREE.TOUCH.PAN; controls.touches.TWO = THREE.TOUCH.DOLLY_ROTATE;
   controls.addEventListener('change', () => {
     const t = controls.target; t.y = 0;
@@ -234,7 +236,13 @@ function mount(host, api) {
   });
   function startView() {
     controls.target.copy(CENTER);
-    camera.position.set(CENTER.x + SPAN * .22, SPAN * .62, CENTER.z + SPAN * .78); camera.lookAt(CENTER); controls.update();
+    camera.position.copy(homePos()); camera.lookAt(CENTER); controls.update();
+  }
+  function homePos() { return TOP ? new THREE.Vector3(CENTER.x + SPAN * .1, SPAN * .9, CENTER.z + SPAN * .5) : new THREE.Vector3(CENTER.x + SPAN * .22, SPAN * .62, CENTER.z + SPAN * .78); }
+  function goHome() {                      /* späť na celý kemp */
+    const from = { t: controls.target.clone(), p: camera.position.clone() }, p = homePos(); card.hidden = true; cardId = null;
+    if (still) { controls.target.copy(CENTER); camera.position.copy(p); return; }
+    anim = { t0: performance.now(), dur: 900, step(k) { controls.target.lerpVectors(from.t, CENTER, k); camera.position.lerpVectors(from.p, p, k); } };
   }
 
   /* ---------------- stav */
@@ -280,8 +288,8 @@ function mount(host, api) {
       if (best) { walk.x = best.x; walk.z = best.z; walk.yaw = Math.atan2(u.c[0] - best.x, -(u.c[1] - best.z)); walk.pitch = -0.12; walk.go = null; }
       return;
     }
-    const from = { t: controls.target.clone(), p: camera.position.clone() }, t = new THREE.Vector3(u.c[0], 0, u.c[1]), d = clamp(u.r * 5 + 22, 30, 90);
-    const p = new THREE.Vector3(t.x + d * .25, d * .62, t.z + d * .78);
+    const from = { t: controls.target.clone(), p: camera.position.clone() }, t = new THREE.Vector3(u.c[0], 0, u.c[1]), d = TOP ? clamp(u.r * 3.4 + 8, 18, 80) * (camera.aspect < 1 ? Math.min(1.8, 0.75 / camera.aspect) : 1) : clamp(u.r * 5 + 22, 30, 90);   /* zhora: miesto vyplní obraz, na výšku z väčšej diaľky */
+    const p = TOP ? new THREE.Vector3(t.x + d * .1, d * .86, t.z + d * .5) : new THREE.Vector3(t.x + d * .25, d * .62, t.z + d * .78);
     if (still) { controls.target.copy(t); camera.position.copy(p); return; }
     anim = { t0: performance.now(), dur: 900, step(k) { controls.target.lerpVectors(from.t, t, k); camera.position.lerpVectors(from.p, p, k); } };
   }
@@ -289,7 +297,7 @@ function mount(host, api) {
     stopFly();
     if (m === mode) return;
     mode = m; anim = null; walk.go = null;
-    host.querySelectorAll('.c3-seg button').forEach((b) => b.setAttribute('aria-pressed', b.dataset.mode === m ? 'true' : 'false'));
+    host.querySelectorAll('.c3-seg button[data-mode]').forEach((b) => b.setAttribute('aria-pressed', b.dataset.mode === m ? 'true' : 'false'));
     host.classList.toggle('walking', m === 'walk');
     controls.enabled = m === 'map'; fwd.hidden = !(m === 'walk' && touch); $('.c3-zoom').hidden = m === 'walk';
     if (m === 'walk') {
@@ -312,7 +320,7 @@ function mount(host, api) {
     if (mode === 'walk') setMode('map');
     api.select(id); mode = 'room'; roomId = id; anim = null; card.hidden = true; cardId = null; host.classList.add('rooming');
     controls.enabled = true; controls.mouseButtons.LEFT = THREE.MOUSE.ROTATE; controls.mouseButtons.RIGHT = THREE.MOUSE.PAN; controls.touches.ONE = THREE.TOUCH.ROTATE; controls.touches.TWO = THREE.TOUCH.DOLLY_PAN;
-    controls.zoomToCursor = false; controls.minDistance = 4; controls.maxPolarAngle = 1.45;
+    controls.zoomToCursor = false; controls.minDistance = 4; controls.maxPolarAngle = TOP ? 1.2 : 1.45;
     const P = room.enter(u, raw), f = room.free();        // vzdialenosť, z ktorej sa celá parcela zmestí do voľnej časti obrazu
     const d = clamp(Math.hypot(P.w, P.h) / 2 * 1.2 * f.full / (Math.tan(camera.fov * Math.PI / 360) * Math.max(120, Math.min(f.w, f.h))), 10, 140); controls.maxDistance = d * 2.2;
     const from = { t: controls.target.clone(), p: camera.position.clone() }, t = new THREE.Vector3(u.c[0], 0, u.c[1]), p = new THREE.Vector3(t.x + d * 0.3, d * 0.74, t.z + d * 0.6);
@@ -324,7 +332,7 @@ function mount(host, api) {
     if (api.kit) api.kit(room.summary());
     room.exit(); fadeTrees(niceTrees, false); mode = 'map'; anim = null; host.classList.remove('rooming');
     controls.mouseButtons.LEFT = THREE.MOUSE.PAN; controls.mouseButtons.RIGHT = THREE.MOUSE.ROTATE; controls.touches.ONE = THREE.TOUCH.PAN; controls.touches.TWO = THREE.TOUCH.DOLLY_ROTATE;
-    controls.zoomToCursor = true; controls.minDistance = 8; controls.maxDistance = SPAN * 1.7; controls.maxPolarAngle = 1.36;
+    controls.zoomToCursor = true; controls.minDistance = 8; controls.maxDistance = SPAN * 1.7; controls.maxPolarAngle = POLAR;
     size(); update();
     if (done) api.book(id); else { showCard(id); flyTo(byId[id]); }
   }
@@ -387,7 +395,8 @@ function mount(host, api) {
   fwd.addEventListener('pointerdown', () => { walk.keys.f = true; walk.go = null; });
   ['pointerup', 'pointerleave', 'pointercancel'].forEach((n) => fwd.addEventListener(n, () => { walk.keys.f = false; }));
 
-  host.querySelectorAll('.c3-seg button').forEach((b) => b.addEventListener('click', () => (b.dataset.mode === 'fly' ? startFly() : setMode(b.dataset.mode))));
+  { const hb = $('[data-home]'); if (hb) hb.addEventListener('click', goHome); }
+  host.querySelectorAll('.c3-seg button[data-mode]').forEach((b) => b.addEventListener('click', () => (b.dataset.mode === 'fly' ? startFly() : setMode(b.dataset.mode))));
   /* prelet: plynulý pohyb po trase kempu vo výške očí (camp.json: tour); zastaví ho dotyk, kláves alebo koniec trasy, hosť potom pokračuje pešo */
   let fly = null;
   function startFly() {

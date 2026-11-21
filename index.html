@@ -70,16 +70,33 @@
 
 *, *::before, *::after { box-sizing: border-box; }
 html { scroll-behavior: smooth; scroll-padding-top: 84px; -webkit-text-size-adjust: 100%; }
-@media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } *, *::before, *::after { transition: none !important; animation: none !important; } }
 body {
   margin: 0; background: var(--paper); color: var(--ink);
   font-family: "Overpass", system-ui, sans-serif; font-size: 1.0625rem; line-height: 1.6;
-  font-variant-numeric: tabular-nums; -webkit-font-smoothing: antialiased;
+  font-variant-numeric: tabular-nums; -webkit-font-smoothing: antialiased; font-optical-sizing: auto;
 }
 img, svg { display: block; max-width: 100%; }
 a { color: var(--link); text-underline-offset: .18em; }
 :focus-visible { outline: 3px solid var(--sign); outline-offset: 3px; border-radius: 4px; }
-h1, h2, h3 { margin: 0; line-height: 1.12; letter-spacing: -.015em; font-weight: 800; }
+/* typografia: tracking a riadkovanie podľa veľkosti (veľké nadpisy tesnejšie, telo 0, drobný text mierne rozpustený) */
+h1, h2, h3 { margin: 0; font-weight: 800; }
+h1, h2 { line-height: 1.1; letter-spacing: -.02em; }
+h3 { line-height: 1.22; letter-spacing: -.01em; }
+.chip, .legend, .map-hint, .demo-title span, .plan .tag, .res-note, .form-note, .demo-note, .render figcaption, .facts, .foot p { letter-spacing: .01em; line-height: 1.5; }
+
+/* odozva na stlačenie (apple-design): zmenšenie hneď pri stlačení, 100 ms; pustenie dobehne mäkšie */
+.btn, .seg button, .stepper button, .linkbtn, .nav a, .pc, .faq summary { touch-action: manipulation; -webkit-tap-highlight-color: transparent; }
+.seg button, .stepper button, .linkbtn, .nav a:not(.btn) { transition: transform .22s cubic-bezier(.2, .9, .3, 1), background-color .15s, color .15s; }
+.btn:active, .seg button:active, .linkbtn:active, .nav a:active { transform: scale(.97); transition-duration: .1s; transition-timing-function: ease-out; }
+.stepper button:active { transform: scale(.94); transition-duration: .1s; transition-timing-function: ease-out; }
+.faq summary { transition: opacity .2s; }
+.faq summary:active { opacity: .62; transition-duration: .1s; }
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+  /* menej pohybu: posuny a zmenšenia sa neanimujú, ostáva krátke prelínanie farieb a priehľadnosti */
+  *, *::before, *::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-property: opacity, color, background-color, border-color, fill, stroke, box-shadow !important; transition-duration: .15s !important; }
+  .btn:active, .seg button:active, .linkbtn:active, .nav a:active, .stepper button:active, .pc:active { transform: none !important; opacity: .72; }
+}
 p { margin: 0; }
 .wrap { width: min(1180px, 100% - 32px); margin-inline: auto; }
 .sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
@@ -91,7 +108,7 @@ p { margin: 0; }
   display: inline-flex; align-items: center; justify-content: center; gap: .5em;
   min-height: 48px; padding: .7em 1.25em; border-radius: 10px; border: 2px solid transparent;
   font: inherit; font-weight: 700; line-height: 1.2; text-decoration: none; cursor: pointer;
-  transition: background-color .15s, border-color .15s, color .15s;
+  transition: background-color .15s, border-color .15s, color .15s, transform .22s cubic-bezier(.2, .9, .3, 1);
 }
 .btn-sign { background: var(--sign); color: var(--on-sign); }
 .btn-line { background: transparent; color: var(--ink); border-color: var(--line); }
@@ -102,8 +119,9 @@ p { margin: 0; }
 .nw { white-space: nowrap; }
 
 /* header */
-.top { position: sticky; top: 0; z-index: 20; background: color-mix(in srgb, var(--paper) 92%, transparent); backdrop-filter: blur(8px); border-bottom: 1px solid transparent; transition: border-color .2s; }
-.top.scrolled { border-bottom-color: var(--line); }
+/* lepivá hlavička = priesvitný materiál, obsah plynie pod ňou; namiesto tvrdej čiary mäkký okraj až po odscrollovaní */
+.top { position: sticky; top: 0; z-index: 20; background: color-mix(in srgb, var(--paper) 78%, transparent); -webkit-backdrop-filter: blur(20px) saturate(180%); backdrop-filter: blur(20px) saturate(180%); border-bottom: 1px solid transparent; transition: border-color .2s, box-shadow .2s; }
+.top.scrolled { border-bottom-color: color-mix(in srgb, var(--line) 55%, transparent); box-shadow: 0 10px 24px -20px rgba(26, 42, 33, .45); }
 .top .wrap { display: flex; align-items: center; justify-content: space-between; gap: 16px; min-height: 68px; }
 .brand { display: inline-flex; align-items: center; gap: 10px; min-height: 44px; color: var(--ink); text-decoration: none; font-weight: 800; font-size: 1.25rem; letter-spacing: -.01em; }
 .brand svg { width: 34px; height: 34px; flex: none; }
@@ -118,13 +136,13 @@ p { margin: 0; }
 .sec-soft { background: var(--soft); }
 .sec-head { max-width: 720px; margin-bottom: clamp(32px, 4vw, 48px); }
 .sec-head h2 { font-size: clamp(1.9rem, 3.4vw, 2.6rem); text-wrap: balance; }
-.sec-head p { margin-top: 14px; color: var(--muted); font-size: 1.125rem; }
+.sec-head p { margin-top: 14px; color: var(--muted); font-size: 1.125rem; line-height: 1.55; }
 
 /* hero */
 .hero { padding-top: clamp(40px, 6vw, 72px); padding-bottom: clamp(48px, 6vw, 80px); }
 .hero-text { max-width: 760px; }
 .hero h1 { font-size: clamp(2.3rem, 5vw, 3.9rem); line-height: 1.04; letter-spacing: -.025em; text-wrap: balance; }
-.hero-lead { margin-top: 20px; font-size: clamp(1.125rem, 1.6vw, 1.3rem); color: var(--muted); max-width: 640px; }
+.hero-lead { margin-top: 20px; font-size: clamp(1.125rem, 1.6vw, 1.3rem); line-height: 1.5; color: var(--muted); max-width: 640px; }
 .hero-cta { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 28px; }
 .ticks { list-style: none; margin: 28px 0 0; padding: 0; display: flex; flex-wrap: wrap; gap: 10px 24px; color: var(--ink); font-weight: 600; font-size: .98rem; }
 .ticks li { display: flex; align-items: center; gap: 8px; }
@@ -146,7 +164,8 @@ p { margin: 0; }
 .demo-body { display: grid; grid-template-columns: minmax(0, 1fr) 340px; }
 .demo-body > div { min-width: 0; }
 .map-scroll { overflow-x: auto; overscroll-behavior-x: contain; background: var(--grass); border-right: 1px solid var(--line); }
-.map-scroll svg { width: 100%; min-width: 780px; height: auto; }
+.map-scroll svg { width: 100%; min-width: 780px; height: auto; -webkit-user-select: none; user-select: none; }
+@media (pointer: fine) { .map-scroll.can-pan { cursor: grab; } .map-scroll.panning, .map-scroll.panning .pc { cursor: grabbing; } }
 .map-hint { display: none; padding: 8px 16px; font-size: .9rem; color: var(--muted); border-top: 1px solid var(--line); }
 .legend { display: flex; flex-wrap: wrap; gap: 8px 18px; padding: 12px 20px; border-top: 1px solid var(--line); font-size: .9rem; color: var(--muted); }
 .legend span { display: inline-flex; align-items: center; gap: 8px; }
@@ -190,7 +209,8 @@ p { margin: 0; }
 .m-t { fill: var(--muted); font-size: 13px; font-weight: 700; }
 .m-ts { fill: var(--muted); font-size: 12px; font-weight: 600; }
 .m-halo { paint-order: stroke; stroke: var(--road); stroke-width: 4px; stroke-linejoin: round; }
-.pc { cursor: pointer; outline: none; }
+.pc { cursor: pointer; outline: none; transform-box: fill-box; transform-origin: center; transition: transform .22s cubic-bezier(.2, .9, .3, 1); }
+.pc:active { transform: scale(.95); transition-duration: .1s; transition-timing-function: ease-out; }
 .pc rect { fill: var(--pitch); stroke: var(--pitch-line); stroke-width: 1.5; transition: fill .12s; }
 .pc text { fill: var(--ink); font-size: 13px; font-weight: 800; text-anchor: middle; dominant-baseline: central; pointer-events: none; }
 @media (hover: hover) { .pc:hover rect { fill: color-mix(in srgb, var(--pitch) 70%, var(--sign) 30%); } }
@@ -314,6 +334,35 @@ input[type="range"] { width: 100%; height: 32px; accent-color: var(--sign); curs
 .foot .wrap { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 12px 24px; }
 .foot .brand { font-size: 1.05rem; }
 .foot .brand svg { width: 28px; height: 28px; }
+
+/* spodný panel na telefóne: detail parcely vyjde zdola ako priesvitná vrstva bez stmavenia (mapa ostáva použiteľná), úchyt sa dá ťahať */
+.sheet-grip { display: none; }
+@media (max-width: 760px) {
+  .panel.sheet {
+    position: fixed; left: 0; right: 0; bottom: 0; z-index: 30; min-height: 0; max-height: 72dvh; overflow-y: auto; overscroll-behavior: contain;
+    padding: 0 16px max(20px, env(safe-area-inset-bottom)); border-top: 0; border-radius: 18px 18px 0 0;
+    background: color-mix(in srgb, var(--paper) 90%, transparent); -webkit-backdrop-filter: blur(28px) saturate(180%); backdrop-filter: blur(28px) saturate(180%);
+    box-shadow: 0 -1px 0 color-mix(in srgb, var(--line) 80%, transparent), 0 -18px 40px -18px rgba(26, 42, 33, .4), 0 120px 0 0 var(--paper);   /* posledný tieň zakryje medzeru pod panelom pri prekmite pružiny */
+  }
+  .panel.sheet .sheet-grip {
+    position: sticky; top: 0; z-index: 1; display: grid; place-items: center; flex: none; width: auto; height: 36px; margin: 0 -16px -8px; padding: 0; border: 0; cursor: grab; touch-action: none;
+    background: linear-gradient(color-mix(in srgb, var(--paper) 96%, transparent) 65%, transparent);
+  }
+  .panel.sheet .mini svg { width: auto; max-height: 20dvh; margin-inline: auto; }   /* plán parcely sa v paneli zmenší, nech je cena a tlačidlo bližšie */
+  .sheet-grip span { width: 40px; height: 5px; border-radius: 3px; background: color-mix(in srgb, var(--muted) 72%, transparent); }   /* aspoň 3:1 voči pozadiu (WCAG 1.4.11) */
+  .sheet-grip:active { cursor: grabbing; }
+  .sheet-ph { border-top: 1px solid var(--line); }
+}
+
+/* materiály: bez priehľadnosti alebo pri vyššom kontraste plné plochy s jasným okrajom */
+@media (prefers-reduced-transparency: reduce) {
+  .top, .panel.sheet { background: var(--paper); -webkit-backdrop-filter: none; backdrop-filter: none; }
+}
+@media (prefers-contrast: more) {
+  .top, .panel.sheet { background: var(--paper); -webkit-backdrop-filter: none; backdrop-filter: none; }
+  .top.scrolled { border-bottom-color: var(--ink); box-shadow: none; }
+  .panel.sheet { box-shadow: 0 -2px 0 var(--ink), 0 120px 0 0 var(--paper); }
+}
 
 /* responsive */
 @media (max-width: 1020px) {
@@ -676,6 +725,43 @@ input[type="range"] { width: 100%; height: 32px; accent-color: var(--sign); curs
     return (n.w <= p.w && n.l <= p.l) || (n.w <= p.l && n.l <= p.w);
   }
 
+  /* ---------- pohyb a dotyk (apple-design): pružina, hybnosť, gumový okraj ---------- */
+  var RM = window.matchMedia('(prefers-reduced-motion: reduce)'), PHONE = window.matchMedia('(max-width: 760px)');
+  document.addEventListener('touchstart', function () {}, { passive: true });   // iOS Safari ukáže :active (stlačenie) až s týmto
+  // pružina ako v iOS: damping 1 = bez prekmitu, menej = mierny prekmit; response = rýchlosť v sekundách (nie trvanie).
+  // Vždy začína z aktuálnej hodnoty a rýchlosti, preto sa dá kedykoľvek chytiť a presmerovať.
+  // Riešenie je presné (podľa času, nie počtu snímok), takže pri trhanom vykresľovaní nespomalí ani neodskočí.
+  function spring(o) {
+    var w = 2 * Math.PI / o.response, z = Math.min(1, o.damping), A = o.from - o.to, v0 = o.v || 0, eps = o.eps || 0.5;
+    var wd = w * Math.sqrt(1 - z * z), B = z < 1 ? (v0 + z * w * A) / wd : v0 + w * A, t0 = performance.now(), raf = 0;
+    function at(t) { // poloha a rýchlosť v čase t (s) od začiatku
+      var e = Math.exp(-z * w * t);
+      if (z >= 1) return [o.to + (A + B * t) * e, (B - w * (A + B * t)) * e];
+      var c = Math.cos(wd * t), s = Math.sin(wd * t), q = A * c + B * s;
+      return [o.to + e * q, e * (-z * w * q + wd * (B * c - A * s))];
+    }
+    function frame(now) {
+      var r = at((now - t0) / 1000);
+      if (Math.abs(r[0] - o.to) < eps && Math.abs(r[1]) < eps * 10) { raf = 0; o.step(o.to); if (o.done) o.done(); return; }
+      o.step(r[0]); raf = requestAnimationFrame(frame);
+    }
+    raf = requestAnimationFrame(frame);
+    return { stop: function () { cancelAnimationFrame(raf); var r = raf ? at((performance.now() - t0) / 1000) : [o.to, 0]; raf = 0; return { x: r[0], v: r[1] }; } };
+  }
+  // kam by sa vec po švihnutí dokĺzala (Designing Fluid Interfaces): rýchlosť v px/s, spomalenie 0,998 za ms
+  function project(v) { return v / 1000 * 0.998 / (1 - 0.998); }
+  // za okrajom ide vec za prstom čoraz menej, nezastaví sa natvrdo
+  function rubber(over, dim) { return over * dim * 0.55 / (dim + 0.55 * Math.abs(over)); }
+  function tracker() { // posledných ~100 ms pohybu → rýchlosť pri pustení (px/s); keď prst pred pustením zastal, je nulová
+    var hs = [];
+    return {
+      add: function (t, x) { hs.push([t, x]); while (hs.length > 2 && t - hs[0][0] > 100) hs.shift(); },
+      v: function (now) { if (hs.length < 2) return 0; var a = hs[0], b = hs[hs.length - 1], dt = b[0] - a[0]; return dt > 0 && now - b[0] < 80 ? (b[1] - a[1]) / dt * 1000 : 0; },
+      reset: function () { hs = []; }
+    };
+  }
+  function rectOf(src) { return !src ? null : src.getBoundingClientRect ? src.getBoundingClientRect() : src; }
+
   /* ---------- map ---------- */
   var svg = document.getElementById('map');
   function drawMap() {
@@ -715,8 +801,8 @@ input[type="range"] { width: 100%; height: 32px; accent-color: var(--sign); curs
       el('rect', { x: p.x, y: p.y, width: p.pw, height: p.ph, rx: 3 }, g);
       var t = el('text', { x: p.x + p.pw / 2, y: p.y + p.ph / 2 }, g); t.textContent = p.id;
       p.g = g;
-      g.addEventListener('click', function () { select(p.id); });
-      g.addEventListener('keydown', function (e) { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); select(p.id); } });
+      g.addEventListener('click', function () { select(p.id, g, true); });
+      g.addEventListener('keydown', function (e) { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); select(p.id, g); } });
     });
   }
   function refreshMap() {
@@ -775,9 +861,10 @@ input[type="range"] { width: 100%; height: 32px; accent-color: var(--sign); curs
   }
   function renderPanel() {
     // the panel is rebuilt from scratch; keep keyboard focus from falling back to <body>
-    var hadFocus = panel.contains(document.activeElement);
+    var hadFocus = panel.contains(document.activeElement) && !(document.activeElement.classList.contains('sheet-grip'));
     drawPanel();
-    if (hadFocus) { var t = panel.querySelector('h3'); t.tabIndex = -1; t.focus(); }
+    sheet.attach();
+    if (hadFocus) { var t = panel.querySelector('h3'); t.tabIndex = -1; t.focus({ preventScroll: panel.classList.contains('sheet') }); }
   }
   function drawPanel() {
     panel.innerHTML = '';
@@ -789,7 +876,7 @@ input[type="range"] { width: 100%; height: 32px; accent-color: var(--sign); curs
       if (c) {
         var b = h('button', 'btn btn-line', 'Odporučiť voľnú parcelu');
         b.type = 'button';
-        b.addEventListener('click', function () { select(c.id); });
+        b.addEventListener('click', function () { select(c.id, b); });
         panel.appendChild(b);
       }
       return;
@@ -806,7 +893,7 @@ input[type="range"] { width: 100%; height: 32px; accent-color: var(--sign); curs
       panel.appendChild(h('div', 'done', '<strong>Rezervácia odoslaná</strong>V&nbsp;ostrej verzii by hosť teraz zaplatil zálohu kartou a&nbsp;vám by prišiel <span class="nw">e-mail</span> s&nbsp;rezerváciou. Parcela sa hneď ukáže ako obsadená.'));
       var again = h('button', 'linkbtn', 'Vyskúšať znova');
       again.type = 'button';
-      again.addEventListener('click', function () { state.booked = null; state.sel = null; update(); });
+      again.addEventListener('click', function () { var r = again.getBoundingClientRect(); state.booked = null; state.sel = null; update(); panelIn(r); });
       panel.appendChild(again);
       return;
     }
@@ -818,7 +905,7 @@ input[type="range"] { width: 100%; height: 32px; accent-color: var(--sign); curs
       if (alt) {
         var ab = h('button', 'btn btn-line', 'Vybrať najbližšiu vhodnú: ' + alt.id);
         ab.type = 'button';
-        ab.addEventListener('click', function () { select(alt.id); });
+        ab.addEventListener('click', function () { select(alt.id, ab); });
         panel.appendChild(ab);
       }
       return;
@@ -827,11 +914,169 @@ input[type="range"] { width: 100%; height: 32px; accent-color: var(--sign); curs
     panel.appendChild(t);
     var go = h('button', 'btn btn-sign', 'Rezervovať, záloha ' + money(b2.dep));
     go.type = 'button';
-    go.addEventListener('click', function () { state.booked = p.id; update(); });
+    go.addEventListener('click', function () { var r = go.getBoundingClientRect(); state.booked = p.id; update(); panelIn(r); });
     panel.appendChild(go);
   }
-  function select(id) { state.sel = id; if (state.booked && state.booked !== id) state.booked = null; update(); }
-  function update() { refreshMap(); renderPanel(); }
+  // src = odkiaľ výber prišiel (parcela na mape alebo tlačidlo): obsah panela z toho miesta vyrastie
+  function select(id, src, fromMap) {
+    var prev = state.sel, from = rectOf(src);
+    state.sel = id; if (state.booked && state.booked !== id) state.booked = null; update();
+    if (fromMap && PHONE.matches) sheet.show(from);
+    if (id !== prev) panelIn(from);
+  }
+  function update() { refreshMap(); renderPanel(); if (!state.sel) sheet.hide(); }
+
+  /* obsah panela pri novom výbere: mierne zväčšenie a zjasnenie s počiatkom v kliknutej parcele alebo tlačidle;
+     pri ďalšom kliknutí počas pohybu pokračuje z hodnoty, ktorá je práve na obrazovke */
+  var panelAnim = null, panelP = 1;
+  function panelIn(from) {
+    var r = panel.getBoundingClientRect();
+    var gx = from ? Math.max(r.left, Math.min(r.right, from.left + from.width / 2)) : r.left + r.width / 2;
+    var gy = from ? Math.max(r.top, Math.min(r.bottom, from.top + from.height / 2)) : r.top;
+    var kids = [].slice.call(panel.children).filter(function (k) { return !k.classList.contains('sheet-grip'); });
+    kids.forEach(function (k) { var kr = k.getBoundingClientRect(); k.style.transformOrigin = (gx - kr.left).toFixed(1) + 'px ' + (gy - kr.top).toFixed(1) + 'px'; });
+    if (panelAnim) panelP = panelAnim.stop().x;
+    if (panelP >= 1) panelP = 0;
+    function paint(x) {
+      panelP = x;
+      kids.forEach(function (k) { k.style.opacity = (0.45 + 0.55 * x).toFixed(3); k.style.scale = RM.matches ? '' : (0.97 + 0.03 * x).toFixed(4); });
+    }
+    paint(panelP);
+    panelAnim = spring({ from: panelP, to: 1, damping: 1, response: RM.matches ? 0.16 : 0.3, eps: 0.002, step: paint, done: function () {
+      panelAnim = null; kids.forEach(function (k) { k.style.opacity = ''; k.style.scale = ''; k.style.transformOrigin = ''; });
+    } });
+  }
+
+  /* spodný panel na telefóne: detail parcely vyjde zdola a zájde späť dole; úchyt sa ťahá 1:1 (pointer capture, od miesta uchopenia),
+     pri pustení rozhodne projekcia hybnosti, dobehne pružina (po švihnutí damping 0,8, inak 1), nad hornou polohou gumový odpor */
+  var sheet = (function () {
+    var open = false, y = 0, H = 1, anim = null, ph = null, drag = null, eat = false, tr = tracker();
+    // keď hosť zroluje stránku ďalej za miesto panela (k cenníku, formuláru, pätičke), panel sám zájde dole, nech nič nezakrýva
+    var io = window.IntersectionObserver ? new IntersectionObserver(function (en) {
+      var e = en[en.length - 1]; if (open && !drag && !e.isIntersecting && e.boundingClientRect.bottom < (e.rootBounds ? e.rootBounds.top : 0)) hide();
+    }) : null;
+    var grip = document.createElement('button');
+    grip.type = 'button'; grip.className = 'sheet-grip'; grip.setAttribute('aria-label', 'Skryť detail parcely');
+    grip.innerHTML = '<span aria-hidden="true"></span>';
+    function paint(v) { y = v; panel.style.translate = '0 ' + (v < 0 ? rubber(v, H) : v).toFixed(1) + 'px'; }
+    function dock() { // späť na svoje miesto pod mapou (obsah ostáva)
+      var f = document.activeElement === grip;
+      open = false; anim = null; drag = null;
+      panel.classList.remove('sheet'); panel.style.translate = ''; panel.style.opacity = '';
+      if (grip.parentNode) grip.parentNode.removeChild(grip);
+      if (ph) { if (io) io.unobserve(ph); ph.parentNode.removeChild(ph); ph = null; }
+      if (f) { var t = panel.querySelector('h3'); if (t) { t.tabIndex = -1; t.focus({ preventScroll: true }); } }
+    }
+    function stop() { if (anim) { var s = anim.stop(); anim = null; return s; } return null; }
+    function to(target, v, flick) {
+      stop();
+      if (RM.matches) { // menej pohybu: krátke prelínanie namiesto posunu
+        if (target > 0) {
+          var a = panel.animate([{ opacity: 1 }, { opacity: 0 }], { duration: 180, easing: 'ease-out' });
+          a.onfinish = dock; anim = { stop: function () { a.onfinish = null; a.cancel(); return { x: y, v: 0 }; } };
+        } else paint(0);
+        return;
+      }
+      anim = spring({ from: y, to: target, v: v || 0, damping: flick ? 0.8 : 1, response: 0.3, step: paint, done: function () { anim = null; if (target > 0) dock(); } });
+    }
+    function attach() { if (open && grip.parentNode !== panel) panel.insertBefore(grip, panel.firstChild); }
+    function keep(r) { // ťuknutá parcela ostane viditeľná nad panelom (stránka sa posunie, panel stojí)
+      if (!r) return;
+      var bar = document.querySelector('.top'), top = bar ? bar.getBoundingClientRect().bottom : 0, bottom = window.innerHeight - H - 12, cy = r.top + r.height / 2;
+      if (cy > top + 12 && cy < bottom) return;
+      window.scrollBy({ top: cy - (top + bottom) / 2, behavior: RM.matches ? 'auto' : 'smooth' });
+    }
+    function show(from) {
+      if (open) { if (anim) to(0, 0, false); H = panel.offsetHeight || 1; keep(from); return; }   // zatvára sa? chytí sa z aktuálnej polohy a vráti hore
+      ph = document.createElement('div'); ph.className = 'sheet-ph'; ph.setAttribute('aria-hidden', 'true');
+      ph.style.height = panel.offsetHeight + 'px';           // miesto pod mapou ostáva, stránka neposkočí
+      panel.parentNode.insertBefore(ph, panel); if (io) io.observe(ph);
+      panel.classList.add('sheet'); open = true; attach(); panel.scrollTop = 0; H = panel.offsetHeight || 1; keep(from);
+      if (RM.matches) { paint(0); panel.animate([{ opacity: 0 }, { opacity: 1 }], { duration: 180, easing: 'ease-out' }); return; }
+      paint(H); to(0, 0, false);
+    }
+    function hide() { if (!open) return; H = panel.offsetHeight || 1; to(H, 0, false); }
+    grip.addEventListener('pointerdown', function (e) {
+      if (e.button) return;
+      var s = stop(); if (s) y = s.x;                       // panel sa dá chytiť aj uprostred pohybu
+      H = panel.offsetHeight || 1; eat = false;
+      drag = { id: e.pointerId, y0: e.clientY, from: y, moved: false }; tr.reset(); tr.add(e.timeStamp, e.clientY);
+      try { grip.setPointerCapture(e.pointerId); } catch (er) { /* ukazovateľ už nie je aktívny */ }
+    });
+    grip.addEventListener('pointermove', function (e) {
+      if (!drag || e.pointerId !== drag.id) return;
+      var d = e.clientY - drag.y0; tr.add(e.timeStamp, e.clientY);
+      if (!drag.moved) { if (Math.abs(d) < 10) return; drag.moved = true; drag.y0 = e.clientY; d = 0; }   // 10 px hysterézia, potom 1:1
+      paint(drag.from + d);
+    });
+    function release(e) {
+      if (!drag || e.pointerId !== drag.id) return;
+      var dd = drag; drag = null;
+      if (!dd.moved) { if (y !== 0) to(0, 0, false); return; }   // ťuk: skryje ho až click (funguje aj z klávesnice)
+      eat = true;
+      var v = tr.v(e.timeStamp), end = y + project(v);
+      to(end > H * 0.5 ? H : 0, v, Math.abs(v) > 300);
+    }
+    grip.addEventListener('pointerup', release);
+    grip.addEventListener('pointercancel', release);
+    grip.addEventListener('click', function () { if (eat) { eat = false; return; } hide(); });
+    document.addEventListener('keydown', function (e) { if (e.key === 'Escape' && open) hide(); });
+    var onMq = function () { if (!PHONE.matches && open) { stop(); dock(); } };
+    if (PHONE.addEventListener) PHONE.addEventListener('change', onMq); else PHONE.addListener(onMq);
+    return { show: show, hide: hide, attach: attach };
+  })();
+
+  /* ťahanie mapy myšou, keď je širšia než okno: 1:1, za okrajom gumový odpor, po pustení dobeh hybnosti.
+     Dotyk má vlastné natívne posúvanie s hybnosťou, toho sa to nedotkne. */
+  function dragPan(sc) {
+    var art = sc.firstElementChild, x = 0, M = 0, drag = null, anim = null, eat = false, tr = tracker();
+    function max() { return Math.max(0, sc.scrollWidth - sc.clientWidth); }
+    function paint(v) {
+      x = v; var c = Math.max(0, Math.min(M, v));
+      sc.scrollLeft = c; art.style.translate = v === c ? '' : (-rubber(v - c, sc.clientWidth)).toFixed(1) + 'px 0';
+    }
+    function bounce(v) { anim = spring({ from: x, to: x < 0 ? 0 : M, v: v, damping: 1, response: 0.3, step: paint, done: function () { anim = null; } }); }
+    function coast(v0) { // rýchlosť klesá exponenciálne (0,998 za ms), za okrajom prevezme pružina
+      var t0 = 0, x0 = x, raf = 0, lnd = Math.log(0.998);
+      function f(now) {
+        if (!t0) t0 = now;
+        var d = Math.pow(0.998, now - t0), vx = v0 * d, p = x0 + v0 / 1000 * (d - 1) / lnd;
+        paint(p);
+        if (p < 0 || p > M) { bounce(vx); return; }
+        if (Math.abs(vx) < 10) { anim = null; return; }
+        raf = requestAnimationFrame(f);
+      }
+      raf = requestAnimationFrame(f);
+      anim = { stop: function () { cancelAnimationFrame(raf); return { x: x, v: 0 }; } };
+    }
+    sc.addEventListener('pointerdown', function (e) {
+      eat = false;
+      if (e.pointerType !== 'mouse' || e.button !== 0) return;
+      M = max(); if (!M) return;
+      if (e.clientY - sc.getBoundingClientRect().top > sc.clientHeight) return;   // posuvník nechá prehliadaču
+      if (anim) { anim.stop(); anim = null; } else x = sc.scrollLeft;
+      drag = { id: e.pointerId, x0: e.clientX, from: x, moved: false }; tr.reset(); tr.add(e.timeStamp, e.clientX);
+    });
+    sc.addEventListener('pointermove', function (e) {
+      if (!drag || e.pointerId !== drag.id) return;
+      var d = e.clientX - drag.x0; tr.add(e.timeStamp, e.clientX);
+      if (!drag.moved) { if (Math.abs(d) < 10) return; drag.moved = true; drag.x0 = e.clientX; d = 0; try { sc.setPointerCapture(e.pointerId); } catch (er) { /* ukazovateľ už nie je aktívny */ } sc.classList.add('panning'); }
+      paint(drag.from - d);
+    });
+    function release(e) {
+      if (!drag || e.pointerId !== drag.id) return;
+      var dd = drag; drag = null; if (!dd.moved) return;
+      sc.classList.remove('panning'); eat = true;
+      var v = -tr.v(e.timeStamp);
+      if (x < 0 || x > M) bounce(v); else if (Math.abs(v) > 60) coast(v);
+    }
+    sc.addEventListener('pointerup', release);
+    sc.addEventListener('pointercancel', release);
+    sc.addEventListener('click', function (e) { if (eat) { eat = false; e.stopPropagation(); e.preventDefault(); } }, true);   // po ťahaní nevyberať parcelu
+    sc.addEventListener('wheel', function () { if (anim) { anim.stop(); anim = null; art.style.translate = ''; } }, { passive: true });
+    function mark() { sc.classList.toggle('can-pan', max() > 0); }
+    window.addEventListener('resize', mark); mark();
+  }
 
   document.querySelectorAll('.seg button').forEach(function (b) {
     b.addEventListener('click', function () {
@@ -852,6 +1097,7 @@ input[type="range"] { width: 100%; height: 32px; accent-color: var(--sign); curs
   update();
   var ms = document.querySelector('.map-scroll');
   requestAnimationFrame(function () { if (ms.scrollWidth > ms.clientWidth) ms.scrollLeft = ms.scrollWidth * (125 / 920); });
+  dragPan(ms);
 
   /* ---------- calculator ---------- */
   var C = {
