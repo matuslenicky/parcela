@@ -156,7 +156,7 @@ export function makeProps(o) {
     if (brick) item(c[0], c[1], rot, [{ w, h, d: dep, y: h / 2, c: '#ddd3bd' }, { w: w + 0.12, h: 0.14, d: dep + 0.12, y: 0.07, c: '#9a968c' }].concat(round ? [{ r: w / 2, h: dep, y: h, rx: Math.PI / 2, c: '#ddd3bd', seg: 24 }] : [{ w: w + 0.06, h: 0.07, d: dep + 0.06, y: h + 0.035, c: '#c9bea6' }]));   /* svetlý tehlový monolit so zaobleným vrchom */
     else if (sg.kind === 'wall') item(c[0], c[1], rot, [{ w, h, d: dep, y: h / 2, c: '#b3a693' }, { w: w + 0.1, h: 0.08, d: dep + 0.1, y: h + 0.04, c: '#8f8474' }]);
     else item(c[0], c[1], rot, (sg.kind === 'plate' ? [] : [{ w: 0.09, h: y0 + h, d: 0.09, x: -w / 2 + 0.12, y: (y0 + h) / 2, c: DARK }, { w: 0.09, h: y0 + h, d: 0.09, x: w / 2 - 0.12, y: (y0 + h) / 2, c: DARK }]).concat([{ w, h, d: dep, y: y0 + h / 2, c: sg.bg || '#24402f' }]));
-    const cv = document.createElement('canvas'); cv.width = 512; cv.height = Math.max(64, Math.round(512 * h / w)); const g = cv.getContext('2d'), CW = cv.width, CHh = cv.height, font = o.font || 'sans-serif';
+    const cv = document.createElement('canvas'), CWd = sg.style === 'mural' ? 1024 : 512; cv.width = CWd; cv.height = Math.max(64, Math.round(CWd * h / w)); const g = cv.getContext('2d'), CW = cv.width, CHh = cv.height, font = o.font || 'sans-serif';
     if (brick) {                          // svetlé tehly na väzbu a sivá sklenená tabuľka s nápisom v hornej časti
       g.fillStyle = '#c9bea6'; g.fillRect(0, 0, CW, CHh); let sd = 11; const rnd = () => ((sd = (sd * 16807) % 2147483647) / 2147483647), bh = CHh / (h / 0.075), bw = bh * 3.3;
       for (let y = 0, r = 0; y < CHh; y += bh, r++) for (let x = (r % 2) * -bw / 2; x < CW; x += bw) { const v = 214 + Math.floor(rnd() * 26); g.fillStyle = 'rgb(' + v + ',' + (v - 8) + ',' + (v - 26) + ')'; g.fillRect(x + 1.5, y + 1.5, bw - 3, bh - 3); }
@@ -172,6 +172,12 @@ export function makeProps(o) {
       for (let y = 0; y < CHh; y += 26) for (let x = -20 + (y / 26 % 2) * 30; x < CW; ) { const ww = 40 + rnd() * 50, v = 150 + Math.floor(rnd() * 60); g.fillStyle = 'rgb(' + (v + 12) + ',' + (v + 2) + ',' + (v - 14) + ')'; g.fillRect(x + 1.5, y + 1.5, ww - 3, 23); x += ww; }
       const R = CHh * 0.4; g.beginPath(); g.arc(CW / 2, CHh / 2, R, 0, 7); g.fillStyle = '#f4f2ec'; g.fill(); g.lineWidth = 3; g.strokeStyle = '#8f8474'; g.stroke();
       g.fillStyle = '#2f3d36'; g.textAlign = 'center'; g.textBaseline = 'middle'; g.font = '700 ' + Math.round(R * 0.36) + 'px ' + font; g.fillText(sg.title || '', CW / 2, CHh / 2 - R * 0.06); g.font = '600 ' + Math.round(R * 0.13) + 'px ' + font; g.fillText(sg.sub || '', CW / 2, CHh / 2 + R * 0.3);
+    } else if (sg.style === 'mural') {    // plachta s lesom v hmle pri západe slnka (fotka spŕch od lávky)
+      const gr = g.createLinearGradient(0, 0, 0, CHh); gr.addColorStop(0, '#f2b766'); gr.addColorStop(0.5, '#f5ddb0'); gr.addColorStop(1, '#d6b07a'); g.fillStyle = gr; g.fillRect(0, 0, CW, CHh);
+      const sx = CW * 0.64, sy = CHh * 0.42, glow = g.createRadialGradient(sx, sy, 0, sx, sy, CHh * 0.7); glow.addColorStop(0, 'rgba(255,248,220,1)'); glow.addColorStop(0.18, 'rgba(255,236,190,0.85)'); glow.addColorStop(1, 'rgba(255,236,190,0)'); g.fillStyle = glow; g.fillRect(0, 0, CW, CHh);
+      let sd = 5; const rnd = () => ((sd = (sd * 16807) % 2147483647) / 2147483647);
+      [['rgba(150,128,96,0.55)', 0.5, 0.12], ['rgba(92,84,62,0.8)', 0.62, 0.16], ['#2e3628', 0.76, 0.22]].forEach(([col, base, tall]) => { g.fillStyle = col; g.beginPath(); g.moveTo(0, CHh); for (let x = -10; x < CW + 20; ) { const tw = CHh * (0.05 + rnd() * 0.05), th = CHh * tall * (0.6 + rnd() * 0.7), y0 = CHh * base + Math.sin(x / CW * 6) * CHh * 0.03; g.lineTo(x, y0); g.lineTo(x + tw / 2, y0 - th); g.lineTo(x + tw, y0); x += tw * (0.7 + rnd() * 0.5); } g.lineTo(CW, CHh); g.closePath(); g.fill(); });
+      g.fillStyle = '#2e3628'; g.fillRect(0, CHh * 0.86, CW, CHh * 0.14);
     } else {
       g.fillStyle = sg.bg || '#24402f'; g.fillRect(0, 0, CW, CHh); g.fillStyle = '#f4f2ec'; g.textAlign = 'center'; g.textBaseline = 'middle';
       const TW = CW * (sg.kind === 'plate' ? 0.9 : Math.max(0.5, 1 - 0.46 / w));   /* text sa zmestí medzi stĺpiky tabule */
