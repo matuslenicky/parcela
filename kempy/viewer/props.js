@@ -152,11 +152,22 @@ export function makeProps(o) {
   /* ---- tabule a múriky s nápisom: camp.json signs [{ kind: 'wall' | 'board' | 'plate' (tabuľa bez stĺpikov, napr. na fasáde), c, ang, w, h, y, title, sub, bg }] */
   const signs = [];
   (CAMP.signs || []).forEach((sg) => {
-    if (!sg.c) return; const c = W(sg.c), rot = (sg.ang || 0) * Math.PI / 180, w = sg.w || 3, h = sg.h || 1.6, y0 = sg.kind === 'wall' ? 0 : (sg.y || 1.6), dep = sg.kind === 'wall' ? 0.4 : 0.06;
-    if (sg.kind === 'wall') item(c[0], c[1], rot, [{ w, h, d: dep, y: h / 2, c: '#b3a693' }, { w: w + 0.1, h: 0.08, d: dep + 0.1, y: h + 0.04, c: '#8f8474' }]);
+    if (!sg.c) return; const c = W(sg.c), rot = (sg.ang || 0) * Math.PI / 180, w = sg.w || 3, brick = sg.kind === 'wall' && sg.style === 'brick', round = brick && sg.round !== false, h = round ? (sg.h || 2.2) - w / 2 : sg.h || 1.6, y0 = sg.kind === 'wall' ? 0 : (sg.y || 1.6), dep = sg.kind === 'wall' ? 0.4 : 0.06;
+    if (brick) item(c[0], c[1], rot, [{ w, h, d: dep, y: h / 2, c: '#ddd3bd' }, { w: w + 0.12, h: 0.14, d: dep + 0.12, y: 0.07, c: '#9a968c' }].concat(round ? [{ r: w / 2, h: dep, y: h, rx: Math.PI / 2, c: '#ddd3bd', seg: 24 }] : [{ w: w + 0.06, h: 0.07, d: dep + 0.06, y: h + 0.035, c: '#c9bea6' }]));   /* svetlý tehlový monolit so zaobleným vrchom */
+    else if (sg.kind === 'wall') item(c[0], c[1], rot, [{ w, h, d: dep, y: h / 2, c: '#b3a693' }, { w: w + 0.1, h: 0.08, d: dep + 0.1, y: h + 0.04, c: '#8f8474' }]);
     else item(c[0], c[1], rot, (sg.kind === 'plate' ? [] : [{ w: 0.09, h: y0 + h, d: 0.09, x: -w / 2 + 0.12, y: (y0 + h) / 2, c: DARK }, { w: 0.09, h: y0 + h, d: 0.09, x: w / 2 - 0.12, y: (y0 + h) / 2, c: DARK }]).concat([{ w, h, d: dep, y: y0 + h / 2, c: sg.bg || '#24402f' }]));
     const cv = document.createElement('canvas'); cv.width = 512; cv.height = Math.max(64, Math.round(512 * h / w)); const g = cv.getContext('2d'), CW = cv.width, CHh = cv.height, font = o.font || 'sans-serif';
-    if (sg.kind === 'wall') {             // lámaný kameň a biely kruh s názvom
+    if (brick) {                          // svetlé tehly na väzbu a sivá sklenená tabuľka s nápisom v hornej časti
+      g.fillStyle = '#c9bea6'; g.fillRect(0, 0, CW, CHh); let sd = 11; const rnd = () => ((sd = (sd * 16807) % 2147483647) / 2147483647), bh = CHh / (h / 0.075), bw = bh * 3.3;
+      for (let y = 0, r = 0; y < CHh; y += bh, r++) for (let x = (r % 2) * -bw / 2; x < CW; x += bw) { const v = 214 + Math.floor(rnd() * 26); g.fillStyle = 'rgb(' + v + ',' + (v - 8) + ',' + (v - 26) + ')'; g.fillRect(x + 1.5, y + 1.5, bw - 3, bh - 3); }
+      if (!round) {                       // široká stena: okrúhla sklenená tabuľa s logom
+        const R = CHh * 0.36, cx = CW * 0.5, cy = CHh * 0.46; g.beginPath(); g.arc(cx + 4, cy + 6, R, 0, 7); g.fillStyle = 'rgba(70,78,76,0.45)'; g.fill(); g.beginPath(); g.arc(cx, cy, R, 0, 7); g.fillStyle = 'rgba(214,222,220,0.92)'; g.fill(); g.lineWidth = 3; g.strokeStyle = '#8f9693'; g.stroke();
+        g.fillStyle = '#2a2e2c'; g.textAlign = 'center'; g.textBaseline = 'middle'; g.font = '700 ' + Math.round(R * 0.36) + 'px ' + font; g.fillText(sg.title || '', cx, cy - R * 0.04, R * 1.7); g.font = '600 ' + Math.round(R * 0.12) + 'px ' + font; g.fillText(sg.sub || '', cx, cy + R * 0.32, R * 1.6);
+      } else {
+      const pw = CW * 0.74, ph = CHh * 0.36, px = (CW - pw) / 2, py = CHh * 0.08; g.fillStyle = 'rgba(70,78,76,0.55)'; g.fillRect(px + 4, py + 6, pw, ph); g.fillStyle = '#9aa29f'; g.fillRect(px, py, pw, ph); g.fillStyle = 'rgba(255,255,255,0.18)'; g.fillRect(px, py, pw, ph * 0.12);
+      g.fillStyle = '#2a2e2c'; g.textAlign = 'center'; g.textBaseline = 'middle'; g.font = '700 ' + Math.round(ph * 0.36) + 'px ' + font; g.fillText(sg.title || '', CW / 2, py + ph * 0.42, pw * 0.9); g.font = '600 ' + Math.round(ph * 0.14) + 'px ' + font; g.fillText(sg.sub || '', CW / 2, py + ph * 0.75, pw * 0.92);
+      }
+    } else if (sg.kind === 'wall') {      // lámaný kameň a biely kruh s názvom
       g.fillStyle = '#b3a693'; g.fillRect(0, 0, CW, CHh); let sd = 7; const rnd = () => ((sd = (sd * 16807) % 2147483647) / 2147483647);
       for (let y = 0; y < CHh; y += 26) for (let x = -20 + (y / 26 % 2) * 30; x < CW; ) { const ww = 40 + rnd() * 50, v = 150 + Math.floor(rnd() * 60); g.fillStyle = 'rgb(' + (v + 12) + ',' + (v + 2) + ',' + (v - 14) + ')'; g.fillRect(x + 1.5, y + 1.5, ww - 3, 23); x += ww; }
       const R = CHh * 0.4; g.beginPath(); g.arc(CW / 2, CHh / 2, R, 0, 7); g.fillStyle = '#f4f2ec'; g.fill(); g.lineWidth = 3; g.strokeStyle = '#8f8474'; g.stroke();

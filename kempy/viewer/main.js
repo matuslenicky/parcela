@@ -138,8 +138,8 @@ function mount(host, api) {
 
   /* ---------------- jednotky (parcely, chatky, plochy): poloha z camp.json, stav zo stránky */
   const UNITS = CAMP.parcels.map((p, i) => {
-    const t = CAMP.types[p.t] || {}, pts = rectPts(p.c, p.w, p.h, p.ang || 0).map(W), c = W(p.c);
-    return { id: p.id, unit: t.unit || 'parcel', pts, c, top: (p.flat ? 0.075 : 0.09) + i * 0.001, r: Math.hypot(p.w, p.h) / 2 / S };
+    const t = CAMP.types[p.t] || {}, pts = (p.pts && p.pts.length > 2 ? p.pts : rectPts(p.c, p.w, p.h, p.ang || 0)).map(W), c = W(p.c);   /* pts = voľný obrys plochy */
+    return { id: p.id, unit: t.unit || 'parcel', pts, c, top: (p.flat ? 0.075 : 0.09) + i * 0.001, r: p.pts ? Math.max(...pts.map((q) => Math.hypot(q[0] - c[0], q[1] - c[1]))) : Math.hypot(p.w, p.h) / 2 / S };
   });
   const byId = Object.fromEntries(UNITS.map((u) => [u.id, u]));
   const overlays = new THREE.Group(); scene.add(overlays);

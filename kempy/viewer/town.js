@@ -21,6 +21,14 @@ function bayTexture(wall, seed) {          // jedno pole steny s oknom; okraje p
   g.fillStyle = 'rgba(255,255,255,0.55)'; g.fillRect(x0 - f * 1.5, y0 + wh + f, ww + 3 * f, f * 0.9); g.fillStyle = 'rgba(0,0,0,0.18)'; g.fillRect(x0 - f * 1.5, y0 + wh + f * 1.9, ww + 3 * f, f * 0.7);
   const t = new THREE.CanvasTexture(c); t.wrapS = t.wrapT = THREE.RepeatWrapping; t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = 4; return t;
 }
+function glassTexture() {                 // pole presklenej fasády: zelenkasté sklo s lamelami, svetlá hrana stropu, úzke okno
+  const N = 128, c = document.createElement('canvas'); c.width = c.height = N; const g = c.getContext('2d');
+  const gr = g.createLinearGradient(0, 0, 0, N); gr.addColorStop(0, '#b9d4d2'); gr.addColorStop(0.7, '#8fb3b2'); gr.addColorStop(1, '#7ea3a3'); g.fillStyle = gr; g.fillRect(0, 0, N, N);
+  for (let x = 0; x < N; x += N / 10) { g.fillStyle = 'rgba(255,255,255,0.22)'; g.fillRect(x, 0, 2, N); g.fillStyle = 'rgba(0,0,0,0.08)'; g.fillRect(x + 4, 0, 2, N); }
+  g.fillStyle = '#4c5a58'; g.fillRect(N * 0.42, N * 0.18, N * 0.14, N * 0.62); g.fillStyle = '#c9b48f'; g.fillRect(N * 0.42, N * 0.18, N * 0.14, N * 0.06);
+  g.fillStyle = '#eef0ec'; g.fillRect(0, N - N * 0.1, N, N * 0.1); g.fillStyle = 'rgba(0,0,0,0.25)'; g.fillRect(0, N - N * 0.1, N, 2);
+  const t = new THREE.CanvasTexture(c); t.wrapS = t.wrapT = THREE.RepeatWrapping; t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = 4; return t;
+}
 function roofTexture() {                   // drážky krytiny, farbu dáva sieť
   const c = document.createElement('canvas'); c.width = c.height = 64; const g = c.getContext('2d'); g.fillStyle = '#e9e9e9'; g.fillRect(0, 0, 64, 64);
   for (let x = 0; x < 64; x += 8) { g.fillStyle = 'rgba(255,255,255,0.5)'; g.fillRect(x, 0, 3, 64); g.fillStyle = 'rgba(0,0,0,0.2)'; g.fillRect(x + 5, 0, 2, 64); }
@@ -43,7 +51,7 @@ export function buildContext(CAMP) {
   };
   list.forEach((b, bi) => {
     const r = rng(bi * 13 + 5), h = b.height, big = b.poly || h > 9.5 || Math.max(b.w || 0, b.d || 0) / S > 22 || !(b.c && b.w > 0 && b.d > 0) || (b.pts && b.pts.length !== 4);
-    const key = (big ? BLOCKS : WALLS)[Math.floor(r() * (big ? BLOCKS : WALLS).length)];
+    const key = b.facade === 'glass' ? 'glass' : (big ? BLOCKS : WALLS)[Math.floor(r() * (big ? BLOCKS : WALLS).length)];
     if (big) {                                           // bytovka alebo hala: steny po obvode, rovná strecha s atikou
       const fa = (b.ang || 0) * Math.PI / 180, fc = Math.cos(fa), fs2 = Math.sin(fa);
       const P = (b.pts && b.pts.length > 2 ? b.pts : [[-1, -1], [1, -1], [1, 1], [-1, 1]].map((k) => [b.c[0] + k[0] * b.w / 2 * fc - k[1] * b.d / 2 * fs2, b.c[1] + k[0] * b.w / 2 * fs2 + k[1] * b.d / 2 * fc])).map(W), floors = Math.max(1, Math.round(h / FLOOR));
@@ -71,7 +79,7 @@ export function buildContext(CAMP) {
   });
   const grp = new THREE.Group(); grp.name = 'okolite domy'; const tex = [];
   const add = (parts, mat) => { const flat = parts.map((g) => (g.index ? g.toNonIndexed() : g)), m = mergeGeometries(flat, false); parts.forEach((g) => g.dispose()); if (!m) return; const mesh = new THREE.Mesh(m, mat); mesh.castShadow = mesh.receiveShadow = true; grp.add(mesh); };
-  let i = 0; walls.forEach((parts, key) => { const t = bayTexture(key, ++i); tex.push(t); add(parts, new THREE.MeshStandardMaterial({ map: t, roughness: 0.9, side: THREE.DoubleSide })); });
+  let i = 0; walls.forEach((parts, key) => { const t = key === 'glass' ? glassTexture() : bayTexture(key, ++i); tex.push(t); add(parts, new THREE.MeshStandardMaterial({ map: t, roughness: 0.9, side: THREE.DoubleSide })); });
   const rt = roofTexture(); tex.push(rt); add(roofs, new THREE.MeshStandardMaterial({ map: rt, vertexColors: true, roughness: 0.75, side: THREE.DoubleSide }));
   /* pôvodné kvádre z GLB: „budova <názov>“, Blender k opakovanému názvu pridáva .001 (three.js z neho spraví budova_<názov>001) */
   const names = new Set(list.map((b) => THREE.PropertyBinding.sanitizeNodeName('budova ' + b.name)));

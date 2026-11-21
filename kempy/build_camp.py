@@ -54,7 +54,7 @@ PAL = {
     'parcel_line': ('#ffffff', .6), 'label': ('#ffffff', .5), 'sand': ('#e9dcb8', .95), 'wood': ('#a07a55', .8),
     'logwall': ('#9a6b47', .85), 'roof2': ('#5a4a3f', .75), 'pitch': ('#78b860', .95), 'labeldark': ('#2b2118', .6),
     'paved': ('#cfcbc0', .85), 'shrub': ('#3f7f45', .95), 'stone': ('#9a9a94', .9), 'poolrim': ('#e6e8e7', .6), 'poolwater': ('#4fb4dc', .08),
-    'pingpong': ('#2f5fb5', .5), 'tramp': ('#22262a', .7),
+    'pingpong': ('#2f5fb5', .5), 'tramp': ('#22262a', .7), 'plate': ('#6e6a64', .55),   # oceľová slzičková doska lávok
 }
 for k_, v_ in D.get('pal', {}).items(): PAL[k_] = (v_, PAL.get(k_, ('', .9))[1])     # kemp si môže farby povrchov upraviť
 def M(n):
@@ -315,7 +315,7 @@ font_mat = M('label')
 for pi, p in enumerate(D['parcels']):
     c = P(p['c']); w = p['w'] / S; h = p['h'] / S; t = p['t']
     mb = MB()
-    corners = rect(c, w, h, p['ang'])
+    corners = [P(q) for q in p['pts']] if p.get('pts') else rect(c, w, h, p['ang'])   # pts = voľný obrys plochy
     # susedné parcely sa na odčítanom pláne často o pár px prekrývajú: rovnako vysoké koplanárne plochy kreslí Cycles
     # čierno, preto má každá parcela vlastnú výšku (o 1 mm vyššie než predchádzajúca), štítok ide nad ňu
     top = (0.075 if p.get('flat') else 0.09) + pi * 0.001
