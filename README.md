@@ -10,7 +10,7 @@ Predajná stránka služby pre kempy, glampingy a chatové osady: mapa areálu s
 - kalkulačka, koľko kemp platí portálom (Booking, Pitchup) a koľko ušetrí,
 - čo kemp dostane, priebeh spolupráce, cenník, časté otázky a kontaktný formulár (otvorí e-mail návštevníka s vyplnenou správou).
 
-Stránka je jeden súbor `index.html` bez buildu. Písmo Overpass sa načítava z Google Fonts, ostatné je v súbore. Kým nie sú doplnené skutočné kontakty, má stránka `noindex`.
+Stránka je jeden súbor `index.html` bez buildu. Používa systémové písmo (San Francisco na Apple, Segoe UI na Windows, Roboto na Androide), všetko je v súbore. Kým nie sú doplnené skutočné kontakty, má stránka `noindex`.
 
 ## Overenie
 

@@ -1,5 +1,5 @@
 // Builds the sales demo page for one camp: node kempy/build-demo.js <slug>
-// Reads kempy/<slug>/camp.json and render_3d.jpg, writes kempy/<slug>/index.html (one file, works offline except the web font).
+// Reads kempy/<slug>/camp.json and render_3d.jpg, writes kempy/<slug>/index.html (one file, system font, works offline).
 const fs = require('fs');
 const path = require('path');
 
