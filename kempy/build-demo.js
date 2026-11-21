@@ -35,7 +35,7 @@ for (const k of Object.keys(TEXT)) TEXT[k] = String(TEXT[k]).replace(/(^|[\s(„
 const HAS3D = fs.existsSync(path.join(dir, 'camp3d.js'));
 const RAW = {
   TOUR_BTN: HAS3D ? (camp.view === 'top' ? '<p class="tour-go"><button type="button" class="btn btn-sign" id="open3d">Pozrieť kemp v 3D</button><span>Kemp vidíte zhora, otočíte si ho a priblížite. Po výbere parcely sa pohľad priblíži k nej a môžete si ju zariadiť.</span></p>' : '<p class="tour-go"><button type="button" class="btn btn-sign" id="open3d">Prejsť sa po kempe v 3D</button><span>Kemp si otočíte, priblížite a prejdete vo výške očí. Výber miesta ostáva rovnaký ako na mape.</span></p>') : '',
-  TOUR_DLG: HAS3D ? `<dialog class="tour" id="tour" aria-label="3D prehliadka: ${esc0(camp.name)}"><div class="tour-bar"><strong>${esc0(camp.name)} v 3D</strong><button type="button" class="tour-x" id="tourX">Zavrieť</button></div><div id="tourHost"></div></dialog>` : '',
+  TOUR_DLG: HAS3D ? `<dialog class="tour" id="tour" aria-label="3D prehliadka: ${esc0(camp.name)}"><div class="tour-bar"><strong>${esc0(camp.name)} v&nbsp;3D</strong><button type="button" class="tour-x" id="tourX">Zavrieť</button></div><div id="tourHost"></div></dialog>` : '',
 };
 TEXT.CAP3D = HAS3D ? 'Model z Blendera podľa plánu areálu. Tlačidlom nad obrázkom ho otvoríte ako prehliadku priamo v prehliadači.' : 'Model z Blendera podľa plánu areálu. V ostrej verzii sa dá otáčať a prechádzať priamo na webe.';
 function esc0(x) { return String(x).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/"/g, '&quot;'); }
