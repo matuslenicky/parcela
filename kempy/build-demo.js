@@ -29,6 +29,8 @@ Object.assign(TEXT, {
   PICK: CABINS ? 'chatku alebo miesto' : 'parcelu',
   CREDIT: camp.credit || 'Zdroj rozloženia: plán areálu zverejnený na webe kempu.',
 });
+// slovenská typografia: jednopísmenová predložka alebo spojka (v, k, s, z, a, i, o, u) neostane na konci riadku
+for (const k of Object.keys(TEXT)) TEXT[k] = String(TEXT[k]).replace(/(^|[\s(„])([vkszaiouVKSZAIOU]) /g, '$1$2 ');
 // 3D prehliadka: ak je pri kempe camp3d.js (node kempy/build-viewer.js <slug>), stránka dostane tlačidlo a dialóg
 const HAS3D = fs.existsSync(path.join(dir, 'camp3d.js'));
 const RAW = {
