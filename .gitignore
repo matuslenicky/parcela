@@ -8,3 +8,9 @@ kempy/*/
 !kempy/models/
 kempy/models/out/
 !kempy/katalog/
+
+# zverejnená ukážka Pullmann (21. 11. 2026): len stránka a 3D prehliadka, podklady ostávajú na disku
+!kempy/pullmann/
+kempy/pullmann/*
+!kempy/pullmann/index.html
+!kempy/pullmann/camp3d.js
