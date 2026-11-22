@@ -708,8 +708,7 @@ input[type="range"]:focus-visible { outline-offset: 2px; border-radius: 16px; }
             <h2 id="h-kontakt">Pošlite názov kempu. Ukážku pripravím do týždňa.</h2>
             <p class="lead">Nakreslím mapu vášho areálu a&nbsp;pošlem vám odkaz, kde si ju vyskúšate ako hosť. Zadarmo a&nbsp;nezáväzne.</p>
             <div class="direct">
-              <span>Telefón: <a href="tel:+421000000000" data-contact="phone">+421 000 000 000</a></span>
-              <span>E-mail: <a href="mailto:kontakt@example.com" data-contact="email">kontakt@example.com</a></span>
+              <span>Telefón: <a href="tel:+421907324441" data-contact="phone">+421 907 324 441</a></span>
             </div>
           </div>
           <form class="form" id="contactForm" novalidate>
@@ -721,7 +720,7 @@ input[type="range"]:focus-visible { outline-offset: 2px; border-radius: 16px; }
             <label>Poznámka (nepovinné)<textarea name="sprava" placeholder="Napríklad koľko máte parciel alebo ako dnes beriete rezervácie."></textarea></label>
             <p class="form-err" id="formErr" role="alert" hidden></p>
             <button class="btn" type="submit">Poslať žiadosť o&nbsp;ukážku</button>
-            <p class="form-note">Otvorí sa váš <span class="nw">e-mail</span> s&nbsp;vyplnenou správou, stačí ju odoslať.</p>
+            <p class="form-note" role="status">Na mobile sa otvorí SMS s&nbsp;vyplnenou správou, z&nbsp;počítača mi zavolajte.</p>
           </form>
         </div>
       </div>
@@ -1228,10 +1227,19 @@ input[type="range"]:focus-visible { outline-offset: 2px; border-radius: 16px; }
       return;
     }
     err.hidden = true;
-    var to = document.querySelector('[data-contact="email"]').textContent.trim();
+    var mail = document.querySelector('[data-contact="email"]');
+    var phone = document.querySelector('[data-contact="phone"]').textContent.trim();
+    var formNote = form.querySelector('.form-note');
     var body = 'Dobrý deň,\n\nmám záujem o ukážku mapy pre náš kemp.\n\nKemp: ' + kemp + '\nMeno: ' + meno + '\nTelefón: ' + tel +
       (f.get('sprava') ? '\n\n' + f.get('sprava') : '') + '\n';
-    location.href = 'mailto:' + to + '?subject=' + encodeURIComponent('Ukážka mapy – ' + kemp) + '&body=' + encodeURIComponent(body);
+    if (mail) {
+      location.href = 'mailto:' + mail.textContent.trim() + '?subject=' + encodeURIComponent('Ukážka mapy – ' + kemp) + '&body=' + encodeURIComponent(body);
+    } else if (window.matchMedia('(pointer: coarse)').matches) {
+      location.href = 'sms:' + phone.replace(/\s/g, '') + '?&body=' + encodeURIComponent(body);
+      formNote.textContent = 'Otvorila sa SMS s vyplnenou správou. Ak nie, zavolajte na ' + phone.replace(/ /g, ' ') + '.';
+    } else {
+      formNote.textContent = 'Z počítača mi, prosím, zavolajte alebo pošlite SMS na ' + phone.replace(/ /g, ' ') + '.';
+    }
   });
 
   /* ---------- misc ---------- */
